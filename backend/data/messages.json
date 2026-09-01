@@ -68,5 +68,47 @@
     "message": "Yes Rahul, your AI project looks promising! Let's discuss it in the lab.",
     "readStatus": true,
     "timestamp": "2026-09-01T20:08:13.956Z"
+  },
+  {
+    "_id": "msg_1788293323365_676",
+    "id": "msg_1788293323365_804",
+    "conversationId": "usr_1788291527038_usr_student_1",
+    "senderId": "usr_1788291527038",
+    "senderRole": "faculty",
+    "senderName": "bhavya",
+    "receiverId": "usr_student_1",
+    "receiverRole": "student",
+    "receiverName": "Alex Johnson",
+    "message": "hi",
+    "readStatus": false,
+    "timestamp": "2026-09-01T20:08:43.365Z"
+  },
+  {
+    "_id": "msg_1788293330776_870",
+    "id": "msg_1788293330776_726",
+    "conversationId": "usr_1788286214638_usr_1788291527038",
+    "senderId": "usr_1788291527038",
+    "senderRole": "faculty",
+    "senderName": "bhavya",
+    "receiverId": "usr_1788286214638",
+    "receiverRole": "student",
+    "receiverName": "vimal",
+    "message": "hi",
+    "readStatus": false,
+    "timestamp": "2026-09-01T20:08:50.776Z"
+  },
+  {
+    "_id": "msg_1788293430968_559",
+    "id": "msg_1788293430968_369",
+    "conversationId": "usr_1788286214638_usr_1788291527038",
+    "senderId": "usr_1788291527038",
+    "senderRole": "faculty",
+    "senderName": "bhavya",
+    "receiverId": "usr_1788286214638",
+    "receiverRole": "student",
+    "receiverName": "vimal",
+    "message": "hiii",
+    "readStatus": false,
+    "timestamp": "2026-09-01T20:10:30.968Z"
   }
 ]

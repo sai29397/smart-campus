@@ -993,29 +993,27 @@ async function loadStudentAttendance() {
     const data = await res.json();
     const summaries = data && Array.isArray(data.attendanceSummary) ? data.attendanceSummary : [];
 
-    if (trackBadge) trackBadge.innerText = `${summaries.length} Subjects`;
+    if (trackBadge) trackBadge.innerText = `${summaries.length} Subjects Tracked`;
 
     if (summaries.length === 0) {
-      gridContainer.innerHTML = `<div style="grid-column: 1/-1; text-align: center; color: var(--text-muted); padding: 24px;">No attendance records published yet.</div>`;
+      gridContainer.innerHTML = `<div style="grid-column: 1/-1; text-align: center; color: var(--text-muted); padding: 24px;">No academic subjects assigned to your profile yet.</div>`;
       if (overallStat) overallStat.innerText = "100%";
       return;
     }
 
-    let totalClassesAll = 0;
-    let totalPresentAll = 0;
-
     gridContainer.innerHTML = summaries
       .map((item) => {
-        totalClassesAll += item.totalClasses;
-        totalPresentAll += item.classesPresent;
-        const pct = item.percentage;
-        const color = pct >= 85 ? "#16a34a" : pct >= 75 ? "#d97706" : "#dc2626";
+        const pct = typeof item.percentage === "number" ? item.percentage : 100.0;
+        const color = pct >= 80 ? "#16a34a" : pct >= 70 ? "#d97706" : "#dc2626";
 
         return `
         <div class="card">
           <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px;">
-            <h4 style="margin: 0; font-size: 1rem; color: var(--dark);">${escapeHtml(item.subjectName)}</h4>
-            <span style="font-size: 1.1rem; font-weight: 800; color: ${color};">${pct}%</span>
+            <div>
+              <h4 style="margin: 0; font-size: 1rem; color: var(--dark);">${escapeHtml(item.subjectName)}</h4>
+              <span style="font-size: 0.75rem; font-weight: 700; color: var(--primary);">${item.subjectCode || "Course"}</span>
+            </div>
+            <span style="font-size: 1.25rem; font-weight: 800; color: ${color};">${pct}%</span>
           </div>
           
           <div style="font-size: 0.85rem; color: var(--text-muted); margin: 8px 0; display: flex; justify-content: space-between;">
@@ -1033,8 +1031,9 @@ async function loadStudentAttendance() {
       .join("");
 
     if (overallStat) {
-      const overallPct = totalClassesAll > 0 ? ((totalPresentAll / totalClassesAll) * 100).toFixed(1) : "100.0";
-      overallStat.innerText = `${overallPct}%`;
+      const overall = data.overallPercentage !== undefined ? data.overallPercentage : "100.0";
+      overallStat.innerText = `${overall}%`;
+      overallStat.style.color = overall >= 80 ? "var(--success)" : overall >= 70 ? "#d97706" : "#dc2626";
     }
   } catch (err) {
     if (overallStat) overallStat.innerText = "--%";

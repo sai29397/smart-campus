@@ -153,22 +153,93 @@ router.post("/", protect, async (req, res) => {
 router.get("/student", protect, (req, res) => {
   try {
     const studentId = String(req.user._id || req.user.id);
+    const studentEmail = req.user.email ? req.user.email.toLowerCase().trim() : "";
+    const studentYear = req.user.year || "1st Year";
+    const studentSpec = req.user.specialization || "General CSE";
+
+    // 1. Load Student's Enrolled Subjects (so all assigned subjects appear in attendance)
+    const subjectsFilePath = path.join(dataDir, "subjects.json");
+    let allSubjects = [];
+    try {
+      if (fs.existsSync(subjectsFilePath)) {
+        allSubjects = JSON.parse(fs.readFileSync(subjectsFilePath, "utf8")) || [];
+      }
+    } catch (e) {}
+
+    // Match enrolled subjects strictly
+    const enrolledSubjects = allSubjects.filter((sub) => {
+      // 1. Specific / Multiple Student IDs
+      if (
+        (sub.assignmentType === "specific_student" || sub.assignmentType === "multiple_students") &&
+        Array.isArray(sub.studentIds)
+      ) {
+        return sub.studentIds.map(String).includes(studentId);
+      }
+
+      // 2. Specialization
+      if (sub.assignmentType === "specialization") {
+        const matchesYear =
+          Array.isArray(sub.years) &&
+          sub.years.some((y) => y && y.toLowerCase() === studentYear.toLowerCase());
+        const matchesSpec =
+          Array.isArray(sub.specializations) &&
+          sub.specializations.some((s) => s && s.toLowerCase() === studentSpec.toLowerCase());
+        return matchesYear && matchesSpec;
+      }
+
+      // 3. Multi-Year / Entire Year
+      if (sub.assignmentType === "multiple_years" || sub.assignmentType === "entire_year" || !sub.assignmentType) {
+        const yearsList = Array.isArray(sub.years) ? sub.years : [sub.year || "1st Year"];
+        const matchesYear = yearsList.some((y) => y && y.toLowerCase() === studentYear.toLowerCase());
+        if (!matchesYear) return false;
+
+        if (Array.isArray(sub.specializations) && sub.specializations.length > 0) {
+          return sub.specializations.some((s) => s && s.toLowerCase() === studentSpec.toLowerCase());
+        }
+        return true;
+      }
+
+      return false;
+    });
+
     inMemoryAttendance = loadServerAttendance();
 
-    const studentRecords = inMemoryAttendance.filter((a) => String(a.studentId) === studentId);
-
-    // Group stats by subject
+    // Map by subjectId
     const subjectStatsMap = {};
 
+    // Pre-populate with all enrolled subjects so student sees 100% of their curriculum
+    enrolledSubjects.forEach((sub) => {
+      const sid = String(sub._id || sub.id);
+      subjectStatsMap[sid] = {
+        subjectId: sid,
+        subjectName: sub.subjectName,
+        subjectCode: sub.subjectCode || "SUB",
+        totalClasses: 0,
+        classesPresent: 0,
+        classesAbsent: 0,
+        percentage: 100.0,
+        records: [],
+      };
+    });
+
+    // Match attendance records by studentId OR studentEmail
+    const studentRecords = inMemoryAttendance.filter((a) => {
+      const matchId = String(a.studentId) === studentId;
+      const matchEmail = studentEmail && a.studentEmail && a.studentEmail.toLowerCase().trim() === studentEmail;
+      return matchId || matchEmail;
+    });
+
     studentRecords.forEach((rec) => {
-      const subId = rec.subjectId;
+      const subId = String(rec.subjectId);
       if (!subjectStatsMap[subId]) {
         subjectStatsMap[subId] = {
           subjectId: subId,
           subjectName: rec.subjectName || "Subject",
+          subjectCode: "SUB",
           totalClasses: 0,
           classesPresent: 0,
           classesAbsent: 0,
+          percentage: 100.0,
           records: [],
         };
       }
@@ -186,17 +257,34 @@ router.get("/student", protect, (req, res) => {
       });
     });
 
+    // Calculate percentages
+    let grandTotalClasses = 0;
+    let grandTotalPresent = 0;
+
     const summaryList = Object.values(subjectStatsMap).map((item) => {
-      const percentage = item.totalClasses > 0 ? ((item.classesPresent / item.totalClasses) * 100).toFixed(1) : "0.0";
+      grandTotalClasses += item.totalClasses;
+      grandTotalPresent += item.classesPresent;
+
+      let pct = 100.0;
+      if (item.totalClasses > 0) {
+        pct = parseFloat(((item.classesPresent / item.totalClasses) * 100).toFixed(1));
+      }
+
       return {
         ...item,
-        percentage: parseFloat(percentage),
+        percentage: pct,
       };
     });
+
+    const overallPercentage =
+      grandTotalClasses > 0
+        ? parseFloat(((grandTotalPresent / grandTotalClasses) * 100).toFixed(1))
+        : 100.0;
 
     return res.json({
       success: true,
       studentId,
+      overallPercentage,
       totalSubjectsTracked: summaryList.length,
       attendanceSummary: summaryList,
     });

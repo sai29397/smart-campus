@@ -138,5 +138,18 @@
     "year": "1st Year",
     "specialization": "General CSE",
     "createdAt": "2026-09-01T19:38:47.038Z"
+  },
+  {
+    "_id": "usr_1788293537349",
+    "id": "usr_1788293537349",
+    "name": "vimal",
+    "email": "vtu2345@veltech.edu.in",
+    "password": "student123",
+    "passwordHash": "$2a$10$aRFOTgI8YAU8cQZwLjPKUuLfuaEbAWmDV7epOGd4kGecMWpbZheqG",
+    "role": "student",
+    "department": "Electronics & Communication",
+    "year": "3rd Year",
+    "specialization": "Artificial Intelligence and Machine Learning",
+    "createdAt": "2026-09-01T20:12:17.349Z"
   }
 ]
