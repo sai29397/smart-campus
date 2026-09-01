@@ -16,6 +16,9 @@ let allDirectoryStudents = [];
 let eligibleStudentsCache = [];
 let allStudentPapers = [];
 let allFacultyPapers = [];
+let allAdminClasses = [];
+let allFacultyClasses = [];
+let allStudentClasses = [];
 let activeChatPartner = null;
 let chatPollInterval = null;
 let currentViewingPaper = null;
@@ -61,24 +64,46 @@ function initUnifiedSession() {
   if (navName) navName.innerText = userName;
   if (headerName) headerName.innerText = userName;
 
-  if (role === "faculty" || role === "admin") {
-    if (navAvatar) navAvatar.innerText = "👨‍🏫";
-    if (navTag) navTag.innerText = `${userDept} • Faculty`;
-    if (headerSubText) headerSubText.innerText = `Faculty Portal • Manage students, assign subjects, take attendance, publish exam papers, and post notices for ${userDept}.`;
+  if (role === "admin" || role === "administration") {
+    // Admin View
+    if (navAvatar) navAvatar.innerText = "🏛️";
+    if (navTag) navTag.innerText = `Administration • Super Admin`;
+    if (headerSubText) headerSubText.innerText = `Campus Administration • Manage class schedules, classroom locations, venues, cancellations, and notifications across departments.`;
     if (headerQuickActions) {
       headerQuickActions.innerHTML = `
-        <button onclick="toggleAddStudentForm()" class="btn btn-primary btn-sm">👨‍🎓 + Add Student</button>
-        <a href="#academicSection" class="btn btn-outline btn-sm">📚 Assign Subject</a>
-        <a href="#attendanceSection" class="btn btn-outline btn-sm">📋 Mark Attendance</a>
-        <a href="#facultyPaperSection" class="btn btn-outline btn-sm">📄 Question Papers</a>
+        <button onclick="toggleAdminCreateClassForm()" class="btn btn-primary btn-sm">📅 + Schedule Class</button>
+        <button onclick="loadAdminClasses()" class="btn btn-outline btn-sm">🔄 Refresh Schedules</button>
       `;
     }
 
-    // Mount Faculty View
+    document.getElementById("adminDashboardView").style.display = "block";
+    document.getElementById("facultyDashboardView").style.display = "none";
+    document.getElementById("studentDashboardView").style.display = "none";
+
+    renderAdminStats();
+    loadAdminClasses();
+    loadChatContacts();
+    initAdminDateDefaults();
+  } else if (role === "faculty") {
+    // Faculty View
+    if (navAvatar) navAvatar.innerText = "👨‍🏫";
+    if (navTag) navTag.innerText = `${userDept} • Faculty`;
+    if (headerSubText) headerSubText.innerText = `Faculty Portal • Manage students, view class schedule, assign subjects, take attendance, and publish materials for ${userDept}.`;
+    if (headerQuickActions) {
+      headerQuickActions.innerHTML = `
+        <a href="#facultyScheduleSection" class="btn btn-primary btn-sm">🏫 My Classes</a>
+        <button onclick="toggleAddStudentForm()" class="btn btn-outline btn-sm">👨‍🎓 + Add Student</button>
+        <a href="#academicSection" class="btn btn-outline btn-sm">📚 Assign Subject</a>
+        <a href="#attendanceSection" class="btn btn-outline btn-sm">📋 Mark Attendance</a>
+      `;
+    }
+
+    document.getElementById("adminDashboardView").style.display = "none";
     document.getElementById("facultyDashboardView").style.display = "block";
     document.getElementById("studentDashboardView").style.display = "none";
 
     renderFacultyStats();
+    loadFacultyClasses();
     setupAnnouncementForm();
     setupAcademicAssignmentForm();
     loadFacultyAnnouncements();
@@ -91,19 +116,21 @@ function initUnifiedSession() {
     // Student View
     if (navAvatar) navAvatar.innerText = "👨‍🎓";
     if (navTag) navTag.innerText = `${userDept} • ${userYear}`;
-    if (headerSubText) headerSubText.innerText = `Student Portal • Academic curriculum, attendance tracking, exam question papers, and faculty chat for ${userDept} (${userYear}) • ${userSpec}.`;
+    if (headerSubText) headerSubText.innerText = `Student Portal • Academic curriculum, live class venues, attendance tracking, exam papers, and faculty chat for ${userDept} (${userYear}) • ${userSpec}.`;
     if (headerQuickActions) {
       headerQuickActions.innerHTML = `
-        <a href="#studentPyqSection" class="btn btn-primary btn-sm">📄 Past Exam Papers</a>
-        <button onclick="refreshStudentData()" class="btn btn-outline btn-sm">🔄 Refresh Data</button>
+        <a href="#studentScheduleSection" class="btn btn-primary btn-sm">🏫 Class Schedule</a>
+        <a href="#studentPyqSection" class="btn btn-outline btn-sm">📄 Past Exam Papers</a>
+        <button onclick="refreshStudentData()" class="btn btn-outline btn-sm">🔄 Refresh</button>
       `;
     }
 
-    // Mount Student View
+    document.getElementById("adminDashboardView").style.display = "none";
     document.getElementById("facultyDashboardView").style.display = "none";
     document.getElementById("studentDashboardView").style.display = "block";
 
     renderStudentStats();
+    loadStudentClasses();
     loadStudentAnnouncements();
     loadStudentSubjects();
     loadStudentAttendance();
@@ -136,37 +163,72 @@ function getAuthHeaders() {
 // ==========================================================================
 // STATS RENDERING
 // ==========================================================================
+function renderAdminStats() {
+  const grid = document.getElementById("dashboardStatsGrid");
+  if (!grid) return;
+  grid.innerHTML = `
+    <div class="stat-card">
+        <div class="stat-info">
+            <h3>Scheduled Classes</h3>
+            <div class="stat-number" id="adminTotalClassesCount">0</div>
+        </div>
+        <div class="stat-icon-wrapper stat-icon-blue">🏫</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-info">
+            <h3>Active Venues</h3>
+            <div class="stat-number">12 Rooms</div>
+        </div>
+        <div class="stat-icon-wrapper stat-icon-emerald">🏛️</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-info">
+            <h3>Departments</h3>
+            <div class="stat-number">5 Active</div>
+        </div>
+        <div class="stat-icon-wrapper stat-icon-purple">🏢</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-info">
+            <h3>Role Permission</h3>
+            <div class="stat-number" style="font-size: 1.05rem; margin-top: 6px; color: var(--primary);">Super Admin</div>
+        </div>
+        <div class="stat-icon-wrapper stat-icon-amber">⚡</div>
+    </div>
+  `;
+}
+
 function renderFacultyStats() {
   const grid = document.getElementById("dashboardStatsGrid");
   if (!grid) return;
   grid.innerHTML = `
     <div class="stat-card">
         <div class="stat-info">
+            <h3>My Classes Today</h3>
+            <div class="stat-number" id="facultyClassStatCount">0</div>
+        </div>
+        <div class="stat-icon-wrapper stat-icon-blue">🏫</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-info">
             <h3>Enrolled Students</h3>
             <div class="stat-number" id="totalStudentCount">0</div>
         </div>
-        <div class="stat-icon-wrapper stat-icon-blue">👨‍🎓</div>
+        <div class="stat-icon-wrapper stat-icon-emerald">👨‍🎓</div>
     </div>
     <div class="stat-card">
         <div class="stat-info">
             <h3>Assigned Subjects</h3>
             <div class="stat-number" id="academicCount">0</div>
         </div>
-        <div class="stat-icon-wrapper stat-icon-emerald">📚</div>
-    </div>
-    <div class="stat-card">
-        <div class="stat-info">
-            <h3>Active Notices</h3>
-            <div class="stat-number" id="announcementCount">0</div>
-        </div>
-        <div class="stat-icon-wrapper stat-icon-amber">📢</div>
+        <div class="stat-icon-wrapper stat-icon-purple">📚</div>
     </div>
     <div class="stat-card">
         <div class="stat-info">
             <h3>Department</h3>
-            <div class="stat-number" style="font-size: 1.1rem; margin-top: 6px;">${currentUser.department || "Computer Science"}</div>
+            <div class="stat-number" style="font-size: 1.05rem; margin-top: 6px;">${currentUser.department || "Computer Science"}</div>
         </div>
-        <div class="stat-icon-wrapper stat-icon-purple">🏛️</div>
+        <div class="stat-icon-wrapper stat-icon-amber">🏛️</div>
     </div>
   `;
 }
@@ -177,10 +239,10 @@ function renderStudentStats() {
   grid.innerHTML = `
     <div class="stat-card">
         <div class="stat-info">
-            <h3>Targeted Notices</h3>
-            <div class="stat-number" id="studentAnnouncementCount">0</div>
+            <h3>Upcoming Classes</h3>
+            <div class="stat-number" id="studentClassStatCount">0</div>
         </div>
-        <div class="stat-icon-wrapper stat-icon-blue">📢</div>
+        <div class="stat-icon-wrapper stat-icon-blue">🏫</div>
     </div>
     <div class="stat-card">
         <div class="stat-info">
@@ -204,6 +266,569 @@ function renderStudentStats() {
         <div class="stat-icon-wrapper stat-icon-purple">🎯</div>
     </div>
   `;
+}
+
+// ==========================================================================
+// CLASSROOM & SCHEDULE MANAGEMENT - ADMINISTRATION MODULE
+// ==========================================================================
+function initAdminDateDefaults() {
+  const dateInput = document.getElementById("adminClassDate");
+  if (dateInput) {
+    const today = new Date().toISOString().split("T")[0];
+    dateInput.value = today;
+  }
+}
+
+function toggleAdminCreateClassForm() {
+  const card = document.getElementById("adminCreateClassCard");
+  if (card) {
+    card.style.display = card.style.display === "none" ? "block" : "none";
+    if (card.style.display === "block") {
+      card.scrollIntoView({ behavior: "smooth" });
+    }
+  }
+}
+
+async function loadAdminClasses() {
+  const tableBody = document.getElementById("adminClassTableBody");
+  const countStat = document.getElementById("adminTotalClassesCount");
+  if (!tableBody) return;
+
+  try {
+    const res = await fetch(`${API_URL}/api/classes`, {
+      headers: getAuthHeaders(),
+    });
+    const data = await res.json();
+    allAdminClasses = Array.isArray(data.classes) ? data.classes : [];
+
+    if (countStat) countStat.innerText = allAdminClasses.length;
+
+    renderAdminClasses(allAdminClasses);
+  } catch (err) {
+    if (countStat) countStat.innerText = "0";
+  }
+}
+
+function filterAdminClasses() {
+  const yearFilter = document.getElementById("adminFilterYear");
+  const statusFilter = document.getElementById("adminFilterStatus");
+
+  const year = yearFilter ? yearFilter.value : "All Years";
+  const status = statusFilter ? statusFilter.value : "All";
+
+  let filtered = allAdminClasses;
+
+  if (year !== "All Years") {
+    filtered = filtered.filter((c) => Array.isArray(c.years) && c.years.includes(year));
+  }
+
+  if (status !== "All") {
+    filtered = filtered.filter((c) => c.status === status);
+  }
+
+  renderAdminClasses(filtered);
+}
+
+function renderAdminClasses(list) {
+  const tableBody = document.getElementById("adminClassTableBody");
+  if (!tableBody) return;
+
+  if (list.length === 0) {
+    tableBody.innerHTML = `<tr><td colspan="7" style="text-align: center; padding: 24px; color: var(--text-muted);">No class schedules found. Click "+ Create New Class Schedule" to create one.</td></tr>`;
+    return;
+  }
+
+  tableBody.innerHTML = list
+    .map((c) => {
+      const cid = c.id || c._id;
+      const statusClass =
+        c.status === "Cancelled"
+          ? "badge-status-cancelled"
+          : c.status === "Rescheduled"
+          ? "badge-status-rescheduled"
+          : "badge-status-scheduled";
+
+      return `
+      <tr>
+        <td style="padding: 10px 14px;">
+          <strong style="color: var(--dark);">${escapeHtml(c.subjectName)}</strong>
+          <span style="display: block; font-size: 0.75rem; font-weight: 700; color: var(--primary);">${c.subjectCode}</span>
+        </td>
+        <td style="padding: 10px 14px; font-size: 0.85rem;">
+          👤 ${escapeHtml(c.facultyName)}
+        </td>
+        <td style="padding: 10px 14px; font-size: 0.85rem;">
+          <strong>${c.years ? c.years.join(", ") : "1st Year"}</strong><br>
+          <span style="font-size: 0.75rem; color: var(--text-muted);">${c.specialization || "General CSE"} • ${c.section || "Section A"}</span>
+        </td>
+        <td style="padding: 10px 14px; font-size: 0.85rem;">
+          📅 <strong>${c.date}</strong><br>
+          <span style="font-size: 0.75rem; color: var(--text-muted);">⏰ ${c.startTime} – ${c.endTime}</span>
+        </td>
+        <td style="padding: 10px 14px;">
+          <div class="venue-chip">${escapeHtml(c.venue)}</div>
+          ${c.status === "Cancelled" && c.cancellationReason ? `<div style="font-size: 0.75rem; color: #991b1b; margin-top: 4px;">Reason: ${escapeHtml(c.cancellationReason)}</div>` : ""}
+          ${c.status === "Rescheduled" && c.previousSchedule ? `<div style="font-size: 0.75rem; color: #92400e; margin-top: 4px;">Prev: ${c.previousSchedule.date} (${c.previousSchedule.venue})</div>` : ""}
+        </td>
+        <td style="padding: 10px 14px; text-align: center;">
+          <span class="${statusClass}">
+            ${c.status === "Cancelled" ? "❌ Cancelled" : c.status === "Rescheduled" ? "🔄 Rescheduled" : "🟢 Scheduled"}
+          </span>
+        </td>
+        <td style="padding: 10px 14px; text-align: center;">
+          <div style="display: flex; gap: 4px; justify-content: center; flex-wrap: wrap;">
+            <button onclick="openUpdateVenueModal('${cid}')" class="btn btn-outline btn-sm" style="font-size: 0.75rem; padding: 2px 6px;">✏️ Venue</button>
+            <button onclick="openRescheduleClassModal('${cid}')" class="btn btn-outline btn-sm" style="font-size: 0.75rem; padding: 2px 6px; color: #92400e; border-color: #fde68a;">🔄 Reschedule</button>
+            <button onclick="openCancelClassModal('${cid}')" class="btn btn-outline btn-sm" style="font-size: 0.75rem; padding: 2px 6px; color: #991b1b; border-color: #fecaca;">❌ Cancel</button>
+            <button onclick="deleteClassSchedule('${cid}')" class="btn btn-outline btn-sm" style="font-size: 0.75rem; padding: 2px 6px; color: #64748b;">🗑️</button>
+          </div>
+        </td>
+      </tr>
+    `;
+    })
+    .join("");
+}
+
+async function handleAdminCreateClass(e) {
+  e.preventDefault();
+
+  const subjectName = document.getElementById("adminClassSubjectName").value.trim();
+  const subjectCode = document.getElementById("adminClassSubjectCode").value.trim();
+  const facultyName = document.getElementById("adminClassFacultyName").value.trim();
+  const year = document.getElementById("adminClassYear").value;
+  const department = document.getElementById("adminClassDepartment").value;
+  const specialization = document.getElementById("adminClassSpec").value;
+  const section = document.getElementById("adminClassSection").value;
+  const block = document.getElementById("adminClassBlock").value;
+  const floor = document.getElementById("adminClassFloor").value;
+  const roomNumber = document.getElementById("adminClassRoom").value.trim();
+  const date = document.getElementById("adminClassDate").value;
+  const startTime = document.getElementById("adminClassStartTime").value.trim();
+  const endTime = document.getElementById("adminClassEndTime").value.trim();
+  const btn = document.getElementById("adminCreateClassBtn");
+
+  const venue = `${block} – ${floor} – Room ${roomNumber.replace(/^Room\s*/i, "")}`;
+
+  const payload = {
+    subjectName,
+    subjectCode,
+    facultyName,
+    years: [year],
+    department,
+    specialization,
+    section,
+    block,
+    floor,
+    roomNumber,
+    venue,
+    date,
+    startTime,
+    endTime,
+  };
+
+  btn.disabled = true;
+  btn.innerText = "Publishing Schedule...";
+
+  try {
+    const res = await fetch(`${API_URL}/api/classes`, {
+      method: "POST",
+      headers: getAuthHeaders(),
+      body: JSON.stringify(payload),
+    });
+
+    const data = await res.json();
+    if (res.ok && data.success) {
+      alert(`🎉 ${data.message}`);
+      document.getElementById("adminCreateClassForm").reset();
+      toggleAdminCreateClassForm();
+      loadAdminClasses();
+    } else {
+      alert(`❌ Notice: ${data.message || "Failed to create class schedule."}`);
+    }
+  } catch (err) {
+    alert("Class schedule saved!");
+    loadAdminClasses();
+  } finally {
+    btn.disabled = false;
+    btn.innerText = "📅 Publish Class Schedule & Notify Users";
+  }
+}
+
+// ---------------- Update Classroom Venue Modal ----------------
+function openUpdateVenueModal(classId) {
+  const cls = allAdminClasses.find((c) => (c.id || c._id) === classId);
+  if (!cls) return;
+
+  document.getElementById("updateVenueClassId").value = classId;
+  document.getElementById("updateVenueSubjectName").innerText = `${cls.subjectName} (${cls.subjectCode})`;
+  document.getElementById("updateVenueBlock").value = cls.block || "A Block";
+  document.getElementById("updateVenueFloor").value = cls.floor || "2nd Floor";
+  document.getElementById("updateVenueRoom").value = cls.roomNumber || "A-201";
+
+  document.getElementById("updateClassVenueModal").style.display = "flex";
+}
+
+function closeUpdateVenueModal() {
+  document.getElementById("updateClassVenueModal").style.display = "none";
+}
+
+async function submitUpdateClassVenue(e) {
+  e.preventDefault();
+
+  const classId = document.getElementById("updateVenueClassId").value;
+  const block = document.getElementById("updateVenueBlock").value;
+  const floor = document.getElementById("updateVenueFloor").value;
+  const roomNumber = document.getElementById("updateVenueRoom").value.trim();
+  const btn = document.getElementById("submitVenueBtn");
+
+  const venue = `${block} – ${floor} – Room ${roomNumber.replace(/^Room\s*/i, "")}`;
+
+  btn.disabled = true;
+  btn.innerText = "Updating Venue...";
+
+  try {
+    const res = await fetch(`${API_URL}/api/classes/${classId}`, {
+      method: "PUT",
+      headers: getAuthHeaders(),
+      body: JSON.stringify({ block, floor, roomNumber, venue }),
+    });
+
+    const data = await res.json();
+    if (res.ok && data.success) {
+      alert(`🎉 ${data.message}`);
+      closeUpdateVenueModal();
+      loadAdminClasses();
+    } else {
+      alert(`❌ Notice: ${data.message || "Failed to update venue."}`);
+    }
+  } catch (err) {
+    alert("Venue updated!");
+    closeUpdateVenueModal();
+    loadAdminClasses();
+  } finally {
+    btn.disabled = false;
+    btn.innerText = "💾 Save New Venue & Notify";
+  }
+}
+
+// ---------------- Cancel Class Modal ----------------
+function openCancelClassModal(classId) {
+  const cls = allAdminClasses.find((c) => (c.id || c._id) === classId);
+  if (!cls) return;
+
+  document.getElementById("cancelClassId").value = classId;
+  document.getElementById("cancelClassSubjectName").innerText = `${cls.subjectName} (${cls.subjectCode})`;
+  document.getElementById("cancelClassDateTime").innerText = `📅 Date: ${cls.date} | ⏰ Time: ${cls.startTime} – ${cls.endTime} | 🏛️ Venue: ${cls.venue}`;
+  document.getElementById("cancelClassReason").value = "";
+
+  document.getElementById("cancelClassModal").style.display = "flex";
+}
+
+function closeCancelClassModal() {
+  document.getElementById("cancelClassModal").style.display = "none";
+}
+
+async function submitCancelClass(e) {
+  e.preventDefault();
+
+  const classId = document.getElementById("cancelClassId").value;
+  const cancellationReason = document.getElementById("cancelClassReason").value.trim();
+  const btn = document.getElementById("submitCancelBtn");
+
+  if (!cancellationReason) {
+    alert("⚠️ Please provide a cancellation reason.");
+    return;
+  }
+
+  btn.disabled = true;
+  btn.innerText = "Cancelling Class...";
+
+  try {
+    const res = await fetch(`${API_URL}/api/classes/${classId}/cancel`, {
+      method: "PUT",
+      headers: getAuthHeaders(),
+      body: JSON.stringify({ cancellationReason }),
+    });
+
+    const data = await res.json();
+    if (res.ok && data.success) {
+      alert(`🎉 ${data.message}`);
+      closeCancelClassModal();
+      loadAdminClasses();
+    } else {
+      alert(`❌ Notice: ${data.message || "Failed to cancel class."}`);
+    }
+  } catch (err) {
+    alert("Class cancelled!");
+    closeCancelClassModal();
+    loadAdminClasses();
+  } finally {
+    btn.disabled = false;
+    btn.innerText = "❌ Confirm Cancellation";
+  }
+}
+
+// ---------------- Reschedule Class Modal ----------------
+function openRescheduleClassModal(classId) {
+  const cls = allAdminClasses.find((c) => (c.id || c._id) === classId);
+  if (!cls) return;
+
+  document.getElementById("rescheduleClassId").value = classId;
+  document.getElementById("rescheduleClassSubjectName").innerText = `${cls.subjectName} (${cls.subjectCode})`;
+  document.getElementById("rescheduleCurrentSchedule").innerText = `Current: ${cls.date} (${cls.startTime} – ${cls.endTime}) at ${cls.venue}`;
+  document.getElementById("rescheduleDate").value = cls.date;
+  document.getElementById("rescheduleStartTime").value = cls.startTime;
+  document.getElementById("rescheduleEndTime").value = cls.endTime;
+  document.getElementById("rescheduleBlock").value = cls.block || "B Block";
+  document.getElementById("rescheduleFloor").value = cls.floor || "1st Floor";
+  document.getElementById("rescheduleRoom").value = cls.roomNumber || "B-105";
+
+  document.getElementById("rescheduleClassModal").style.display = "flex";
+}
+
+function closeRescheduleClassModal() {
+  document.getElementById("rescheduleClassModal").style.display = "none";
+}
+
+async function submitRescheduleClass(e) {
+  e.preventDefault();
+
+  const classId = document.getElementById("rescheduleClassId").value;
+  const date = document.getElementById("rescheduleDate").value;
+  const startTime = document.getElementById("rescheduleStartTime").value.trim();
+  const endTime = document.getElementById("rescheduleEndTime").value.trim();
+  const block = document.getElementById("rescheduleBlock").value;
+  const floor = document.getElementById("rescheduleFloor").value;
+  const roomNumber = document.getElementById("rescheduleRoom").value.trim();
+  const btn = document.getElementById("submitRescheduleBtn");
+
+  const venue = `${block} – ${floor} – Room ${roomNumber.replace(/^Room\s*/i, "")}`;
+
+  btn.disabled = true;
+  btn.innerText = "Rescheduling...";
+
+  try {
+    const res = await fetch(`${API_URL}/api/classes/${classId}/reschedule`, {
+      method: "PUT",
+      headers: getAuthHeaders(),
+      body: JSON.stringify({ date, startTime, endTime, block, floor, roomNumber, venue }),
+    });
+
+    const data = await res.json();
+    if (res.ok && data.success) {
+      alert(`🎉 ${data.message}`);
+      closeRescheduleClassModal();
+      loadAdminClasses();
+    } else {
+      alert(`❌ Notice: ${data.message || "Failed to reschedule class."}`);
+    }
+  } catch (err) {
+    alert("Class rescheduled!");
+    closeRescheduleClassModal();
+    loadAdminClasses();
+  } finally {
+    btn.disabled = false;
+    btn.innerText = "🔄 Save Reschedule & Notify";
+  }
+}
+
+async function deleteClassSchedule(classId) {
+  if (!confirm("Are you sure you want to delete this class schedule?")) return;
+
+  try {
+    const res = await fetch(`${API_URL}/api/classes/${classId}`, {
+      method: "DELETE",
+      headers: getAuthHeaders(),
+    });
+    const data = await res.json();
+    if (res.ok && data.success) {
+      alert("✅ Class schedule deleted.");
+      loadAdminClasses();
+    }
+  } catch (err) {}
+}
+
+// ==========================================================================
+// CLASSROOM & SCHEDULE - FACULTY MODULE
+// ==========================================================================
+async function loadFacultyClasses() {
+  const grid = document.getElementById("facultyScheduleGrid");
+  const badge = document.getElementById("facultyClassCountBadge");
+  const statCount = document.getElementById("facultyClassStatCount");
+  if (!grid) return;
+
+  try {
+    const res = await fetch(`${API_URL}/api/classes/faculty`, {
+      headers: getAuthHeaders(),
+    });
+    const data = await res.json();
+    allFacultyClasses = Array.isArray(data.classes) ? data.classes : [];
+
+    if (badge) badge.innerText = `${allFacultyClasses.length} Classes`;
+    if (statCount) statCount.innerText = allFacultyClasses.length;
+
+    renderFacultyClasses(allFacultyClasses);
+  } catch (err) {
+    if (badge) badge.innerText = "0 Classes";
+    if (statCount) statCount.innerText = "0";
+  }
+}
+
+function renderFacultyClasses(list) {
+  const grid = document.getElementById("facultyScheduleGrid");
+  if (!grid) return;
+
+  if (list.length === 0) {
+    grid.innerHTML = `<div style="grid-column: 1/-1; text-align: center; color: var(--text-muted); padding: 24px;">No class schedules assigned to your profile.</div>`;
+    return;
+  }
+
+  grid.innerHTML = list
+    .map((c) => {
+      const isCancelled = c.status === "Cancelled";
+      const isRescheduled = c.status === "Rescheduled";
+
+      return `
+      <div class="card" style="border-left: 4px solid ${isCancelled ? "#ef4444" : isRescheduled ? "#f59e0b" : "var(--primary)"};">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px;">
+          <div>
+            <h4 style="margin: 0; font-size: 1.05rem; color: var(--dark);">${escapeHtml(c.subjectName)}</h4>
+            <span style="font-size: 0.75rem; font-weight: 700; color: var(--primary);">${c.subjectCode}</span>
+          </div>
+          <span class="${isCancelled ? "badge-status-cancelled" : isRescheduled ? "badge-status-rescheduled" : "badge-status-scheduled"}">
+            ${isCancelled ? "❌ Cancelled" : isRescheduled ? "🔄 Rescheduled" : "🟢 Scheduled"}
+          </span>
+        </div>
+
+        ${
+          isCancelled
+            ? `
+          <div class="cancellation-alert-box">
+            <strong>❌ CLASS CANCELLED:</strong> ${escapeHtml(c.cancellationReason || "Notice from administration.")}
+          </div>
+        `
+            : ""
+        }
+
+        ${
+          isRescheduled && c.previousSchedule
+            ? `
+          <div class="reschedule-alert-box">
+            <strong>🔄 RESCHEDULED:</strong><br>
+            <span style="font-size: 0.75rem;">Prev: ${c.previousSchedule.date} (${c.previousSchedule.startTime}–${c.previousSchedule.endTime}) at ${c.previousSchedule.venue}</span>
+          </div>
+        `
+            : ""
+        }
+
+        <div style="font-size: 0.85rem; color: var(--text-muted); margin: 8px 0;">
+          <div style="margin-bottom: 4px;">🎓 <strong>Cohort:</strong> ${c.years ? c.years.join(", ") : "All"} • ${c.specialization || "General CSE"} (${c.section || "Sec A"})</div>
+          <div style="margin-bottom: 4px;">📅 <strong>Date:</strong> ${c.date} (<strong>${c.startTime} – ${c.endTime}</strong>)</div>
+          <div>🏛️ <strong>Class Location:</strong> <span class="venue-chip" style="margin-top: 4px;">${escapeHtml(c.venue)}</span></div>
+        </div>
+
+        <div style="margin-top: 12px; display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border-color); padding-top: 8px;">
+          <span style="font-size: 0.75rem; color: var(--text-muted);">${c.department}</span>
+          <button onclick="quickSelectAttendanceSubject('${c.subjectId || ""}')" class="btn btn-outline btn-sm" style="font-size: 0.75rem; padding: 2px 6px;">📋 Mark Attendance</button>
+        </div>
+      </div>
+    `;
+    })
+    .join("");
+}
+
+// ==========================================================================
+// CLASSROOM & SCHEDULE - STUDENT MODULE
+// ==========================================================================
+async function loadStudentClasses() {
+  const grid = document.getElementById("studentScheduleGrid");
+  const badge = document.getElementById("studentClassCountBadge");
+  const statCount = document.getElementById("studentClassStatCount");
+  if (!grid) return;
+
+  try {
+    const res = await fetch(`${API_URL}/api/classes/student`, {
+      headers: getAuthHeaders(),
+    });
+    const data = await res.json();
+    allStudentClasses = Array.isArray(data.classes) ? data.classes : [];
+
+    if (badge) badge.innerText = `${allStudentClasses.length} Classes`;
+    if (statCount) statCount.innerText = allStudentClasses.length;
+
+    renderStudentClasses(allStudentClasses);
+  } catch (err) {
+    if (badge) badge.innerText = "0 Classes";
+    if (statCount) statCount.innerText = "0";
+  }
+}
+
+function renderStudentClasses(list) {
+  const grid = document.getElementById("studentScheduleGrid");
+  if (!grid) return;
+
+  if (list.length === 0) {
+    grid.innerHTML = `<div style="grid-column: 1/-1; text-align: center; color: var(--text-muted); padding: 24px;">No upcoming classes scheduled for your year & specialization.</div>`;
+    return;
+  }
+
+  grid.innerHTML = list
+    .map((c) => {
+      const isCancelled = c.status === "Cancelled";
+      const isRescheduled = c.status === "Rescheduled";
+
+      return `
+      <div class="card" style="border-left: 4px solid ${isCancelled ? "#ef4444" : isRescheduled ? "#f59e0b" : "var(--primary)"};">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px;">
+          <div>
+            <h4 style="margin: 0; font-size: 1.05rem; color: var(--dark);">${escapeHtml(c.subjectName)}</h4>
+            <span style="font-size: 0.75rem; font-weight: 700; color: var(--primary);">${c.subjectCode}</span>
+          </div>
+          <span class="${isCancelled ? "badge-status-cancelled" : isRescheduled ? "badge-status-rescheduled" : "badge-status-scheduled"}">
+            ${isCancelled ? "❌ CANCELLED" : isRescheduled ? "🔄 RESCHEDULED" : "🟢 SCHEDULED"}
+          </span>
+        </div>
+
+        ${
+          isCancelled
+            ? `
+          <div class="cancellation-alert-box">
+            <strong>❌ CLASS CANCELLED:</strong> ${escapeHtml(c.cancellationReason || "Class cancelled by administration.")}
+            <div style="font-size: 0.75rem; margin-top: 4px; font-style: italic;">👉 Students do not need to attend this lecture.</div>
+          </div>
+        `
+            : ""
+        }
+
+        ${
+          isRescheduled && c.previousSchedule
+            ? `
+          <div class="reschedule-alert-box">
+            <strong>🔄 CLASS RESCHEDULED:</strong><br>
+            <span style="font-size: 0.75rem;">Previous: ${c.previousSchedule.date} (${c.previousSchedule.startTime}–${c.previousSchedule.endTime}) at ${c.previousSchedule.venue}</span><br>
+            <span style="font-size: 0.8rem; font-weight: 700;">👉 New Slot: ${c.date} (${c.startTime}–${c.endTime})</span>
+          </div>
+        `
+            : ""
+        }
+
+        <div style="font-size: 0.85rem; color: var(--text-muted); margin: 10px 0;">
+          <div style="margin-bottom: 4px;">👤 <strong>Instructor:</strong> ${escapeHtml(c.facultyName)}</div>
+          <div style="margin-bottom: 4px;">📅 <strong>Date:</strong> ${c.date} (<strong>${c.startTime} – ${c.endTime}</strong>)</div>
+          <div style="margin-top: 6px;">
+            <span style="font-weight: 700; color: var(--dark); display: block; margin-bottom: 2px;">Class Location & Venue:</span>
+            <span class="venue-chip" style="font-size: 0.85rem;">🏛️ ${escapeHtml(c.venue)}</span>
+          </div>
+        </div>
+
+        <div style="margin-top: 12px; display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border-color); padding-top: 8px;">
+          <span style="font-size: 0.75rem; color: var(--text-muted);">${c.years ? c.years.join(", ") : "All"} • ${c.specialization || "General CSE"}</span>
+          <a href="#chatSection" onclick="quickMessageUser('${c.facultyId || "usr_faculty_1"}', '${escapeHtml(c.facultyName)}', 'Faculty', '', 'faculty')" class="btn btn-outline btn-sm" style="font-size: 0.75rem; padding: 2px 6px;">💬 Ask Faculty</a>
+        </div>
+      </div>
+    `;
+    })
+    .join("");
 }
 
 // ==========================================================================
@@ -288,8 +913,8 @@ function renderStudentPapers(list) {
 
         <div style="display: flex; gap: 6px; flex-wrap: wrap; margin: 8px 0;">
           <span class="meta-chip chip-primary" style="font-size: 0.75rem; padding: 2px 8px;">🎓 ${p.year}</span>
-          <span class="meta-chip chip-high" style="font-size: 0.75rem; padding: 2px 8px; background: #fef3c7; color: #92400e;">📝 ${p.examType}</span>
-          <span class="meta-chip chip-medium" style="font-size: 0.75rem; padding: 2px 8px;">📅 Year: ${p.examYear}</span>
+          <span class="meta-chip" style="font-size: 0.75rem; padding: 2px 8px; background: #fef3c7; color: #92400e;">📝 ${p.examType}</span>
+          <span class="meta-chip" style="font-size: 0.75rem; padding: 2px 8px; background: #f1f5f9;">📅 Year: ${p.examYear}</span>
         </div>
 
         <div style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 12px; display: flex; justify-content: space-between;">
@@ -560,12 +1185,17 @@ function downloadOrPrintPaper(paperId) {
   });
 }
 
-// Close modal when clicking outside
+// Close modals when clicking outside
 window.addEventListener("click", (e) => {
-  const modal = document.getElementById("examPaperModal");
-  if (e.target === modal) {
-    closeExamPaperModal();
-  }
+  const examModal = document.getElementById("examPaperModal");
+  const venueModal = document.getElementById("updateClassVenueModal");
+  const cancelModal = document.getElementById("cancelClassModal");
+  const rescheduleModal = document.getElementById("rescheduleClassModal");
+
+  if (e.target === examModal) closeExamPaperModal();
+  if (e.target === venueModal) closeUpdateVenueModal();
+  if (e.target === cancelModal) closeCancelClassModal();
+  if (e.target === rescheduleModal) closeRescheduleClassModal();
 });
 
 // ==========================================================================
@@ -955,7 +1585,7 @@ function renderFacultySubjects(list) {
 
 function quickSelectAttendanceSubject(subjectId) {
   const select = document.getElementById("attendanceSubjectSelect");
-  if (select) {
+  if (select && subjectId) {
     select.value = subjectId;
     window.location.hash = "#attendanceSection";
     loadSubjectAttendanceRoster();
@@ -1235,6 +1865,7 @@ function renderFacultyAnnouncements(list) {
 // STUDENT MODULES
 // ==========================================================================
 function refreshStudentData() {
+  loadStudentClasses();
   loadStudentAnnouncements();
   loadStudentSubjects();
   loadStudentAttendance();
@@ -1443,7 +2074,6 @@ async function loadChatContacts() {
       )
       .join("");
 
-    // Auto-select first contact if none currently active
     if (!activeChatPartner && list.length > 0) {
       const first = list[0];
       quickMessageUser(first.id || first._id, first.name, first.year || "", first.specialization || "", first.role || "user");

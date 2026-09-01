@@ -1,0 +1,46 @@
+[
+  {
+    "_id": "ann_cls_1788304237754_64",
+    "id": "ann_cls_1788304237754_343",
+    "title": "🔄 CLASS RESCHEDULED: Deep Neural Networks & Transformers (CSAI305)",
+    "description": "Your Deep Neural Networks & Transformers class has been RESCHEDULED.\nPrevious: 2026-09-05 (10:00 AM – 11:00 AM) at B Block – 1st Floor – Room B-105\nNew Schedule: 2026-09-06 (02:00 PM – 03:00 PM) at B Block – 1st Floor – Room B-105.",
+    "department": "Computer Science",
+    "year": "3rd Year",
+    "priority": "Important",
+    "author": "Campus Administration",
+    "createdAt": "2026-09-01T23:10:37.754Z"
+  },
+  {
+    "_id": "ann_cls_1788304237717_70",
+    "id": "ann_cls_1788304237717_95",
+    "title": "❌ CLASS CANCELLED: Deep Neural Networks & Transformers (CSAI305)",
+    "description": "Your Deep Neural Networks & Transformers class on 2026-09-05 (10:00 AM – 11:00 AM) has been CANCELLED.\nReason: Faculty unavailable due to an emergency.\nFaculty: Dr. Sarah Jenkins.\nStudents do not need to attend this lecture.",
+    "department": "Computer Science",
+    "year": "3rd Year",
+    "priority": "Urgent",
+    "author": "Campus Administration",
+    "createdAt": "2026-09-01T23:10:37.717Z"
+  },
+  {
+    "_id": "ann_cls_1788304237679_494",
+    "id": "ann_cls_1788304237679_519",
+    "title": "🏛️ Classroom Updated: Deep Neural Networks & Transformers (CSAI305)",
+    "description": "Your Deep Neural Networks & Transformers class venue has been changed.\nPrevious Venue: A Block – 2nd Floor – Room A-201\nNew Venue: B Block – 1st Floor – Room B-105\nDate & Time: 2026-09-05 (10:00 AM – 11:00 AM).",
+    "department": "Computer Science",
+    "year": "3rd Year",
+    "priority": "Important",
+    "author": "Campus Administration",
+    "createdAt": "2026-09-01T23:10:37.679Z"
+  },
+  {
+    "_id": "ann_cls_1788304237617_588",
+    "id": "ann_cls_1788304237617_585",
+    "title": "📅 New Class Scheduled: Deep Neural Networks & Transformers (CSAI305)",
+    "description": "Class is scheduled for 3rd Year (Artificial Intelligence and Machine Learning) on 2026-09-05 from 10:00 AM to 11:00 AM at A Block – 2nd Floor – Room A-201. Faculty: Dr. Sarah Jenkins.",
+    "department": "Computer Science",
+    "year": "3rd Year",
+    "priority": "Normal",
+    "author": "Campus Administration",
+    "createdAt": "2026-09-01T23:10:37.617Z"
+  }
+]

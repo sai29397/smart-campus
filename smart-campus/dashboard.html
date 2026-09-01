@@ -127,8 +127,8 @@
             transition: width 0.4s ease;
         }
         
-        /* Interactive Exam Paper Modal Styles */
-        .paper-modal-overlay {
+        /* Modal Overlay & Container */
+        .app-modal-overlay {
             position: fixed;
             top: 0;
             left: 0;
@@ -142,10 +142,10 @@
             z-index: 9999;
             padding: 20px;
         }
-        .paper-modal-container {
+        .app-modal-container {
             background: #fff;
             width: 100%;
-            max-width: 860px;
+            max-width: 580px;
             max-height: 90vh;
             border-radius: var(--radius-md);
             display: flex;
@@ -153,19 +153,74 @@
             overflow: hidden;
             box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2);
         }
-        .paper-modal-header {
-            padding: 16px 20px;
+        .app-modal-header {
+            padding: 14px 20px;
             background: #0f172a;
             color: #fff;
             display: flex;
             justify-content: space-between;
             align-items: center;
         }
-        .paper-modal-body {
-            padding: 24px;
+        .app-modal-body {
+            padding: 20px;
             overflow-y: auto;
-            background: #f8fafc;
         }
+
+        /* Class Schedule Cards & Status Badges */
+        .badge-status-scheduled {
+            background: #dcfce7;
+            color: #166534;
+            font-weight: 700;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+        }
+        .badge-status-cancelled {
+            background: #fee2e2;
+            color: #991b1b;
+            font-weight: 700;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+        }
+        .badge-status-rescheduled {
+            background: #fef3c7;
+            color: #92400e;
+            font-weight: 700;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+        }
+        .venue-chip {
+            background: #f1f5f9;
+            border: 1px solid #cbd5e1;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            color: #334155;
+            font-weight: 600;
+            display: inline-block;
+        }
+        .cancellation-alert-box {
+            background: #fef2f2;
+            border: 1.5px solid #f87171;
+            border-radius: var(--radius-sm);
+            padding: 10px 14px;
+            margin: 8px 0;
+            color: #991b1b;
+            font-size: 0.85rem;
+        }
+        .reschedule-alert-box {
+            background: #fffbeb;
+            border: 1.5px solid #fcd34d;
+            border-radius: var(--radius-sm);
+            padding: 10px 14px;
+            margin: 8px 0;
+            color: #92400e;
+            font-size: 0.85rem;
+        }
+
+        /* Exam Sheet Styles */
         .exam-sheet {
             background: #fff;
             border: 2px solid #334155;
@@ -252,10 +307,197 @@
         <div class="stats-grid" id="dashboardStatsGrid"></div>
 
         <!-- ================================================================= -->
-        <!-- VIEW A: FACULTY DASHBOARD VIEW (Shown only if role === 'faculty')  -->
+        <!-- VIEW A: ADMINISTRATION DASHBOARD VIEW (role === 'admin')          -->
+        <!-- ================================================================= -->
+        <div id="adminDashboardView" style="display: none;">
+            <section class="section-card" id="adminClassSection">
+                <div class="section-header">
+                    <h2>🏫 Classroom & Class Schedule Management (Admin)</h2>
+                    <button onclick="toggleAdminCreateClassForm()" class="btn btn-primary btn-sm">+ Create New Class Schedule</button>
+                </div>
+                <div class="section-body">
+                    
+                    <!-- Admin Create Class Schedule Form (Collapsible) -->
+                    <div id="adminCreateClassCard" class="modal-card" style="display: none;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                            <h3 style="margin: 0; font-size: 1.1rem; color: var(--primary);">
+                                📅 Create New Class Schedule & Venue
+                            </h3>
+                            <button type="button" onclick="toggleAdminCreateClassForm()" class="btn btn-sm btn-outline" style="padding: 2px 8px;">✕ Close</button>
+                        </div>
+
+                        <form id="adminCreateClassForm" onsubmit="handleAdminCreateClass(event)">
+                            <div class="form-row">
+                                <div class="form-group" style="flex: 2;">
+                                    <label for="adminClassSubjectName">Subject Name *</label>
+                                    <input type="text" id="adminClassSubjectName" placeholder="e.g., Machine Learning & Deep Neural Nets" required>
+                                </div>
+                                <div class="form-group" style="flex: 1;">
+                                    <label for="adminClassSubjectCode">Subject Code *</label>
+                                    <input type="text" id="adminClassSubjectCode" placeholder="e.g., CSML301" required>
+                                </div>
+                                <div class="form-group" style="flex: 2;">
+                                    <label for="adminClassFacultyName">Assigned Faculty Instructor *</label>
+                                    <input type="text" id="adminClassFacultyName" placeholder="e.g., Dr. Sarah Jenkins" value="Dr. Sarah Jenkins" required>
+                                </div>
+                            </div>
+
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="adminClassYear">Target Academic Year *</label>
+                                    <select id="adminClassYear" required>
+                                        <option value="1st Year">1st Year</option>
+                                        <option value="2nd Year">2nd Year</option>
+                                        <option value="3rd Year" selected>3rd Year</option>
+                                        <option value="4th Year">4th Year</option>
+                                    </select>
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="adminClassDepartment">Department *</label>
+                                    <select id="adminClassDepartment" required>
+                                        <option value="Computer Science" selected>Computer Science & Eng</option>
+                                        <option value="Information Technology">Information Technology</option>
+                                        <option value="Electronics & Communication">Electronics & Comm.</option>
+                                        <option value="Mechanical Engineering">Mechanical Engineering</option>
+                                        <option value="Civil Engineering">Civil Engineering</option>
+                                    </select>
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="adminClassSpec">Specialization *</label>
+                                    <select id="adminClassSpec" required>
+                                        <option value="All Specializations">All Specializations</option>
+                                        <option value="General CSE">General CSE</option>
+                                        <option value="Artificial Intelligence and Machine Learning" selected>AI & Machine Learning (AI & ML)</option>
+                                        <option value="Data Science">Data Science</option>
+                                        <option value="Cyber Security">Cyber Security</option>
+                                        <option value="Cloud Computing">Cloud Computing</option>
+                                        <option value="Software Engineering">Software Engineering</option>
+                                    </select>
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="adminClassSection">Section</label>
+                                    <select id="adminClassSection">
+                                        <option value="Section A" selected>Section A</option>
+                                        <option value="Section B">Section B</option>
+                                        <option value="Section C">Section C</option>
+                                        <option value="All Sections">All Sections</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="form-row" style="background: #f8fafc; padding: 12px; border-radius: var(--radius-sm); border: 1px solid var(--border-color); margin-bottom: 1rem;">
+                                <div class="form-group">
+                                    <label for="adminClassBlock">Classroom Block *</label>
+                                    <select id="adminClassBlock" required>
+                                        <option value="A Block" selected>A Block</option>
+                                        <option value="B Block">B Block</option>
+                                        <option value="C Block">C Block</option>
+                                        <option value="Main Academic Block">Main Academic Block</option>
+                                        <option value="Science Block">Science Block</option>
+                                    </select>
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="adminClassFloor">Floor *</label>
+                                    <select id="adminClassFloor" required>
+                                        <option value="Ground Floor">Ground Floor</option>
+                                        <option value="1st Floor">1st Floor</option>
+                                        <option value="2nd Floor" selected>2nd Floor</option>
+                                        <option value="3rd Floor">3rd Floor</option>
+                                        <option value="4th Floor">4th Floor</option>
+                                    </select>
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="adminClassRoom">Room Number *</label>
+                                    <input type="text" id="adminClassRoom" placeholder="e.g., A-201 or Lab-03" value="A-201" required>
+                                </div>
+                            </div>
+
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="adminClassDate">Class Date *</label>
+                                    <input type="date" id="adminClassDate" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="adminClassStartTime">Start Time *</label>
+                                    <input type="text" id="adminClassStartTime" placeholder="e.g., 10:00 AM" value="10:00 AM" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="adminClassEndTime">End Time *</label>
+                                    <input type="text" id="adminClassEndTime" placeholder="e.g., 11:00 AM" value="11:00 AM" required>
+                                </div>
+                            </div>
+
+                            <div style="margin-top: 1rem;">
+                                <button type="submit" id="adminCreateClassBtn" class="btn btn-primary">
+                                    📅 Publish Class Schedule & Notify Users
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- Filter Controls -->
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 8px;">
+                        <h3 style="font-size: 1.1rem; color: var(--dark); margin: 0;">Master Class Schedules & Venues</h3>
+                        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                            <select id="adminFilterYear" onchange="filterAdminClasses()" style="padding: 4px 8px; font-size: 0.85rem; border-radius: var(--radius-sm); border: 1px solid var(--border-color);">
+                                <option value="All Years" selected>All Years</option>
+                                <option value="1st Year">1st Year</option>
+                                <option value="2nd Year">2nd Year</option>
+                                <option value="3rd Year">3rd Year</option>
+                                <option value="4th Year">4th Year</option>
+                            </select>
+
+                            <select id="adminFilterStatus" onchange="filterAdminClasses()" style="padding: 4px 8px; font-size: 0.85rem; border-radius: var(--radius-sm); border: 1px solid var(--border-color);">
+                                <option value="All" selected>All Statuses</option>
+                                <option value="Scheduled">🟢 Scheduled</option>
+                                <option value="Cancelled">❌ Cancelled</option>
+                                <option value="Rescheduled">🔄 Rescheduled</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Master Table -->
+                    <div style="overflow-x: auto; border: 1px solid var(--border-color); border-radius: var(--radius-sm);">
+                        <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 0.875rem;">
+                            <thead style="background: #f8fafc; border-bottom: 1px solid var(--border-color);">
+                                <tr>
+                                    <th style="padding: 10px 14px;">Subject & Code</th>
+                                    <th style="padding: 10px 14px;">Faculty</th>
+                                    <th style="padding: 10px 14px;">Target Cohort</th>
+                                    <th style="padding: 10px 14px;">Date & Time</th>
+                                    <th style="padding: 10px 14px;">Classroom Location / Venue</th>
+                                    <th style="padding: 10px 14px; text-align: center;">Status</th>
+                                    <th style="padding: 10px 14px; text-align: center;">Admin Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="adminClassTableBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <!-- ================================================================= -->
+        <!-- VIEW B: FACULTY DASHBOARD VIEW (Shown only if role === 'faculty')  -->
         <!-- ================================================================= -->
         <div id="facultyDashboardView" style="display: none;">
             
+            <!-- SECTION F0: MY CLASS SCHEDULE & VENUES -->
+            <section class="section-card" id="facultyScheduleSection">
+                <div class="section-header">
+                    <h2>🏫 My Assigned Class Schedule & Venues</h2>
+                    <span class="badge-count" id="facultyClassCountBadge">0 Classes</span>
+                </div>
+                <div class="section-body">
+                    <div id="facultyScheduleGrid" class="cards-grid"></div>
+                </div>
+            </section>
+
             <!-- SECTION F1: DIRECT STUDENT ADDITION & DIRECTORY -->
             <section class="section-card" id="studentDirectorySection">
                 <div class="section-header">
@@ -716,10 +958,21 @@
         </div>
 
         <!-- ================================================================= -->
-        <!-- VIEW B: STUDENT DASHBOARD VIEW (Shown only if role === 'student')  -->
+        <!-- VIEW C: STUDENT DASHBOARD VIEW (Shown only if role === 'student')  -->
         <!-- ================================================================= -->
         <div id="studentDashboardView" style="display: none;">
             
+            <!-- SECTION S0: MY CLASS SCHEDULE & VENUES -->
+            <section class="section-card" id="studentScheduleSection">
+                <div class="section-header">
+                    <h2>🏫 My Classes & Live Classroom Venues</h2>
+                    <span class="badge-count" id="studentClassCountBadge">0 Classes</span>
+                </div>
+                <div class="section-body">
+                    <div id="studentScheduleGrid" class="cards-grid"></div>
+                </div>
+            </section>
+
             <!-- SECTION S1: TARGETED ANNOUNCEMENTS -->
             <section class="section-card">
                 <div class="section-header">
@@ -807,7 +1060,7 @@
         </div>
 
         <!-- ================================================================= -->
-        <!-- VIEW C: DIRECT MESSAGING & CHAT (Available for all authenticated)  -->
+        <!-- VIEW D: DIRECT MESSAGING & CHAT (Available for all authenticated)  -->
         <!-- ================================================================= -->
         <section class="section-card" id="chatSection">
             <div class="section-header">
@@ -863,10 +1116,153 @@
 
     </main>
 
+    <!-- ================= MODAL: UPDATE CLASSROOM VENUE ================= -->
+    <div id="updateClassVenueModal" class="app-modal-overlay">
+        <div class="app-modal-container">
+            <div class="app-modal-header">
+                <h3 style="margin: 0; font-size: 1.1rem; color: #fff;">🏛️ Update Classroom Venue</h3>
+                <button type="button" onclick="closeUpdateVenueModal()" class="btn btn-sm btn-outline" style="color: #fff; border-color: #475569;">✕</button>
+            </div>
+            <div class="app-modal-body">
+                <form id="updateVenueForm" onsubmit="submitUpdateClassVenue(event)">
+                    <input type="hidden" id="updateVenueClassId">
+                    <p style="font-size: 0.875rem; color: var(--text-muted); margin-bottom: 12px;">
+                        Subject: <strong id="updateVenueSubjectName" style="color: var(--dark);"></strong>
+                    </p>
+
+                    <div class="form-group">
+                        <label for="updateVenueBlock">Block *</label>
+                        <select id="updateVenueBlock" required>
+                            <option value="A Block">A Block</option>
+                            <option value="B Block">B Block</option>
+                            <option value="C Block">C Block</option>
+                            <option value="Main Academic Block">Main Academic Block</option>
+                            <option value="Science Block">Science Block</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="updateVenueFloor">Floor *</label>
+                        <select id="updateVenueFloor" required>
+                            <option value="Ground Floor">Ground Floor</option>
+                            <option value="1st Floor">1st Floor</option>
+                            <option value="2nd Floor">2nd Floor</option>
+                            <option value="3rd Floor">3rd Floor</option>
+                            <option value="4th Floor">4th Floor</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="updateVenueRoom">Room Number *</label>
+                        <input type="text" id="updateVenueRoom" placeholder="e.g., B-105 or Lab-02" required>
+                    </div>
+
+                    <div style="margin-top: 1.25rem; display: flex; justify-content: flex-end; gap: 8px;">
+                        <button type="button" onclick="closeUpdateVenueModal()" class="btn btn-outline">Cancel</button>
+                        <button type="submit" id="submitVenueBtn" class="btn btn-primary">💾 Save New Venue & Notify</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= MODAL: CANCEL CLASS ================= -->
+    <div id="cancelClassModal" class="app-modal-overlay">
+        <div class="app-modal-container">
+            <div class="app-modal-header" style="background: #991b1b;">
+                <h3 style="margin: 0; font-size: 1.1rem; color: #fff;">❌ Cancel Class Lecture</h3>
+                <button type="button" onclick="closeCancelClassModal()" class="btn btn-sm btn-outline" style="color: #fff; border-color: #f87171;">✕</button>
+            </div>
+            <div class="app-modal-body">
+                <form id="cancelClassForm" onsubmit="submitCancelClass(event)">
+                    <input type="hidden" id="cancelClassId">
+                    <p style="font-size: 0.875rem; color: var(--text-muted); margin-bottom: 8px;">
+                        Subject: <strong id="cancelClassSubjectName" style="color: var(--dark);"></strong>
+                    </p>
+                    <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 14px;" id="cancelClassDateTime"></p>
+
+                    <div class="form-group">
+                        <label for="cancelClassReason">Reason for Class Cancellation *</label>
+                        <textarea id="cancelClassReason" rows="3" placeholder="e.g., Faculty unavailable due to an emergency / Campus event scheduled" required></textarea>
+                    </div>
+
+                    <div style="margin-top: 1.25rem; display: flex; justify-content: flex-end; gap: 8px;">
+                        <button type="button" onclick="closeCancelClassModal()" class="btn btn-outline">Keep Scheduled</button>
+                        <button type="submit" id="submitCancelBtn" class="btn btn-primary" style="background: #dc2626; border-color: #dc2626;">❌ Confirm Cancellation</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= MODAL: RESCHEDULE CLASS ================= -->
+    <div id="rescheduleClassModal" class="app-modal-overlay">
+        <div class="app-modal-container">
+            <div class="app-modal-header" style="background: #92400e;">
+                <h3 style="margin: 0; font-size: 1.1rem; color: #fff;">🔄 Reschedule Class</h3>
+                <button type="button" onclick="closeRescheduleClassModal()" class="btn btn-sm btn-outline" style="color: #fff; border-color: #fcd34d;">✕</button>
+            </div>
+            <div class="app-modal-body">
+                <form id="rescheduleClassForm" onsubmit="submitRescheduleClass(event)">
+                    <input type="hidden" id="rescheduleClassId">
+                    <p style="font-size: 0.875rem; color: var(--text-muted); margin-bottom: 8px;">
+                        Subject: <strong id="rescheduleClassSubjectName" style="color: var(--dark);"></strong>
+                    </p>
+                    <p style="font-size: 0.85rem; color: #92400e; margin-bottom: 14px; background: #fffbeb; padding: 6px 10px; border-radius: 4px;" id="rescheduleCurrentSchedule"></p>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="rescheduleDate">New Date *</label>
+                            <input type="date" id="rescheduleDate" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="rescheduleStartTime">New Start Time *</label>
+                            <input type="text" id="rescheduleStartTime" placeholder="e.g., 02:00 PM" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="rescheduleEndTime">New End Time *</label>
+                            <input type="text" id="rescheduleEndTime" placeholder="e.g., 03:00 PM" required>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="rescheduleBlock">Block</label>
+                            <select id="rescheduleBlock">
+                                <option value="A Block">A Block</option>
+                                <option value="B Block" selected>B Block</option>
+                                <option value="C Block">C Block</option>
+                                <option value="Main Academic Block">Main Academic Block</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="rescheduleFloor">Floor</label>
+                            <select id="rescheduleFloor">
+                                <option value="Ground Floor">Ground Floor</option>
+                                <option value="1st Floor" selected>1st Floor</option>
+                                <option value="2nd Floor">2nd Floor</option>
+                                <option value="3rd Floor">3rd Floor</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="rescheduleRoom">Room Number</label>
+                            <input type="text" id="rescheduleRoom" placeholder="e.g., B-105" value="B-105" required>
+                        </div>
+                    </div>
+
+                    <div style="margin-top: 1.25rem; display: flex; justify-content: flex-end; gap: 8px;">
+                        <button type="button" onclick="closeRescheduleClassModal()" class="btn btn-outline">Cancel</button>
+                        <button type="submit" id="submitRescheduleBtn" class="btn btn-primary" style="background: #d97706; border-color: #d97706;">🔄 Save Reschedule & Notify</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
     <!-- ================= MODAL: INTERACTIVE EXAM PAPER VIEWER ================= -->
-    <div id="examPaperModal" class="paper-modal-overlay">
-        <div class="paper-modal-container">
-            <div class="paper-modal-header">
+    <div id="examPaperModal" class="app-modal-overlay">
+        <div class="app-modal-container" style="max-width: 860px;">
+            <div class="app-modal-header">
                 <div>
                     <h3 style="margin: 0; font-size: 1.15rem; color: #fff;" id="modalPaperTitle">Examination Question Paper</h3>
                     <span style="font-size: 0.8rem; color: #94a3b8;" id="modalPaperMeta">Semester Exam</span>
@@ -877,7 +1273,7 @@
                 </div>
             </div>
 
-            <div class="paper-modal-body">
+            <div class="app-modal-body" style="background: #f8fafc;">
                 <div class="exam-sheet" id="printableExamSheet">
                     <!-- Dynamic Exam Sheet Content Rendered via JS -->
                 </div>
