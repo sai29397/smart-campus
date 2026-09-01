@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Smart Campus</title>
+    <!-- Connect CSS -->
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .quick-role-buttons {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            margin-bottom: 1.5rem;
+        }
+        .quick-role-btn {
+            background: #f1f5f9;
+            border: 1.5px solid var(--border-color);
+            padding: 8px 4px;
+            border-radius: var(--radius-sm);
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: var(--text-main);
+            cursor: pointer;
+            transition: var(--transition);
+            text-align: center;
+        }
+        .quick-role-btn:hover, .quick-role-btn.active {
+            background: var(--primary-light);
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+    </style>
+</head>
+<body class="auth-page">
+
+    <div class="auth-card">
+        <div class="auth-header">
+            <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">🎓</div>
+            <h2>Sign in to SmartCampus</h2>
+            <p>Select your user role to enter your dedicated portal</p>
+        </div>
+
+        <!-- 1-Click Quick Role Switchers -->
+        <label style="font-size: 0.8rem; font-weight: 700; color: var(--text-muted); margin-bottom: 6px; display: block;">
+            QUICK ROLE DEMO LOGIN:
+        </label>
+        <div class="quick-role-buttons">
+            <button type="button" class="quick-role-btn active" onclick="quickSelectRole('faculty')">👨‍🏫 Faculty</button>
+            <button type="button" class="quick-role-btn" onclick="quickSelectRole('student')">👨‍🎓 Student</button>
+            <button type="button" class="quick-role-btn" onclick="quickSelectRole('admin')">🏛️ Admin</button>
+        </div>
+
+        <form id="loginForm">
+            <div class="form-group">
+                <label for="role">Selected Role *</label>
+                <select id="role" required>
+                    <option value="faculty" selected>Faculty Member</option>
+                    <option value="student">Student</option>
+                    <option value="admin">Administrator</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="email">Campus Email Address *</label>
+                <input 
+                    type="email" 
+                    id="email" 
+                    placeholder="e.g., faculty@campus.edu" 
+                    value="faculty@campus.edu"
+                    required
+                >
+            </div>
+
+            <div class="form-group">
+                <label for="password">Password *</label>
+                <input 
+                    type="password" 
+                    id="password" 
+                    placeholder="Enter your password" 
+                    value="faculty123"
+                    required
+                >
+            </div>
+
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; font-size: 0.875rem;">
+                <label style="display: flex; align-items: center; gap: 6px; cursor: pointer;">
+                    <input type="checkbox" id="rememberMe" checked> Remember me
+                </label>
+                <a href="#">Forgot password?</a>
+            </div>
+
+            <button type="submit" class="btn btn-primary" style="width: 100%;">
+                🔐 Login to Portal
+            </button>
+        </form>
+
+        <div class="auth-footer">
+            <p>Need a new user account? <a href="register.html">Register here</a></p>
+            <p style="margin-top: 0.5rem;"><a href="index.html">← Back to Homepage</a></p>
+        </div>
+    </div>
+
+    <!-- Connect JS -->
+    <script src="js/auth.js"></script>
+</body>
+</html>

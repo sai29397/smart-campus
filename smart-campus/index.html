@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Campus Communication Platform</title>
+    <!-- Connect CSS -->
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .hero-banner {
+            padding: 5rem 5%;
+            background: radial-gradient(circle at top right, #eff6ff 0%, #ffffff 70%);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 3rem;
+            min-height: 75vh;
+        }
+        .hero-text {
+            flex: 1;
+            max-width: 620px;
+        }
+        .hero-text h1 {
+            font-size: 3.2rem;
+            font-weight: 800;
+            line-height: 1.15;
+            color: var(--dark);
+            margin-bottom: 1.5rem;
+        }
+        .hero-text h1 span {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .hero-text p {
+            font-size: 1.15rem;
+            color: var(--text-muted);
+            margin-bottom: 2rem;
+            line-height: 1.7;
+        }
+        .hero-buttons {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+        .hero-visual {
+            flex: 1;
+            max-width: 520px;
+        }
+        .feature-grid-section {
+            padding: 4.5rem 5%;
+            max-width: 1300px;
+            margin: auto;
+        }
+        .section-intro {
+            text-align: center;
+            max-width: 700px;
+            margin: 0 auto 3rem auto;
+        }
+        .section-intro h2 {
+            font-size: 2.25rem;
+            font-weight: 800;
+            color: var(--dark);
+            margin-bottom: 0.75rem;
+        }
+        .section-intro p {
+            color: var(--text-muted);
+            font-size: 1.05rem;
+        }
+        .role-cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+        }
+        .role-card {
+            background: white;
+            border-radius: var(--radius-lg);
+            padding: 2.5rem;
+            border: 1px solid var(--border-color);
+            box-shadow: var(--shadow-md);
+            transition: var(--transition);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+        .role-card:hover {
+            transform: translateY(-6px);
+            box-shadow: var(--shadow-xl);
+            border-color: var(--primary);
+        }
+        .role-icon {
+            font-size: 2.5rem;
+            margin-bottom: 1.25rem;
+        }
+        .role-card h3 {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: var(--dark);
+            margin-bottom: 0.75rem;
+        }
+        .role-card p {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            margin-bottom: 1.75rem;
+            line-height: 1.6;
+        }
+        .features-showcase {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 1.5rem;
+        }
+        .feature-box {
+            background: white;
+            padding: 1.75rem;
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border-color);
+            box-shadow: var(--shadow-sm);
+        }
+        .feature-box h4 {
+            font-size: 1.15rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: var(--dark);
+        }
+        .feature-box p {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            line-height: 1.6;
+        }
+        footer {
+            background: var(--dark);
+            color: white;
+            padding: 3rem 5% 2rem 5%;
+            text-align: center;
+            border-top: 1px solid var(--dark-surface);
+        }
+        footer p {
+            color: var(--text-light);
+            font-size: 0.9rem;
+        }
+        @media (max-width: 900px) {
+            .hero-banner {
+                flex-direction: column;
+                text-align: center;
+                padding: 3rem 5%;
+            }
+            .hero-buttons {
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ================= NAVBAR ================= -->
+    <nav class="navbar">
+        <a href="index.html" class="nav-brand">
+            <div class="brand-icon">🎓</div>
+            <span>SmartCampus</span>
+        </a>
+
+        <div class="nav-links">
+            <a href="index.html" class="active">Home</a>
+            <a href="#features">Features</a>
+            <a href="#portals">Portals</a>
+            <a href="faculty-dashboard.html">Faculty Portal</a>
+            <a href="student-dashboard.html">Student Portal</a>
+            <a href="login.html" class="btn btn-outline btn-sm">Sign In</a>
+            <a href="register.html" class="btn btn-primary btn-sm">Register</a>
+        </div>
+    </nav>
+
+    <!-- ================= HERO SECTION ================= -->
+    <section class="hero-banner">
+        <div class="hero-text">
+            <span class="meta-chip chip-primary" style="margin-bottom: 1rem; display: inline-block; font-size: 0.85rem; padding: 6px 12px;">
+                🚀 Next-Generation Campus Communication
+            </span>
+            <h1>Unified Campus Communication for <span>Smarter Learning</span></h1>
+            <p>
+                Seamlessly bridge the gap between Students, Faculty, and Campus Administration. Real-time announcements, instant academic course updates, and centralized department management.
+            </p>
+            <div class="hero-buttons">
+                <a href="faculty-dashboard.html" class="btn btn-primary">👨‍🏫 Faculty Dashboard →</a>
+                <a href="student-dashboard.html" class="btn btn-outline">👨‍🎓 Student Portal</a>
+            </div>
+        </div>
+
+        <div class="hero-visual">
+            <div class="section-card" style="margin-bottom: 0; box-shadow: var(--shadow-xl);">
+                <div class="section-header">
+                    <h2>🔔 Live Campus Feed</h2>
+                    <span class="badge-count">Live</span>
+                </div>
+                <div class="section-body">
+                    <div class="item-card" style="margin-bottom: 1rem;">
+                        <div class="item-header">
+                            <h4 class="item-title">📢 Mid-Term Exam Schedule</h4>
+                            <span class="meta-chip chip-high">Urgent</span>
+                        </div>
+                        <p class="item-desc">CS501 & CS502 examination timetable published.</p>
+                        <div class="item-footer">
+                            <span>🏛️ Computer Science</span>
+                            <span>🕒 Today</span>
+                        </div>
+                    </div>
+                    <div class="item-card">
+                        <div class="item-header">
+                            <h4 class="item-title">📚 Hackathon 2026 Registration</h4>
+                            <span class="meta-chip chip-medium">Important</span>
+                        </div>
+                        <p class="item-desc">Annual intra-college hackathon registrations are open.</p>
+                        <div class="item-footer">
+                            <span>🏛️ Campus Wide</span>
+                            <span>🕒 Yesterday</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ================= FEATURES SECTION ================= -->
+    <section class="feature-grid-section" id="features" style="background: #f1f5f9; border-radius: var(--radius-lg); margin-top: 2rem;">
+        <div class="section-intro">
+            <h2>Platform Capabilities</h2>
+            <p>Engineered for high availability, security, and seamless academic coordination.</p>
+        </div>
+
+        <div class="features-showcase">
+            <div class="feature-box">
+                <div style="font-size: 2rem; margin-bottom: 0.5rem;">📢</div>
+                <h4>Targeted Announcements</h4>
+                <p>Broadcast notices filtered by department, academic year, and urgency levels in real time.</p>
+            </div>
+            <div class="feature-box">
+                <div style="font-size: 2rem; margin-bottom: 0.5rem;">📚</div>
+                <h4>Academic Management</h4>
+                <p>Faculty can allocate subjects, syllabus details, and course codes synced via RESTful APIs.</p>
+            </div>
+            <div class="feature-box">
+                <div style="font-size: 2rem; margin-bottom: 0.5rem;">🔒</div>
+                <h4>Role-Based Access</h4>
+                <p>Strict access boundaries ensuring Faculty, Students, and Administrators access only permitted tasks.</p>
+            </div>
+            <div class="feature-box">
+                <div style="font-size: 2rem; margin-bottom: 0.5rem;">⚡</div>
+                <h4>Instant Live Sync</h4>
+                <p>Connected directly to Express Backend on Port 3000 with CORS and MongoDB persistence.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- ================= PORTALS SECTION ================= -->
+    <section class="feature-grid-section" id="portals">
+        <div class="section-intro">
+            <h2>Choose Your Dedicated Portal</h2>
+            <p>Select your user profile to enter the customized dashboard.</p>
+        </div>
+
+        <div class="role-cards-grid">
+            <!-- Faculty Portal -->
+            <div class="role-card" style="border: 2px solid var(--primary);">
+                <div>
+                    <span class="meta-chip chip-primary" style="margin-bottom: 0.5rem; display: inline-block;">Primary</span>
+                    <div class="role-icon">👨‍🏫</div>
+                    <h3>Faculty Portal</h3>
+                    <p>Broadcast targeted announcements, manage academic subject details, and configure department curriculum directly.</p>
+                </div>
+                <a href="faculty-dashboard.html" class="btn btn-primary">Open Faculty Dashboard →</a>
+            </div>
+
+            <!-- Student Portal -->
+            <div class="role-card">
+                <div>
+                    <div class="role-icon">👨‍🎓</div>
+                    <h3>Student Portal</h3>
+                    <p>Access department announcements, view allocated subjects, track semester schedules, and receive instant exam alerts.</p>
+                </div>
+                <a href="student-dashboard.html" class="btn btn-outline">Open Student Portal →</a>
+            </div>
+
+            <!-- Admin Portal -->
+            <div class="role-card">
+                <div>
+                    <div class="role-icon">🏛️</div>
+                    <h3>Admin Portal</h3>
+                    <p>Campus-wide announcements, complete user management, department analytics, and security alert controls.</p>
+                </div>
+                <a href="admin-dashboard.html" class="btn btn-outline">Open Admin Portal →</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- ================= FOOTER ================= -->
+    <footer>
+        <p>© 2026 Smart Campus Communication Platform. All rights reserved.</p>
+    </footer>
+
+    <!-- Master Scripts -->
+    <script src="js/script.js"></script>
+</body>
+</html>

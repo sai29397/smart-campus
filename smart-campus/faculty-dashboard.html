@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Faculty Dashboard - Smart Campus</title>
+    <!-- Connect CSS -->
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+    <!-- ================= TOP NAVIGATION ================= -->
+    <nav class="navbar">
+        <a href="index.html" class="nav-brand">
+            <div class="brand-icon">🎓</div>
+            <span>SmartCampus</span>
+        </a>
+
+        <div class="nav-links">
+            <a href="index.html">Home</a>
+            <a href="student-dashboard.html">Student Portal</a>
+            <a href="faculty-dashboard.html" class="active">Faculty Dashboard</a>
+            <a href="admin-dashboard.html">Admin Portal</a>
+            
+            <div class="user-profile-badge">
+                <div class="user-avatar">👨‍🏫</div>
+                <div>
+                    <span class="user-info" id="facultyName">Dr. Sarah Jenkins</span>
+                    <span class="user-role-tag">Faculty Member</span>
+                </div>
+            </div>
+
+            <a href="login.html" class="btn btn-outline btn-sm" id="logoutBtn">Logout</a>
+        </div>
+    </nav>
+
+    <!-- ================= MAIN DASHBOARD CONTAINER ================= -->
+    <main class="dashboard-wrapper">
+
+        <!-- Page Header -->
+        <div class="page-header">
+            <div class="page-title">
+                <h1>Faculty Management Dashboard</h1>
+                <p>Post targeted department announcements and manage academic subject allocations.</p>
+            </div>
+            <div>
+                <a href="#academicSection" class="btn btn-primary btn-sm">+ Add Academic Details</a>
+            </div>
+        </div>
+
+        <!-- Quick Summary Stats -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-info">
+                    <h3>Active Announcements</h3>
+                    <div class="stat-number" id="announcementCount">0</div>
+                </div>
+                <div class="stat-icon-wrapper stat-icon-blue">📢</div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-info">
+                    <h3>Allocated Subjects</h3>
+                    <div class="stat-number" id="academicCount">0</div>
+                </div>
+                <div class="stat-icon-wrapper stat-icon-emerald">📚</div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-info">
+                    <h3>Department</h3>
+                    <div class="stat-number" style="font-size: 1.2rem; margin-top: 6px;">Computer Science</div>
+                </div>
+                <div class="stat-icon-wrapper stat-icon-purple">🏛️</div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-info">
+                    <h3>Semester Status</h3>
+                    <div class="stat-number" style="font-size: 1.2rem; margin-top: 6px; color: var(--success);">Active (2026)</div>
+                </div>
+                <div class="stat-icon-wrapper stat-icon-amber">📅</div>
+            </div>
+        </div>
+
+        <!-- ================= SECTION 1: ANNOUNCEMENTS ================= -->
+        <section class="section-card" id="announcementSection">
+            <div class="section-header">
+                <h2>📢 Create & Manage Announcements</h2>
+            </div>
+            <div class="section-body">
+                <!-- Announcement Form (Strictly Single Form) -->
+                <form id="announcementForm">
+                    <div class="form-group">
+                        <label for="announcementTitle">Announcement Title *</label>
+                        <input 
+                            type="text" 
+                            id="announcementTitle" 
+                            placeholder="e.g., Mid-Term Examination Schedule Released" 
+                            required
+                        >
+                    </div>
+
+                    <div class="form-group">
+                        <label for="announcementDescription">Announcement Description *</label>
+                        <textarea 
+                            id="announcementDescription" 
+                            rows="4" 
+                            placeholder="Provide the complete announcement details, instructions, or deadlines..." 
+                            required
+                        ></textarea>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="department">Target Department *</label>
+                            <select id="department" required>
+                                <option value="All Departments">All Departments</option>
+                                <option value="Computer Science">Computer Science & Eng</option>
+                                <option value="Information Technology">Information Technology</option>
+                                <option value="Electronics & Communication">Electronics & Comm.</option>
+                                <option value="Mechanical Engineering">Mechanical Engineering</option>
+                                <option value="Civil Engineering">Civil Engineering</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="year">Target Academic Year *</label>
+                            <select id="year" required>
+                                <option value="All Years">All Years</option>
+                                <option value="1st Year">1st Year</option>
+                                <option value="2nd Year">2nd Year</option>
+                                <option value="3rd Year">3rd Year</option>
+                                <option value="4th Year">4th Year</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="priority">Priority Level *</label>
+                            <select id="priority" required>
+                                <option value="Normal">Normal</option>
+                                <option value="Important">Important</option>
+                                <option value="Urgent">Urgent</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div style="margin-top: 1rem;">
+                        <button type="submit" class="btn btn-primary">
+                            📢 Publish Announcement
+                        </button>
+                    </div>
+                </form>
+
+                <hr style="margin: 2rem 0; border: none; border-top: 1px solid var(--border-color);">
+
+                <!-- Published Announcements List -->
+                <h3 style="font-size: 1.1rem; color: var(--dark); margin-bottom: 1rem;">
+                    Published Announcements
+                </h3>
+                <div id="announcementList" class="cards-grid">
+                    <!-- Dynamic Announcements rendered by JS -->
+                </div>
+            </div>
+        </section>
+
+        <!-- ================= SECTION 2: ACADEMIC DETAILS ================= -->
+        <!-- Academic Details section is completely outside and after the announcement section -->
+        <section class="section-card" id="academicSection">
+            <div class="section-header">
+                <h2>📚 Academic Details & Subject Allocation</h2>
+            </div>
+            <div class="section-body">
+                <!-- Academic Form (Strictly Single Form, NOT nested) -->
+                <form id="academicForm">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="subjectName">Subject Name *</label>
+                            <input 
+                                type="text" 
+                                id="subjectName" 
+                                placeholder="e.g., Data Structures & Algorithms" 
+                                required
+                            >
+                        </div>
+
+                        <div class="form-group">
+                            <label for="subjectCode">Subject Code *</label>
+                            <input 
+                                type="text" 
+                                id="subjectCode" 
+                                placeholder="e.g., CS501" 
+                                required
+                            >
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="semester">Semester *</label>
+                            <select id="semester" required>
+                                <option value="">Select Semester</option>
+                                <option value="Semester 1">Semester 1</option>
+                                <option value="Semester 2">Semester 2</option>
+                                <option value="Semester 3">Semester 3</option>
+                                <option value="Semester 4">Semester 4</option>
+                                <option value="Semester 5" selected>Semester 5</option>
+                                <option value="Semester 6">Semester 6</option>
+                                <option value="Semester 7">Semester 7</option>
+                                <option value="Semester 8">Semester 8</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="academicDepartment">Department *</label>
+                            <select id="academicDepartment" required>
+                                <option value="Computer Science" selected>Computer Science & Eng</option>
+                                <option value="Information Technology">Information Technology</option>
+                                <option value="Electronics & Communication">Electronics & Comm.</option>
+                                <option value="Mechanical Engineering">Mechanical Engineering</option>
+                                <option value="Civil Engineering">Civil Engineering</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="academicYear">Academic Year *</label>
+                            <select id="academicYear" required>
+                                <option value="1st Year">1st Year</option>
+                                <option value="2nd Year">2nd Year</option>
+                                <option value="3rd Year" selected>3rd Year</option>
+                                <option value="4th Year">4th Year</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div style="margin-top: 1rem;">
+                        <button type="submit" class="btn btn-primary">
+                            💾 Save Academic Details
+                        </button>
+                    </div>
+                </form>
+
+                <hr style="margin: 2rem 0; border: none; border-top: 1px solid var(--border-color);">
+
+                <!-- Academic Details List -->
+                <h3 style="font-size: 1.1rem; color: var(--dark); margin-bottom: 1rem;">
+                    Allocated Academic Subjects
+                </h3>
+                <div id="academicList" class="cards-grid">
+                    <!-- Dynamic Academic items loaded via GET /api/academic -->
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Connect JavaScript (Loaded only once at the bottom) -->
+    <script src="js/faculty.js"></script>
+</body>
+</html>

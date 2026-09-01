@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register - Smart Campus</title>
+    <!-- Connect CSS -->
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="auth-page">
+
+    <div class="auth-card" style="max-width: 540px;">
+        <div class="auth-header">
+            <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">🎓</div>
+            <h2>Create Your Account</h2>
+            <p>Join the unified Smart Campus communication platform</p>
+        </div>
+
+        <form id="registerForm">
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="regRole">Role *</label>
+                    <select id="regRole" required>
+                        <option value="student">Student</option>
+                        <option value="faculty">Faculty Member</option>
+                        <option value="admin">Administrator</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="regName">Full Name *</label>
+                    <input 
+                        type="text" 
+                        id="regName" 
+                        placeholder="e.g., Dr. Sarah Jenkins" 
+                        required
+                    >
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="regEmail">Campus Email *</label>
+                <input 
+                    type="email" 
+                    id="regEmail" 
+                    placeholder="e.g., username@campus.edu" 
+                    required
+                >
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="regDepartment">Department</label>
+                    <select id="regDepartment">
+                        <option value="Computer Science">Computer Science & Eng</option>
+                        <option value="Information Technology">Information Technology</option>
+                        <option value="Electronics & Communication">Electronics & Comm.</option>
+                        <option value="Mechanical Engineering">Mechanical Engineering</option>
+                        <option value="Civil Engineering">Civil Engineering</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="regYear">Academic Year</label>
+                    <select id="regYear">
+                        <option value="1st Year">1st Year</option>
+                        <option value="2nd Year">2nd Year</option>
+                        <option value="3rd Year">3rd Year</option>
+                        <option value="4th Year">4th Year</option>
+                        <option value="Faculty/Staff">Faculty/Staff</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="regPassword">Password *</label>
+                    <input 
+                        type="password" 
+                        id="regPassword" 
+                        placeholder="At least 4 characters" 
+                        required
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label for="regConfirmPassword">Confirm Password *</label>
+                    <input 
+                        type="password" 
+                        id="regConfirmPassword" 
+                        placeholder="Re-enter password" 
+                        required
+                    >
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 0.5rem;">
+                ✨ Complete Registration
+            </button>
+        </form>
+
+        <div class="auth-footer">
+            <p>Already have an account? <a href="login.html">Sign in here</a></p>
+            <p style="margin-top: 0.5rem;"><a href="index.html">← Back to Homepage</a></p>
+        </div>
+    </div>
+
+    <!-- Connect JS -->
+    <script src="js/auth.js"></script>
+</body>
+</html>

@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Dashboard - Smart Campus</title>
+    <!-- Connect CSS -->
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+    <!-- ================= TOP NAVIGATION ================= -->
+    <nav class="navbar">
+        <a href="index.html" class="nav-brand">
+            <div class="brand-icon">🎓</div>
+            <span>SmartCampus</span>
+        </a>
+
+        <div class="nav-links">
+            <a href="index.html">Home</a>
+            <a href="student-dashboard.html" class="active">Student Portal</a>
+            <a href="faculty-dashboard.html">Faculty Dashboard</a>
+            <a href="admin-dashboard.html">Admin Portal</a>
+            
+            <div class="user-profile-badge">
+                <div class="user-avatar">👨‍🎓</div>
+                <div>
+                    <span class="user-info" id="studentName">Alex Johnson</span>
+                    <span class="user-role-tag">CS • 3rd Year</span>
+                </div>
+            </div>
+
+            <a href="login.html" class="btn btn-outline btn-sm">Logout</a>
+        </div>
+    </nav>
+
+    <!-- ================= MAIN DASHBOARD CONTAINER ================= -->
+    <main class="dashboard-wrapper">
+
+        <!-- Page Header -->
+        <div class="page-header">
+            <div class="page-title">
+                <h1>Welcome Back, <span id="welcomeStudentName">Alex</span>! 👋</h1>
+                <p>Stay updated with department announcements, curriculum subjects, and examination alerts.</p>
+            </div>
+            <div>
+                <button onclick="refreshStudentData()" class="btn btn-outline btn-sm">🔄 Refresh Data</button>
+            </div>
+        </div>
+
+        <!-- Quick Summary Stats -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-info">
+                    <h3>Announcements</h3>
+                    <div class="stat-number" id="studentAnnouncementCount">3</div>
+                </div>
+                <div class="stat-icon-wrapper stat-icon-blue">📢</div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-info">
+                    <h3>Enrolled Subjects</h3>
+                    <div class="stat-number" id="studentSubjectCount">2</div>
+                </div>
+                <div class="stat-icon-wrapper stat-icon-emerald">📚</div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-info">
+                    <h3>Current Semester</h3>
+                    <div class="stat-number" style="font-size: 1.2rem; margin-top: 6px;">Semester 5</div>
+                </div>
+                <div class="stat-icon-wrapper stat-icon-purple">🎯</div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-info">
+                    <h3>Attendance Rate</h3>
+                    <div class="stat-number" style="font-size: 1.2rem; margin-top: 6px; color: var(--success);">94.5%</div>
+                </div>
+                <div class="stat-icon-wrapper stat-icon-amber">📊</div>
+            </div>
+        </div>
+
+        <!-- ================= SECTION 1: ANNOUNCEMENTS ================= -->
+        <section class="section-card">
+            <div class="section-header">
+                <h2>📢 Department & Campus Announcements</h2>
+                <span class="badge-count" id="annCountBadge">3 Updates</span>
+            </div>
+            <div class="section-body">
+                <div id="studentAnnouncementList" class="cards-grid">
+                    <!-- Dynamic Announcements -->
+                </div>
+            </div>
+        </section>
+
+        <!-- ================= SECTION 2: ACADEMIC SUBJECTS ================= -->
+        <section class="section-card">
+            <div class="section-header">
+                <h2>📚 Enrolled Subjects & Faculty (Live API)</h2>
+                <span class="badge-count" id="acadCountBadge">Live from Server</span>
+            </div>
+            <div class="section-body">
+                <div id="studentAcademicList" class="cards-grid">
+                    <!-- Dynamic Subjects loaded via GET /api/academic -->
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Connect JS -->
+    <script src="js/student.js"></script>
+</body>
+</html>
