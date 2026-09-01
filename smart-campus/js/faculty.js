@@ -2,8 +2,13 @@
 // SMART CAMPUS - FACULTY DASHBOARD CONTROLLER (faculty.js)
 // ==========================================================================
 
-// Backend Base URL
-const API_URL = "http://localhost:3000";
+// Base API URL: connects to http://localhost:3000 in local dev, or relative path on deployed Vercel
+const API_URL =
+  window.location.hostname === "localhost" && window.location.port !== "3000"
+    ? "http://localhost:3000"
+    : window.location.protocol === "file:"
+    ? "http://localhost:3000"
+    : "";
 
 // In-memory announcements list for faculty
 let facultyAnnouncements = [
@@ -33,7 +38,6 @@ let facultyAnnouncements = [
 function ensureFacultySession() {
   let userStr = localStorage.getItem("smart_campus_user");
 
-  // If no session exists yet, default to standard Faculty member
   if (!userStr) {
     const defaultFaculty = {
       id: "usr_faculty_1",
@@ -50,9 +54,8 @@ function ensureFacultySession() {
   try {
     const user = JSON.parse(userStr);
 
-    // If logged in as student, guide to student portal
     if (user.role === "student") {
-      alert("Notice: You are currently signed in as a Student. Redirecting you to the Student Portal.");
+      alert("Notice: You are currently signed in as a Student. Redirecting to the Student Portal.");
       window.location.href = "student-dashboard.html";
       return false;
     }
@@ -69,7 +72,7 @@ document.addEventListener("DOMContentLoaded", () => {
   if (!isAllowed) return;
 
   console.log("SmartCampus Faculty Dashboard Initialized");
-  console.log("Connecting to Backend API:", API_URL);
+  console.log("Connecting to Backend API:", API_URL || window.location.origin);
 
   // Initialize faculty profile header
   initializeFacultyProfile();
@@ -160,7 +163,7 @@ async function loadAcademicDetails() {
       <div style="grid-column: 1 / -1; background: #fff5f5; border: 1px solid #fed7d7; border-radius: 8px; padding: 1.5rem; text-align: center;">
         <h4 style="color: #c53030; margin-bottom: 0.5rem;">⚠️ Could not connect to Backend API</h4>
         <p style="color: #742a2a; font-size: 0.9rem; margin-bottom: 1rem;">
-          Make sure backend is running at <strong>${API_URL}</strong> using <code>node server.js</code>
+          Make sure backend server is running using <code>node server.js</code>
         </p>
         <button onclick="loadAcademicDetails()" class="btn btn-outline btn-sm">🔄 Retry Connection</button>
       </div>

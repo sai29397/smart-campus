@@ -2,7 +2,13 @@
 // SMART CAMPUS - STUDENT DASHBOARD CONTROLLER (student.js)
 // ==========================================================================
 
-const API_URL = "http://localhost:3000";
+// Base API URL: connects to http://localhost:3000 in local dev, or relative path on deployed Vercel
+const API_URL =
+  window.location.hostname === "localhost" && window.location.port !== "3000"
+    ? "http://localhost:3000"
+    : window.location.protocol === "file:"
+    ? "http://localhost:3000"
+    : "";
 
 const studentAnnouncements = [
   {
@@ -140,7 +146,7 @@ async function loadStudentAcademics() {
 
   container.innerHTML = `
     <div style="grid-column: 1 / -1; text-align: center; padding: 2rem; color: var(--text-muted);">
-      <p>⏳ Loading subjects from Backend API (${API_URL}/api/academic)...</p>
+      <p>⏳ Loading subjects from Backend API...</p>
     </div>
   `;
 
@@ -195,7 +201,7 @@ async function loadStudentAcademics() {
     container.innerHTML = `
       <div style="grid-column: 1 / -1; background: #fff5f5; border: 1px solid #fed7d7; border-radius: 8px; padding: 1.5rem; text-align: center;">
         <h4 style="color: #c53030;">⚠️ Backend Offline</h4>
-        <p style="color: #742a2a; font-size: 0.9rem;">Start the backend at <strong>http://localhost:3000</strong> using <code>node server.js</code></p>
+        <p style="color: #742a2a; font-size: 0.9rem;">Start the backend server using <code>node server.js</code></p>
       </div>
     `;
   }

@@ -1,0 +1,59 @@
+{
+  "version": 2,
+  "builds": [
+    {
+      "src": "backend/server.js",
+      "use": "@vercel/node"
+    },
+    {
+      "src": "smart-campus/**",
+      "use": "@vercel/static"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/api/(.*)",
+      "dest": "/backend/server.js"
+    },
+    {
+      "src": "/css/(.*)",
+      "dest": "/smart-campus/css/$1"
+    },
+    {
+      "src": "/js/(.*)",
+      "dest": "/smart-campus/js/$1"
+    },
+    {
+      "src": "/images/(.*)",
+      "dest": "/smart-campus/images/$1"
+    },
+    {
+      "src": "/faculty-dashboard.html",
+      "dest": "/smart-campus/faculty-dashboard.html"
+    },
+    {
+      "src": "/student-dashboard.html",
+      "dest": "/smart-campus/student-dashboard.html"
+    },
+    {
+      "src": "/admin-dashboard.html",
+      "dest": "/smart-campus/admin-dashboard.html"
+    },
+    {
+      "src": "/login.html",
+      "dest": "/smart-campus/login.html"
+    },
+    {
+      "src": "/register.html",
+      "dest": "/smart-campus/register.html"
+    },
+    {
+      "src": "/",
+      "dest": "/smart-campus/index.html"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/smart-campus/$1"
+    }
+  ]
+}

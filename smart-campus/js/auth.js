@@ -2,7 +2,13 @@
 // SMART CAMPUS - AUTHENTICATION CONTROLLER (auth.js)
 // ==========================================================================
 
-const API_URL = "http://localhost:3000";
+// Base API URL: connects to http://localhost:3000 in local dev, or relative path on deployed Vercel
+const API_URL =
+  window.location.hostname === "localhost" && window.location.port !== "3000"
+    ? "http://localhost:3000"
+    : window.location.protocol === "file:"
+    ? "http://localhost:3000"
+    : "";
 
 // Preset default demo credentials for easy testing
 const DEMO_CREDENTIALS = {
@@ -118,7 +124,6 @@ function setupLoginForm() {
         localStorage.setItem("smart_campus_token", data.token);
         localStorage.setItem("smart_campus_user", JSON.stringify(data.user));
 
-        // Direct navigation
         redirectToRoleDashboard(data.user.role);
       } else {
         alert(`❌ Login Rejection:\n${data.message || "Invalid credentials or unauthorized role."}`);
