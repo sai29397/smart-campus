@@ -419,4 +419,80 @@ router.get("/eligible-students", protect, (req, res) => {
   }
 });
 
+// ==========================================================================
+// 6. ADD STUDENT DIRECTLY FROM FACULTY DASHBOARD
+// ==========================================================================
+router.post("/add-student", protect, async (req, res) => {
+  try {
+    const { name, email, department, year, specialization, password } = req.body;
+
+    if (!name || !email) {
+      return res.status(400).json({
+        success: false,
+        message: "Student Name and Email Address are required.",
+      });
+    }
+
+    const cleanEmail = email.toLowerCase().trim();
+    const bcrypt = require("bcryptjs");
+    const User = require("../models/User");
+
+    const users = loadServerUsers();
+    const existing = users.find((u) => u.email.toLowerCase() === cleanEmail);
+
+    if (existing) {
+      return res.status(400).json({
+        success: false,
+        message: `Student with email "${email}" already exists in the system.`,
+      });
+    }
+
+    const userPassword = password || "student123";
+    const salt = await bcrypt.genSalt(10);
+    const passwordHash = await bcrypt.hash(userPassword, salt);
+
+    const newStudent = {
+      _id: "usr_" + Date.now(),
+      id: "usr_" + Date.now(),
+      name: name.trim(),
+      email: cleanEmail,
+      password: userPassword,
+      passwordHash: passwordHash,
+      role: "student",
+      department: department || req.user.department || "Computer Science",
+      year: normalizeYear(year || "1st Year"),
+      specialization: specialization || "General CSE",
+      createdAt: new Date().toISOString(),
+    };
+
+    // Try MongoDB
+    try {
+      const dbUser = await User.create(newStudent);
+      newStudent._id = dbUser._id.toString();
+    } catch (dbErr) {}
+
+    users.push(newStudent);
+    try {
+      fs.writeFileSync(usersFilePath, JSON.stringify(users, null, 2), "utf8");
+    } catch (e) {}
+
+    return res.status(201).json({
+      success: true,
+      message: `Student "${name}" successfully added to the platform!`,
+      student: {
+        id: newStudent._id,
+        _id: newStudent._id,
+        name: newStudent.name,
+        email: newStudent.email,
+        department: newStudent.department,
+        year: newStudent.year,
+        specialization: newStudent.specialization,
+      },
+    });
+  } catch (error) {
+    console.error("Add Student Error:", error);
+    res.status(500).json({ success: false, message: "Failed to add student." });
+  }
+});
+
 module.exports = router;

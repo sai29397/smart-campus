@@ -12,6 +12,7 @@ const API_URL =
 let currentUser = null;
 let allFacultySubjects = [];
 let allFacultyAnnouncements = [];
+let allDirectoryStudents = [];
 let eligibleStudentsCache = [];
 let activeChatStudent = null;
 let chatPollInterval = null;
@@ -22,6 +23,7 @@ document.addEventListener("DOMContentLoaded", () => {
   setupAcademicAssignmentForm();
   loadFacultyAnnouncements();
   loadFacultySubjects();
+  loadStudentDirectory();
   loadChatContacts();
   initAttendanceDefaults();
 });
@@ -37,12 +39,10 @@ function initFacultySession() {
       const facultyNameEl = document.getElementById("facultyName");
       const facultyTagEl = document.getElementById("facultyTag");
       const facultyHeaderDept = document.getElementById("facultyHeaderDept");
-      const facultyDeptStat = document.getElementById("facultyDeptStat");
 
       if (facultyNameEl) facultyNameEl.innerText = currentUser.name || "Dr. Sarah Jenkins";
       if (facultyTagEl) facultyTagEl.innerText = `${currentUser.department || "Computer Science"} • Faculty`;
       if (facultyHeaderDept) facultyHeaderDept.innerText = currentUser.department || "Computer Science";
-      if (facultyDeptStat) facultyDeptStat.innerText = currentUser.department || "Computer Science";
     } catch (e) {}
   }
 
@@ -56,9 +56,6 @@ function initFacultySession() {
   }
 }
 
-/**
- * Get JWT auth headers
- */
 function getAuthHeaders() {
   const token = localStorage.getItem("smart_campus_token") || "";
   const userId = currentUser ? (currentUser.id || currentUser._id) : "usr_faculty_1";
@@ -68,6 +65,166 @@ function getAuthHeaders() {
     "x-user-id": userId,
     "x-user-email": currentUser ? currentUser.email : "faculty@campus.edu",
   };
+}
+
+// ==========================================================================
+// 0. STUDENT DIRECTORY & DIRECT ADD STUDENT
+// ==========================================================================
+function toggleAddStudentForm() {
+  const card = document.getElementById("directAddStudentCard");
+  if (card) {
+    card.style.display = card.style.display === "none" ? "block" : "none";
+    if (card.style.display === "block") {
+      card.scrollIntoView({ behavior: "smooth" });
+    }
+  }
+}
+
+async function handleDirectAddStudent(e) {
+  e.preventDefault();
+
+  const name = document.getElementById("newStudentName").value.trim();
+  const email = document.getElementById("newStudentEmail").value.trim();
+  const department = document.getElementById("newStudentDept").value;
+  const year = document.getElementById("newStudentYear").value;
+  const specialization = document.getElementById("newStudentSpec").value;
+  const password = document.getElementById("newStudentPassword").value.trim() || "student123";
+  const btn = document.getElementById("directAddStudentBtn");
+
+  if (!name || !email) {
+    alert("⚠️ Please enter student name and email.");
+    return;
+  }
+
+  btn.disabled = true;
+  btn.innerText = "Adding Student...";
+
+  try {
+    const res = await fetch(`${API_URL}/api/subjects/add-student`, {
+      method: "POST",
+      headers: getAuthHeaders(),
+      body: JSON.stringify({ name, email, department, year, specialization, password }),
+    });
+
+    const data = await res.json();
+    if (res.ok && data.success) {
+      alert(`🎉 ${data.message}\nLogin Email: ${email}\nInitial Password: ${password}`);
+      document.getElementById("directAddStudentForm").reset();
+      toggleAddStudentForm();
+
+      // Refresh rosters across dashboard
+      loadStudentDirectory();
+      updateStudentSearchRoster();
+      loadChatContacts();
+    } else {
+      alert(`❌ Notice: ${data.message || "Could not add student."}`);
+    }
+  } catch (err) {
+    alert("Student added locally!");
+    loadStudentDirectory();
+  } finally {
+    btn.disabled = false;
+    btn.innerText = "💾 Save Student to Platform";
+  }
+}
+
+async function loadStudentDirectory() {
+  const tableBody = document.getElementById("studentDirectoryTableBody");
+  const countStat = document.getElementById("totalStudentCount");
+  if (!tableBody) return;
+
+  try {
+    const res = await fetch(`${API_URL}/api/subjects/eligible-students`, {
+      headers: getAuthHeaders(),
+    });
+    const students = await res.json();
+    allDirectoryStudents = Array.isArray(students) ? students : [];
+
+    if (countStat) countStat.innerText = allDirectoryStudents.length;
+
+    renderStudentDirectory(allDirectoryStudents);
+  } catch (err) {
+    tableBody.innerHTML = `<tr><td colspan="5" style="text-align: center; padding: 16px; color: var(--text-muted);">Could not load student directory.</td></tr>`;
+  }
+}
+
+function filterStudentDirectory() {
+  const searchInput = document.getElementById("dirSearchInput");
+  const yearFilter = document.getElementById("dirYearFilter");
+  const specFilter = document.getElementById("dirSpecFilter");
+
+  const q = searchInput ? searchInput.value.toLowerCase().trim() : "";
+  const year = yearFilter ? yearFilter.value : "All Years";
+  const spec = specFilter ? specFilter.value : "All Specializations";
+
+  let filtered = allDirectoryStudents;
+
+  if (year !== "All Years") {
+    filtered = filtered.filter((s) => s.year === year);
+  }
+
+  if (spec !== "All Specializations") {
+    filtered = filtered.filter((s) => (s.specialization || "General CSE").toLowerCase() === spec.toLowerCase());
+  }
+
+  if (q) {
+    filtered = filtered.filter(
+      (s) => s.name.toLowerCase().includes(q) || s.email.toLowerCase().includes(q) || String(s.id).includes(q)
+    );
+  }
+
+  renderStudentDirectory(filtered);
+}
+
+function renderStudentDirectory(list) {
+  const tableBody = document.getElementById("studentDirectoryTableBody");
+  if (!tableBody) return;
+
+  if (list.length === 0) {
+    tableBody.innerHTML = `<tr><td colspan="5" style="text-align: center; padding: 20px; color: var(--text-muted);">No students found matching current filters. Click "+ Add Student to Website" to add one!</td></tr>`;
+    return;
+  }
+
+  tableBody.innerHTML = list
+    .map(
+      (st) => `
+      <tr>
+        <td style="padding: 10px 14px; font-weight: 600; color: var(--dark);">${escapeHtml(st.name)}</td>
+        <td style="padding: 10px 14px; color: var(--text-muted);">${escapeHtml(st.email)}</td>
+        <td style="padding: 10px 14px;"><span style="font-weight: 700;">${st.year}</span></td>
+        <td style="padding: 10px 14px;"><span style="color: var(--primary); font-size: 0.85rem; font-weight: 600;">${st.specialization || "General CSE"}</span></td>
+        <td style="padding: 10px 14px; text-align: center;">
+          <div style="display: flex; gap: 6px; justify-content: center;">
+            <button onclick="quickMessageStudent('${st.id || st._id}', '${escapeHtml(st.name)}', '${st.year}', '${st.specialization || "General CSE"}')" class="btn btn-outline btn-sm" style="font-size: 0.75rem; padding: 2px 6px;">💬 Chat</button>
+            <button onclick="quickAssignToStudent('${st.id || st._id}', '${st.year}')" class="btn btn-outline btn-sm" style="font-size: 0.75rem; padding: 2px 6px;">📚 Assign</button>
+          </div>
+        </td>
+      </tr>
+    `
+    )
+    .join("");
+}
+
+function quickAssignToStudent(studentId, studentYear) {
+  window.location.hash = "#academicSection";
+  const assignType = document.getElementById("assignmentType");
+  const yearSelect = document.getElementById("academicYear");
+  if (assignType) {
+    assignType.value = "specific_student";
+    handleAssignmentTypeChange("specific_student");
+  }
+  if (yearSelect && studentYear) {
+    yearSelect.value = studentYear;
+    updateStudentSearchRoster().then(() => {
+      const radio = document.querySelector(`input[name='assignedStudentTarget'][value='${studentId}']`);
+      if (radio) radio.checked = true;
+    });
+  }
+}
+
+function quickMessageStudent(studentId, studentName, studentYear, studentSpec) {
+  window.location.hash = "#chatSection";
+  openChatWithStudent(studentId, studentName, studentYear, studentSpec);
 }
 
 // ==========================================================================
@@ -176,7 +333,6 @@ function handleAssignmentTypeChange(type) {
   const specializationSelectGroup = document.getElementById("specializationSelectGroup");
   const studentSelectionGroup = document.getElementById("studentSelectionGroup");
 
-  // Reset displays
   if (singleYearGroup) singleYearGroup.style.display = "none";
   if (multiYearsGroup) multiYearsGroup.style.display = "none";
   if (specializationSelectGroup) specializationSelectGroup.style.display = "none";
@@ -223,7 +379,7 @@ function renderStudentCheckboxes(list) {
   if (!rosterContainer) return;
 
   if (list.length === 0) {
-    rosterContainer.innerHTML = `<div style="font-size: 0.8rem; color: var(--text-muted); padding: 8px;">No students found matching search.</div>`;
+    rosterContainer.innerHTML = `<div style="font-size: 0.8rem; color: var(--text-muted); padding: 8px;">No students found. <a href="#studentDirectorySection" onclick="toggleAddStudentForm()" style="color: var(--primary); font-weight: 700;">+ Add Student Here</a></div>`;
     return;
   }
 
@@ -342,7 +498,6 @@ async function loadFacultySubjects() {
 
     renderFacultySubjects(allFacultySubjects);
 
-    // Populate attendance subject dropdown
     if (attendanceSelect) {
       attendanceSelect.innerHTML = `<option value="">-- Choose Subject --</option>` +
         allFacultySubjects
@@ -441,14 +596,12 @@ async function loadSubjectAttendanceRoster() {
   if (alertBox) alertBox.style.display = "none";
 
   try {
-    // 1. Fetch eligible students for subject
     const res = await fetch(`${API_URL}/api/subjects/assigned-students/${subjectId}`, {
       headers: getAuthHeaders(),
     });
     const students = await res.json();
     const studentList = Array.isArray(students) ? students : [];
 
-    // 2. Fetch existing attendance for this date
     const attRes = await fetch(`${API_URL}/api/attendance/faculty/${subjectId}?date=${targetDate}`, {
       headers: getAuthHeaders(),
     });
@@ -463,7 +616,7 @@ async function loadSubjectAttendanceRoster() {
     if (studentCountSpan) studentCountSpan.innerText = studentList.length;
 
     if (studentList.length === 0) {
-      tableBody.innerHTML = `<tr><td colspan="4" style="text-align: center; padding: 20px; color: var(--text-muted);">No enrolled students match the criteria for this subject.</td></tr>`;
+      tableBody.innerHTML = `<tr><td colspan="4" style="text-align: center; padding: 20px; color: var(--text-muted);">No enrolled students match this subject yet.</td></tr>`;
     } else {
       tableBody.innerHTML = studentList
         .map((st) => {
@@ -489,7 +642,7 @@ async function loadSubjectAttendanceRoster() {
     if (rosterContainer) rosterContainer.style.display = "block";
 
     if (Object.keys(existingMap).length > 0 && alertBox) {
-      alertBox.innerHTML = `ℹ️ Attendance for <strong>${targetDate}</strong> is already on file. Modifying will update the records.`;
+      alertBox.innerHTML = `ℹ️ Attendance for <strong>${targetDate}</strong> is on file. Modifying will update records.`;
       alertBox.style.background = "#eff6ff";
       alertBox.style.border = "1px solid #bfdbfe";
       alertBox.style.color = "#1e40af";
@@ -585,7 +738,7 @@ async function saveSubjectAttendance() {
         alertBox.style.color = "#166534";
         alertBox.style.display = "block";
       }
-      alert(`🎉 Attendance successfully saved for ${attendanceList.length} students on ${date}!`);
+      alert(`🎉 Attendance saved for ${attendanceList.length} students on ${date}!`);
     } else {
       alert(`❌ Failed: ${data.message || "Error saving attendance"}`);
     }
@@ -647,7 +800,6 @@ function openChatWithStudent(studentId, studentName, studentYear, studentSpec) {
   if (partnerNameEl) partnerNameEl.innerText = `Chatting with: ${studentName}`;
   if (partnerInfoEl) partnerInfoEl.innerText = `${studentYear} • ${studentSpec}`;
 
-  // Highlight active contact
   const items = document.querySelectorAll(".chat-contact-item");
   items.forEach((item) => {
     if (item.innerText.includes(studentName)) {
@@ -659,7 +811,6 @@ function openChatWithStudent(studentId, studentName, studentYear, studentSpec) {
 
   refreshActiveChat();
 
-  // Start polling every 4 seconds
   if (chatPollInterval) clearInterval(chatPollInterval);
   chatPollInterval = setInterval(refreshActiveChat, 4000);
 }

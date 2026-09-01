@@ -106,21 +106,13 @@
             border-bottom: 1px solid #edf2f7;
             font-size: 0.85rem;
         }
-        .status-badge-present {
-            background: #dcfce7;
-            color: #166534;
-            font-weight: 700;
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-size: 0.8rem;
-        }
-        .status-badge-absent {
-            background: #fee2e2;
-            color: #991b1b;
-            font-weight: 700;
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-size: 0.8rem;
+        .modal-card {
+            background: #fff;
+            border: 1.5px solid var(--primary);
+            border-radius: var(--radius-md);
+            padding: 20px;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
         }
     </style>
 </head>
@@ -158,10 +150,11 @@
         <div class="page-header">
             <div class="page-title">
                 <h1>Faculty Management Dashboard</h1>
-                <p>Assign targeted subjects, manage student attendance, and communicate in real-time for <strong id="facultyHeaderDept">Computer Science</strong>.</p>
+                <p>Manage students, assign subjects, take attendance, and message in real-time for <strong id="facultyHeaderDept">Computer Science</strong>.</p>
             </div>
             <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-                <a href="#academicSection" class="btn btn-primary btn-sm">+ Assign Subject</a>
+                <button onclick="toggleAddStudentForm()" class="btn btn-primary btn-sm">👨‍🎓 + Add New Student</button>
+                <a href="#academicSection" class="btn btn-outline btn-sm">📚 Assign Subject</a>
                 <a href="#attendanceSection" class="btn btn-outline btn-sm">📋 Mark Attendance</a>
                 <a href="#chatSection" class="btn btn-outline btn-sm">💬 Messages</a>
             </div>
@@ -171,10 +164,10 @@
         <div class="stats-grid">
             <div class="stat-card">
                 <div class="stat-info">
-                    <h3>Active Announcements</h3>
-                    <div class="stat-number" id="announcementCount">0</div>
+                    <h3>Enrolled Students</h3>
+                    <div class="stat-number" id="totalStudentCount">0</div>
                 </div>
-                <div class="stat-icon-wrapper stat-icon-blue">📢</div>
+                <div class="stat-icon-wrapper stat-icon-blue">👨‍🎓</div>
             </div>
 
             <div class="stat-card">
@@ -187,10 +180,10 @@
 
             <div class="stat-card">
                 <div class="stat-info">
-                    <h3>Attendance Logs</h3>
-                    <div class="stat-number" id="attendanceRecordCount">0</div>
+                    <h3>Active Notices</h3>
+                    <div class="stat-number" id="announcementCount">0</div>
                 </div>
-                <div class="stat-icon-wrapper stat-icon-amber">📋</div>
+                <div class="stat-icon-wrapper stat-icon-amber">📢</div>
             </div>
 
             <div class="stat-card">
@@ -201,6 +194,138 @@
                 <div class="stat-icon-wrapper stat-icon-purple">💬</div>
             </div>
         </div>
+
+        <!-- ================= SECTION 0: DIRECT STUDENT CREATION & DIRECTORY ================= -->
+        <section class="section-card" id="studentDirectorySection">
+            <div class="section-header">
+                <h2>👨‍🎓 Student Directory & Direct Student Addition</h2>
+                <button onclick="toggleAddStudentForm()" class="btn btn-primary btn-sm">+ Add Student to Website</button>
+            </div>
+            <div class="section-body">
+                
+                <!-- Direct Add Student Form (Collapsible) -->
+                <div id="directAddStudentCard" class="modal-card" style="display: none;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                        <h3 style="margin: 0; font-size: 1.1rem; color: var(--primary);">
+                            ✨ Add New Student Directly
+                        </h3>
+                        <button type="button" onclick="toggleAddStudentForm()" class="btn btn-sm btn-outline" style="padding: 2px 8px;">✕ Close</button>
+                    </div>
+
+                    <form id="directAddStudentForm" onsubmit="handleDirectAddStudent(event)">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="newStudentName">Student Full Name *</label>
+                                <input type="text" id="newStudentName" placeholder="e.g., Rohit Verma" required>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="newStudentEmail">Campus Email Address *</label>
+                                <input type="email" id="newStudentEmail" placeholder="e.g., rohit@campus.edu" required>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="newStudentDept">Department *</label>
+                                <select id="newStudentDept" required>
+                                    <option value="Computer Science" selected>Computer Science & Eng</option>
+                                    <option value="Information Technology">Information Technology</option>
+                                    <option value="Electronics & Communication">Electronics & Comm.</option>
+                                    <option value="Mechanical Engineering">Mechanical Engineering</option>
+                                    <option value="Civil Engineering">Civil Engineering</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="newStudentYear">Academic Year *</label>
+                                <select id="newStudentYear" required>
+                                    <option value="1st Year">1st Year</option>
+                                    <option value="2nd Year">2nd Year</option>
+                                    <option value="3rd Year" selected>3rd Year</option>
+                                    <option value="4th Year">4th Year</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="newStudentSpec">Specialization *</label>
+                                <select id="newStudentSpec" required>
+                                    <option value="General CSE">General CSE / Core</option>
+                                    <option value="Artificial Intelligence and Machine Learning" selected>AI & Machine Learning (AI & ML)</option>
+                                    <option value="Data Science">Data Science</option>
+                                    <option value="Cyber Security">Cyber Security</option>
+                                    <option value="Cloud Computing">Cloud Computing</option>
+                                    <option value="Software Engineering">Software Engineering</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group" style="flex: 1;">
+                                <label for="newStudentPassword">Initial Password (Optional)</label>
+                                <input type="text" id="newStudentPassword" placeholder="Default: student123" value="student123">
+                            </div>
+                            <div class="form-group" style="flex: 1; display: flex; align-items: flex-end;">
+                                <button type="submit" id="directAddStudentBtn" class="btn btn-primary" style="width: 100%;">
+                                    💾 Save Student to Platform
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Student Directory Search & Filters -->
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 10px;">
+                    <div style="flex: 1; min-width: 240px;">
+                        <input 
+                            type="text" 
+                            id="dirSearchInput" 
+                            placeholder="🔍 Search students by name, ID, or email..." 
+                            oninput="filterStudentDirectory()"
+                            style="padding: 8px 12px; font-size: 0.875rem;"
+                        >
+                    </div>
+
+                    <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                        <select id="dirYearFilter" onchange="filterStudentDirectory()" style="padding: 6px 10px; font-size: 0.85rem; border-radius: var(--radius-sm); border: 1px solid var(--border-color);">
+                            <option value="All Years" selected>All Years</option>
+                            <option value="1st Year">1st Year</option>
+                            <option value="2nd Year">2nd Year</option>
+                            <option value="3rd Year">3rd Year</option>
+                            <option value="4th Year">4th Year</option>
+                        </select>
+
+                        <select id="dirSpecFilter" onchange="filterStudentDirectory()" style="padding: 6px 10px; font-size: 0.85rem; border-radius: var(--radius-sm); border: 1px solid var(--border-color);">
+                            <option value="All Specializations" selected>All Specializations</option>
+                            <option value="General CSE">General CSE</option>
+                            <option value="Artificial Intelligence and Machine Learning">AI & ML</option>
+                            <option value="Data Science">Data Science</option>
+                            <option value="Cyber Security">Cyber Security</option>
+                            <option value="Cloud Computing">Cloud Computing</option>
+                            <option value="Software Engineering">Software Engineering</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Student Directory Table -->
+                <div style="overflow-x: auto; border: 1px solid var(--border-color); border-radius: var(--radius-sm);">
+                    <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 0.875rem;">
+                        <thead style="background: #f8fafc; border-bottom: 1px solid var(--border-color);">
+                            <tr>
+                                <th style="padding: 10px 14px;">Student Name</th>
+                                <th style="padding: 10px 14px;">Email</th>
+                                <th style="padding: 10px 14px;">Year</th>
+                                <th style="padding: 10px 14px;">Specialization</th>
+                                <th style="padding: 10px 14px; text-align: center;">Quick Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="studentDirectoryTableBody">
+                            <!-- Dynamic student rows -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
 
         <!-- ================= SECTION 1: ANNOUNCEMENTS ================= -->
         <section class="section-card" id="announcementSection">
@@ -343,7 +468,6 @@
                             </select>
                         </div>
 
-                        <!-- Specialization dropdown (Visible when Specialization is chosen) -->
                         <div class="form-group" id="specializationSelectGroup" style="display: none;">
                             <label for="academicSpecialization">Specialization</label>
                             <select id="academicSpecialization">
@@ -357,7 +481,7 @@
                         </div>
                     </div>
 
-                    <!-- Multi-Years Checkboxes (Visible when Multiple Years is chosen) -->
+                    <!-- Multi-Years Checkboxes -->
                     <div id="multiYearsGroup" style="display: none; margin-bottom: 1rem; padding: 12px; background: #f8fafc; border-radius: var(--radius-sm); border: 1px solid var(--border-color);">
                         <label style="font-weight: 700; font-size: 0.85rem; display: block; margin-bottom: 6px;">Select Applicable Years:</label>
                         <div style="display: flex; gap: 16px; flex-wrap: wrap;">
@@ -378,9 +502,14 @@
 
                     <!-- Student Search & Selection for Specific / Multiple Students -->
                     <div id="studentSelectionGroup" style="display: none; margin-bottom: 1.25rem;">
-                        <label style="font-weight: 700; font-size: 0.85rem; display: block; margin-bottom: 6px;">
-                            Search and Select Student(s):
-                        </label>
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                            <label style="font-weight: 700; font-size: 0.85rem; margin: 0;">
+                                Select Student(s):
+                            </label>
+                            <button type="button" onclick="toggleAddStudentForm()" class="btn btn-outline btn-sm" style="font-size: 0.75rem; padding: 2px 6px;">
+                                + Add New Student Directly
+                            </button>
+                        </div>
                         <input 
                             type="text" 
                             id="studentSearchInput" 
@@ -388,9 +517,7 @@
                             oninput="filterStudentSearchList(this.value)"
                             style="margin-bottom: 8px;"
                         >
-                        <div class="student-checkbox-list" id="studentRosterCheckboxes">
-                            <!-- Populated dynamically with registered students -->
-                        </div>
+                        <div class="student-checkbox-list" id="studentRosterCheckboxes"></div>
                     </div>
 
                     <div style="margin-top: 1rem;">
@@ -447,7 +574,6 @@
 
                 <div id="attendanceAlertBox" style="display: none; padding: 10px 14px; border-radius: var(--radius-sm); margin: 1rem 0; font-size: 0.875rem;"></div>
 
-                <!-- Student Roster Table -->
                 <div id="attendanceRosterContainer" style="margin-top: 1.5rem; display: none;">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
                         <h4 style="margin: 0; font-size: 1rem; color: var(--dark);">
@@ -473,9 +599,7 @@
                                     <th style="padding: 10px 14px; text-align: center;">Attendance Status</th>
                                 </tr>
                             </thead>
-                            <tbody id="attendanceTableBody">
-                                <!-- Dynamic roster rows -->
-                            </tbody>
+                            <tbody id="attendanceTableBody"></tbody>
                         </table>
                     </div>
 
@@ -495,7 +619,6 @@
             </div>
             <div class="section-body">
                 <div class="chat-container">
-                    <!-- Left Sidebar: Student Contacts -->
                     <div class="chat-sidebar">
                         <div style="padding: 12px; border-bottom: 1px solid var(--border-color);">
                             <input 
@@ -506,12 +629,9 @@
                                 style="font-size: 0.85rem; padding: 6px 10px;"
                             >
                         </div>
-                        <div id="chatContactList" style="flex: 1; overflow-y: auto;">
-                            <!-- Populated with students -->
-                        </div>
+                        <div id="chatContactList" style="flex: 1; overflow-y: auto;"></div>
                     </div>
 
-                    <!-- Right Pane: Active Conversation -->
                     <div class="chat-main">
                         <div class="chat-header-bar">
                             <div>

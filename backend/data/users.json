@@ -113,5 +113,18 @@
     "year": "1st Year",
     "specialization": "General CSE",
     "createdAt": "2026-09-01T19:26:58.939Z"
+  },
+  {
+    "_id": "usr_1788291181025",
+    "id": "usr_1788291181025",
+    "name": "Ananya Iyer",
+    "email": "ananya@campus.edu",
+    "password": "AnanyaPassword@123",
+    "passwordHash": "$2a$10$qw/BtQCtyBEA1ve7YuCYQObJ0swfxB8US/TLMUcxieYltpvjXa8/e",
+    "role": "student",
+    "department": "Computer Science",
+    "year": "2nd Year",
+    "specialization": "Cyber Security",
+    "createdAt": "2026-09-01T19:33:01.025Z"
   }
 ]
