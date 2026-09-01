@@ -454,12 +454,33 @@ async function handleAdminCreateClass(e) {
   }
 }
 
-// ---------------- Update Classroom Venue Modal ----------------
-function openUpdateVenueModal(classId) {
-  const cls = allAdminClasses.find((c) => (c.id || c._id) === classId);
-  if (!cls) return;
+// ---------------- Helper to find class by ID across any cached list ----------------
+function findClassById(classId) {
+  return (
+    allAdminClasses.find((c) => (c.id || c._id) === classId) ||
+    allFacultyClasses.find((c) => (c.id || c._id) === classId) ||
+    allStudentClasses.find((c) => (c.id || c._id) === classId)
+  );
+}
 
-  document.getElementById("updateVenueClassId").value = classId;
+// ---------------- Update Classroom Venue Modal ----------------
+async function openUpdateVenueModal(classId) {
+  let cls = findClassById(classId);
+
+  if (!cls) {
+    try {
+      const res = await fetch(`${API_URL}/api/classes/${classId}`, { headers: getAuthHeaders() });
+      const data = await res.json();
+      cls = data && data.class ? data.class : null;
+    } catch (e) {}
+  }
+
+  if (!cls) {
+    alert("Could not load class details.");
+    return;
+  }
+
+  document.getElementById("updateVenueClassId").value = cls.id || cls._id;
   document.getElementById("updateVenueSubjectName").innerText = `${cls.subjectName} (${cls.subjectCode})`;
   document.getElementById("updateVenueBlock").value = cls.block || "A Block";
   document.getElementById("updateVenueFloor").value = cls.floor || "2nd Floor";
@@ -498,6 +519,10 @@ async function submitUpdateClassVenue(e) {
       alert(`🎉 ${data.message}`);
       closeUpdateVenueModal();
       loadAdminClasses();
+      loadFacultyClasses();
+      loadStudentClasses();
+      loadStudentAnnouncements();
+      loadFacultyAnnouncements();
     } else {
       alert(`❌ Notice: ${data.message || "Failed to update venue."}`);
     }
@@ -505,6 +530,8 @@ async function submitUpdateClassVenue(e) {
     alert("Venue updated!");
     closeUpdateVenueModal();
     loadAdminClasses();
+    loadFacultyClasses();
+    loadStudentClasses();
   } finally {
     btn.disabled = false;
     btn.innerText = "💾 Save New Venue & Notify";
@@ -512,11 +539,23 @@ async function submitUpdateClassVenue(e) {
 }
 
 // ---------------- Cancel Class Modal ----------------
-function openCancelClassModal(classId) {
-  const cls = allAdminClasses.find((c) => (c.id || c._id) === classId);
-  if (!cls) return;
+async function openCancelClassModal(classId) {
+  let cls = findClassById(classId);
 
-  document.getElementById("cancelClassId").value = classId;
+  if (!cls) {
+    try {
+      const res = await fetch(`${API_URL}/api/classes/${classId}`, { headers: getAuthHeaders() });
+      const data = await res.json();
+      cls = data && data.class ? data.class : null;
+    } catch (e) {}
+  }
+
+  if (!cls) {
+    alert("Could not load class details.");
+    return;
+  }
+
+  document.getElementById("cancelClassId").value = cls.id || cls._id;
   document.getElementById("cancelClassSubjectName").innerText = `${cls.subjectName} (${cls.subjectCode})`;
   document.getElementById("cancelClassDateTime").innerText = `📅 Date: ${cls.date} | ⏰ Time: ${cls.startTime} – ${cls.endTime} | 🏛️ Venue: ${cls.venue}`;
   document.getElementById("cancelClassReason").value = "";
@@ -555,6 +594,10 @@ async function submitCancelClass(e) {
       alert(`🎉 ${data.message}`);
       closeCancelClassModal();
       loadAdminClasses();
+      loadFacultyClasses();
+      loadStudentClasses();
+      loadStudentAnnouncements();
+      loadFacultyAnnouncements();
     } else {
       alert(`❌ Notice: ${data.message || "Failed to cancel class."}`);
     }
@@ -562,6 +605,8 @@ async function submitCancelClass(e) {
     alert("Class cancelled!");
     closeCancelClassModal();
     loadAdminClasses();
+    loadFacultyClasses();
+    loadStudentClasses();
   } finally {
     btn.disabled = false;
     btn.innerText = "❌ Confirm Cancellation";
@@ -569,11 +614,23 @@ async function submitCancelClass(e) {
 }
 
 // ---------------- Reschedule Class Modal ----------------
-function openRescheduleClassModal(classId) {
-  const cls = allAdminClasses.find((c) => (c.id || c._id) === classId);
-  if (!cls) return;
+async function openRescheduleClassModal(classId) {
+  let cls = findClassById(classId);
 
-  document.getElementById("rescheduleClassId").value = classId;
+  if (!cls) {
+    try {
+      const res = await fetch(`${API_URL}/api/classes/${classId}`, { headers: getAuthHeaders() });
+      const data = await res.json();
+      cls = data && data.class ? data.class : null;
+    } catch (e) {}
+  }
+
+  if (!cls) {
+    alert("Could not load class details.");
+    return;
+  }
+
+  document.getElementById("rescheduleClassId").value = cls.id || cls._id;
   document.getElementById("rescheduleClassSubjectName").innerText = `${cls.subjectName} (${cls.subjectCode})`;
   document.getElementById("rescheduleCurrentSchedule").innerText = `Current: ${cls.date} (${cls.startTime} – ${cls.endTime}) at ${cls.venue}`;
   document.getElementById("rescheduleDate").value = cls.date;
@@ -619,6 +676,10 @@ async function submitRescheduleClass(e) {
       alert(`🎉 ${data.message}`);
       closeRescheduleClassModal();
       loadAdminClasses();
+      loadFacultyClasses();
+      loadStudentClasses();
+      loadStudentAnnouncements();
+      loadFacultyAnnouncements();
     } else {
       alert(`❌ Notice: ${data.message || "Failed to reschedule class."}`);
     }
@@ -626,6 +687,8 @@ async function submitRescheduleClass(e) {
     alert("Class rescheduled!");
     closeRescheduleClassModal();
     loadAdminClasses();
+    loadFacultyClasses();
+    loadStudentClasses();
   } finally {
     btn.disabled = false;
     btn.innerText = "🔄 Save Reschedule & Notify";
@@ -644,6 +707,8 @@ async function deleteClassSchedule(classId) {
     if (res.ok && data.success) {
       alert("✅ Class schedule deleted.");
       loadAdminClasses();
+      loadFacultyClasses();
+      loadStudentClasses();
     }
   } catch (err) {}
 }
@@ -685,26 +750,28 @@ function renderFacultyClasses(list) {
 
   grid.innerHTML = list
     .map((c) => {
+      const cid = c.id || c._id;
       const isCancelled = c.status === "Cancelled";
       const isRescheduled = c.status === "Rescheduled";
 
       return `
-      <div class="card" style="border-left: 4px solid ${isCancelled ? "#ef4444" : isRescheduled ? "#f59e0b" : "var(--primary)"};">
+      <div class="card" style="border: 1.5px solid ${isCancelled ? "#ef4444" : isRescheduled ? "#f59e0b" : "var(--border-color)"}; background: ${isCancelled ? "#fff5f5" : "#fff"};">
         <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px;">
           <div>
             <h4 style="margin: 0; font-size: 1.05rem; color: var(--dark);">${escapeHtml(c.subjectName)}</h4>
             <span style="font-size: 0.75rem; font-weight: 700; color: var(--primary);">${c.subjectCode}</span>
           </div>
           <span class="${isCancelled ? "badge-status-cancelled" : isRescheduled ? "badge-status-rescheduled" : "badge-status-scheduled"}">
-            ${isCancelled ? "❌ Cancelled" : isRescheduled ? "🔄 Rescheduled" : "🟢 Scheduled"}
+            ${isCancelled ? "❌ CANCELLED" : isRescheduled ? "🔄 RESCHEDULED" : "🟢 SCHEDULED"}
           </span>
         </div>
 
         ${
           isCancelled
             ? `
-          <div class="cancellation-alert-box">
-            <strong>❌ CLASS CANCELLED:</strong> ${escapeHtml(c.cancellationReason || "Notice from administration.")}
+          <div style="background: #fee2e2; border: 1.5px solid #ef4444; border-radius: 6px; padding: 10px 12px; margin: 8px 0;">
+            <div style="color: #991b1b; font-weight: 800; font-size: 0.95rem;">❌ CLASS CANCELLED</div>
+            <div style="color: #b91c1c; font-size: 0.85rem; margin-top: 3px;"><strong>Reason:</strong> ${escapeHtml(c.cancellationReason || "Class cancelled by instructor/administration.")}</div>
           </div>
         `
             : ""
@@ -713,9 +780,9 @@ function renderFacultyClasses(list) {
         ${
           isRescheduled && c.previousSchedule
             ? `
-          <div class="reschedule-alert-box">
-            <strong>🔄 RESCHEDULED:</strong><br>
-            <span style="font-size: 0.75rem;">Prev: ${c.previousSchedule.date} (${c.previousSchedule.startTime}–${c.previousSchedule.endTime}) at ${c.previousSchedule.venue}</span>
+          <div style="background: #fffbeb; border: 1.5px solid #f59e0b; border-radius: 6px; padding: 10px 12px; margin: 8px 0;">
+            <div style="color: #92400e; font-weight: 800; font-size: 0.95rem;">🔄 CLASS RESCHEDULED</div>
+            <div style="font-size: 0.8rem; color: #78350f; margin-top: 3px;">Prev: ${c.previousSchedule.date} (${c.previousSchedule.startTime}–${c.previousSchedule.endTime}) at ${c.previousSchedule.venue}</div>
           </div>
         `
             : ""
@@ -727,9 +794,15 @@ function renderFacultyClasses(list) {
           <div>🏛️ <strong>Class Location:</strong> <span class="venue-chip" style="margin-top: 4px;">${escapeHtml(c.venue)}</span></div>
         </div>
 
-        <div style="margin-top: 12px; display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border-color); padding-top: 8px;">
-          <span style="font-size: 0.75rem; color: var(--text-muted);">${c.department}</span>
-          <button onclick="quickSelectAttendanceSubject('${c.subjectId || ""}')" class="btn btn-outline btn-sm" style="font-size: 0.75rem; padding: 2px 6px;">📋 Mark Attendance</button>
+        <div style="margin-top: 12px; display: flex; gap: 6px; flex-wrap: wrap; border-top: 1px solid var(--border-color); padding-top: 8px;">
+          <button onclick="openUpdateVenueModal('${cid}')" class="btn btn-outline btn-sm" style="font-size: 0.75rem; padding: 2px 8px;">✏️ Venue</button>
+          <button onclick="openRescheduleClassModal('${cid}')" class="btn btn-outline btn-sm" style="font-size: 0.75rem; padding: 2px 8px; color: #92400e; border-color: #fde68a;">🔄 Reschedule</button>
+          ${
+            !isCancelled
+              ? `<button onclick="openCancelClassModal('${cid}')" class="btn btn-outline btn-sm" style="font-size: 0.75rem; padding: 2px 8px; color: #991b1b; border-color: #fecaca;">❌ Cancel</button>`
+              : ""
+          }
+          <button onclick="quickSelectAttendanceSubject('${c.subjectId || ""}')" class="btn btn-outline btn-sm" style="font-size: 0.75rem; padding: 2px 8px;">📋 Attendance</button>
         </div>
       </div>
     `;
@@ -778,7 +851,7 @@ function renderStudentClasses(list) {
       const isRescheduled = c.status === "Rescheduled";
 
       return `
-      <div class="card" style="border-left: 4px solid ${isCancelled ? "#ef4444" : isRescheduled ? "#f59e0b" : "var(--primary)"};">
+      <div class="card" style="border: 1.5px solid ${isCancelled ? "#ef4444" : isRescheduled ? "#f59e0b" : "var(--border-color)"}; background: ${isCancelled ? "#fff5f5" : "#fff"};">
         <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px;">
           <div>
             <h4 style="margin: 0; font-size: 1.05rem; color: var(--dark);">${escapeHtml(c.subjectName)}</h4>
@@ -792,9 +865,16 @@ function renderStudentClasses(list) {
         ${
           isCancelled
             ? `
-          <div class="cancellation-alert-box">
-            <strong>❌ CLASS CANCELLED:</strong> ${escapeHtml(c.cancellationReason || "Class cancelled by administration.")}
-            <div style="font-size: 0.75rem; margin-top: 4px; font-style: italic;">👉 Students do not need to attend this lecture.</div>
+          <div style="background: #fee2e2; border: 2px solid #ef4444; border-radius: 8px; padding: 12px; margin: 10px 0;">
+            <div style="color: #991b1b; font-weight: 900; font-size: 1.05rem; display: flex; align-items: center; gap: 6px;">
+              ❌ CLASS CANCELLED
+            </div>
+            <div style="color: #b91c1c; font-size: 0.9rem; margin-top: 4px; font-weight: 600;">
+              Reason: ${escapeHtml(c.cancellationReason || "Faculty unavailable / Holiday")}
+            </div>
+            <div style="color: #7f1d1d; font-size: 0.8rem; margin-top: 4px; font-weight: 600;">
+              👉 Notice: Students do NOT need to attend this lecture.
+            </div>
           </div>
         `
             : ""
@@ -803,10 +883,16 @@ function renderStudentClasses(list) {
         ${
           isRescheduled && c.previousSchedule
             ? `
-          <div class="reschedule-alert-box">
-            <strong>🔄 CLASS RESCHEDULED:</strong><br>
-            <span style="font-size: 0.75rem;">Previous: ${c.previousSchedule.date} (${c.previousSchedule.startTime}–${c.previousSchedule.endTime}) at ${c.previousSchedule.venue}</span><br>
-            <span style="font-size: 0.8rem; font-weight: 700;">👉 New Slot: ${c.date} (${c.startTime}–${c.endTime})</span>
+          <div style="background: #fffbeb; border: 2px solid #f59e0b; border-radius: 8px; padding: 12px; margin: 10px 0;">
+            <div style="color: #92400e; font-weight: 900; font-size: 1.05rem;">
+              🔄 CLASS RESCHEDULED
+            </div>
+            <div style="font-size: 0.85rem; color: #78350f; margin-top: 4px;">
+              Previous: ${c.previousSchedule.date} (${c.previousSchedule.startTime}–${c.previousSchedule.endTime}) at ${c.previousSchedule.venue}
+            </div>
+            <div style="font-size: 0.85rem; font-weight: 700; color: #92400e; margin-top: 2px;">
+              👉 New Schedule: ${c.date} (${c.startTime}–${c.endTime}) at ${c.venue}
+            </div>
           </div>
         `
             : ""

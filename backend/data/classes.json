@@ -8,7 +8,9 @@
     "facultyId": "usr_faculty_1",
     "facultyName": "Dr. Sarah Jenkins",
     "facultyEmail": "faculty@campus.edu",
-    "years": ["1st Year"],
+    "years": [
+      "1st Year"
+    ],
     "specialization": "General CSE",
     "department": "Computer Science",
     "section": "Section A",
@@ -35,7 +37,9 @@
     "facultyId": "usr_1788291527038",
     "facultyName": "bhavya",
     "facultyEmail": "vtu29704@veltech.edu.in",
-    "years": ["1st Year"],
+    "years": [
+      "1st Year"
+    ],
     "specialization": "General CSE",
     "department": "Computer Science",
     "section": "Section A",
@@ -62,7 +66,9 @@
     "facultyId": "usr_1788291527038",
     "facultyName": "bhavya",
     "facultyEmail": "vtu29704@veltech.edu.in",
-    "years": ["1st Year"],
+    "years": [
+      "1st Year"
+    ],
     "specialization": "General CSE",
     "department": "Electronics & Communication",
     "section": "Section B",
@@ -73,12 +79,12 @@
     "floor": "Ground Floor",
     "roomNumber": "B-005",
     "venue": "B Block – Ground Floor – Room B-005",
-    "status": "Scheduled",
-    "cancellationReason": "",
+    "status": "Cancelled",
+    "cancellationReason": "Instructor attending academic conference. Class will be covered next week.",
     "previousSchedule": null,
     "createdBy": "Campus Administration",
     "createdAt": "2026-09-01T08:45:00.000Z",
-    "updatedAt": "2026-09-01T08:45:00.000Z"
+    "updatedAt": "2026-09-01T23:23:17.563Z"
   },
   {
     "_id": "cls_201",
@@ -89,7 +95,9 @@
     "facultyId": "usr_faculty_1",
     "facultyName": "Dr. Sarah Jenkins",
     "facultyEmail": "faculty@campus.edu",
-    "years": ["2nd Year"],
+    "years": [
+      "2nd Year"
+    ],
     "specialization": "All Specializations",
     "department": "Computer Science",
     "section": "Section A",
@@ -116,7 +124,9 @@
     "facultyId": "usr_1788291527038",
     "facultyName": "bhavya",
     "facultyEmail": "vtu29704@veltech.edu.in",
-    "years": ["2nd Year"],
+    "years": [
+      "2nd Year"
+    ],
     "specialization": "Cyber Security",
     "department": "Computer Science",
     "section": "Section A",
@@ -143,7 +153,9 @@
     "facultyId": "usr_faculty_1",
     "facultyName": "Dr. Sarah Jenkins",
     "facultyEmail": "faculty@campus.edu",
-    "years": ["3rd Year"],
+    "years": [
+      "3rd Year"
+    ],
     "specialization": "Artificial Intelligence and Machine Learning",
     "department": "Computer Science",
     "section": "Section A",
@@ -170,7 +182,9 @@
     "facultyId": "usr_1788291527038",
     "facultyName": "bhavya",
     "facultyEmail": "vtu29704@veltech.edu.in",
-    "years": ["3rd Year"],
+    "years": [
+      "3rd Year"
+    ],
     "specialization": "Artificial Intelligence and Machine Learning",
     "department": "Computer Science",
     "section": "Section A",
@@ -197,7 +211,9 @@
     "facultyId": "usr_faculty_1",
     "facultyName": "Dr. Sarah Jenkins",
     "facultyEmail": "faculty@campus.edu",
-    "years": ["3rd Year"],
+    "years": [
+      "3rd Year"
+    ],
     "specialization": "Data Science",
     "department": "Computer Science",
     "section": "Section A",
@@ -224,7 +240,9 @@
     "facultyId": "usr_1788291527038",
     "facultyName": "bhavya",
     "facultyEmail": "vtu29704@veltech.edu.in",
-    "years": ["4th Year"],
+    "years": [
+      "4th Year"
+    ],
     "specialization": "Cloud Computing",
     "department": "Computer Science",
     "section": "Section A",

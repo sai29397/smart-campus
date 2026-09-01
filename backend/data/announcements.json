@@ -1,5 +1,16 @@
 [
   {
+    "_id": "ann_cls_1788304997565_932",
+    "id": "ann_cls_1788304997565_725",
+    "title": "❌ CLASS CANCELLED: Basic Electronics & Digital Circuits (EC101)",
+    "description": "Your Basic Electronics & Digital Circuits class on 2026-09-05 (11:30 AM – 12:30 PM) has been CANCELLED.\nReason: Instructor attending academic conference. Class will be covered next week.\nFaculty: bhavya.\nStudents do not need to attend this lecture.",
+    "department": "Electronics & Communication",
+    "year": "1st Year",
+    "priority": "Urgent",
+    "author": "bhavya",
+    "createdAt": "2026-09-01T23:23:17.565Z"
+  },
+  {
     "_id": "ann_cls_1788304237754_64",
     "id": "ann_cls_1788304237754_343",
     "title": "🔄 CLASS RESCHEDULED: Deep Neural Networks & Transformers (CSAI305)",

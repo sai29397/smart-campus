@@ -437,15 +437,16 @@ router.post("/", protect, async (req, res) => {
 });
 
 // ==========================================================================
-// 6. UPDATE CLASSROOM LOCATION & VENUE (Administration Only)
+// ==========================================================================
+// 6. UPDATE CLASSROOM LOCATION & VENUE (Admin & Faculty)
 // ==========================================================================
 router.put("/:classId", protect, async (req, res) => {
   try {
     const userRole = (req.user.role || "").toLowerCase();
-    if (userRole !== "admin" && userRole !== "administration") {
+    if (userRole !== "admin" && userRole !== "administration" && userRole !== "faculty") {
       return res.status(403).json({
         success: false,
-        message: "Access Denied: Only Administration can update classroom venues.",
+        message: "Access Denied: Only Administration and Faculty can update classroom venues.",
       });
     }
 
@@ -493,7 +494,7 @@ router.put("/:classId", protect, async (req, res) => {
       department: cls.department,
       year: Array.isArray(cls.years) ? cls.years[0] : "All Years",
       priority: "Important",
-      author: "Campus Administration",
+      author: req.user.name || "Campus Administration",
     });
 
     return res.json({
@@ -509,15 +510,15 @@ router.put("/:classId", protect, async (req, res) => {
 });
 
 // ==========================================================================
-// 7. CANCEL A CLASS (Administration Only)
+// 7. CANCEL A CLASS (Admin & Faculty)
 // ==========================================================================
 router.put("/:classId/cancel", protect, async (req, res) => {
   try {
     const userRole = (req.user.role || "").toLowerCase();
-    if (userRole !== "admin" && userRole !== "administration") {
+    if (userRole !== "admin" && userRole !== "administration" && userRole !== "faculty") {
       return res.status(403).json({
         success: false,
-        message: "Access Denied: Only Administration can cancel classes.",
+        message: "Access Denied: Only Administration and Faculty can cancel classes.",
       });
     }
 
@@ -559,7 +560,7 @@ router.put("/:classId/cancel", protect, async (req, res) => {
       department: cls.department,
       year: Array.isArray(cls.years) ? cls.years[0] : "All Years",
       priority: "Urgent",
-      author: "Campus Administration",
+      author: req.user.name || "Campus Administration",
     });
 
     return res.json({
@@ -574,15 +575,15 @@ router.put("/:classId/cancel", protect, async (req, res) => {
 });
 
 // ==========================================================================
-// 8. RESCHEDULE A CLASS (Administration Only)
+// 8. RESCHEDULE A CLASS (Admin & Faculty)
 // ==========================================================================
 router.put("/:classId/reschedule", protect, async (req, res) => {
   try {
     const userRole = (req.user.role || "").toLowerCase();
-    if (userRole !== "admin" && userRole !== "administration") {
+    if (userRole !== "admin" && userRole !== "administration" && userRole !== "faculty") {
       return res.status(403).json({
         success: false,
-        message: "Access Denied: Only Administration can reschedule classes.",
+        message: "Access Denied: Only Administration and Faculty can reschedule classes.",
       });
     }
 
@@ -646,7 +647,7 @@ router.put("/:classId/reschedule", protect, async (req, res) => {
       department: cls.department,
       year: Array.isArray(cls.years) ? cls.years[0] : "All Years",
       priority: "Important",
-      author: "Campus Administration",
+      author: req.user.name || "Campus Administration",
     });
 
     return res.json({
@@ -661,15 +662,15 @@ router.put("/:classId/reschedule", protect, async (req, res) => {
 });
 
 // ==========================================================================
-// 9. DELETE CLASS (Administration Only)
+// 9. DELETE CLASS (Admin & Faculty)
 // ==========================================================================
 router.delete("/:classId", protect, async (req, res) => {
   try {
     const userRole = (req.user.role || "").toLowerCase();
-    if (userRole !== "admin" && userRole !== "administration") {
+    if (userRole !== "admin" && userRole !== "administration" && userRole !== "faculty") {
       return res.status(403).json({
         success: false,
-        message: "Access Denied: Only Administration can delete class schedules.",
+        message: "Access Denied: Only Administration and Faculty can delete class schedules.",
       });
     }
 
