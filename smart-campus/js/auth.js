@@ -540,16 +540,8 @@ function hideLoginAlert(element) {
 }
 
 /**
- * Strict role-based redirect
+ * Unified single dashboard redirect
  */
 function redirectToRoleDashboard(role) {
-  if (role === "faculty") {
-    window.location.href = "faculty-dashboard.html";
-  } else if (role === "admin") {
-    window.location.href = "admin-dashboard.html";
-  } else if (role === "student") {
-    window.location.href = "student-dashboard.html";
-  } else {
-    window.location.href = "index.html";
-  }
+  window.location.href = "dashboard.html";
 }

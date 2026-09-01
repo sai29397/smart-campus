@@ -162,9 +162,7 @@
         <div class="nav-links">
             <a href="index.html" class="active">Home</a>
             <a href="#features">Features</a>
-            <a href="#portals">Portals</a>
-            <a href="faculty-dashboard.html">Faculty Portal</a>
-            <a href="student-dashboard.html">Student Portal</a>
+            <a href="dashboard.html">Dashboard</a>
             <a href="login.html" class="btn btn-outline btn-sm">Sign In</a>
             <a href="register.html" class="btn btn-primary btn-sm">Register</a>
         </div>
@@ -176,13 +174,13 @@
             <span class="meta-chip chip-primary" style="margin-bottom: 1rem; display: inline-block; font-size: 0.85rem; padding: 6px 12px;">
                 🚀 Next-Generation Campus Communication
             </span>
-            <h1>Unified Campus Communication for <span>Smarter Learning</span></h1>
+            <h1>Unified Campus Platform for <span>Smarter Learning</span></h1>
             <p>
-                Seamlessly bridge the gap between Students, Faculty, and Campus Administration. Real-time announcements, instant academic course updates, and centralized department management.
+                A single unified dashboard connecting Students and Faculty. Real-time announcements, targeted subject allocations, attendance analytics, and private 1-on-1 messaging.
             </p>
             <div class="hero-buttons">
-                <a href="faculty-dashboard.html" class="btn btn-primary">👨‍🏫 Faculty Dashboard →</a>
-                <a href="student-dashboard.html" class="btn btn-outline">👨‍🎓 Student Portal</a>
+                <a href="dashboard.html" class="btn btn-primary">Open Campus Dashboard →</a>
+                <a href="login.html" class="btn btn-outline">Sign In</a>
             </div>
         </div>
 
@@ -235,18 +233,18 @@
             </div>
             <div class="feature-box">
                 <div style="font-size: 2rem; margin-bottom: 0.5rem;">📚</div>
-                <h4>Academic Management</h4>
-                <p>Faculty can allocate subjects, syllabus details, and course codes synced via RESTful APIs.</p>
+                <h4>Targeted Subject Assignment</h4>
+                <p>Assign courses to specific students, specializations, or entire academic years with server filtering.</p>
             </div>
             <div class="feature-box">
-                <div style="font-size: 2rem; margin-bottom: 0.5rem;">🔒</div>
-                <h4>Role-Based Access</h4>
-                <p>Strict access boundaries ensuring Faculty, Students, and Administrators access only permitted tasks.</p>
+                <div style="font-size: 2rem; margin-bottom: 0.5rem;">📊</div>
+                <h4>Attendance Analytics</h4>
+                <p>Faculty mark daily attendance; students track subject-wise percentage and progress bars.</p>
             </div>
             <div class="feature-box">
-                <div style="font-size: 2rem; margin-bottom: 0.5rem;">⚡</div>
-                <h4>Instant Live Sync</h4>
-                <p>Connected directly to Express Backend on Port 3000 with CORS and MongoDB persistence.</p>
+                <div style="font-size: 2rem; margin-bottom: 0.5rem;">💬</div>
+                <h4>Private 1-on-1 Messaging</h4>
+                <p>Real-time isolated chat channels between students and instructors.</p>
             </div>
         </div>
     </section>
@@ -254,30 +252,31 @@
     <!-- ================= PORTALS SECTION ================= -->
     <section class="feature-grid-section" id="portals">
         <div class="section-intro">
-            <h2>Choose Your Dedicated Portal</h2>
-            <p>Select your user profile to enter the customized dashboard.</p>
+            <h2>Access Unified Dashboard</h2>
+            <p>Sign in with your campus account to enter your customized role-based dashboard.</p>
         </div>
 
         <div class="role-cards-grid">
             <!-- Faculty Portal -->
             <div class="role-card" style="border: 2px solid var(--primary);">
                 <div>
-                    <span class="meta-chip chip-primary" style="margin-bottom: 0.5rem; display: inline-block;">Primary</span>
+                    <span class="meta-chip chip-primary" style="margin-bottom: 0.5rem; display: inline-block;">Faculty</span>
                     <div class="role-icon">👨‍🏫</div>
                     <h3>Faculty Portal</h3>
-                    <p>Broadcast targeted announcements, manage academic subject details, and configure department curriculum directly.</p>
+                    <p>Manage students, assign subjects, mark attendance, post notices, and message students directly.</p>
                 </div>
-                <a href="faculty-dashboard.html" class="btn btn-primary">Open Faculty Dashboard →</a>
+                <a href="login.html?role=faculty" class="btn btn-primary">Sign In as Faculty →</a>
             </div>
 
             <!-- Student Portal -->
             <div class="role-card">
                 <div>
+                    <span class="meta-chip chip-secondary" style="margin-bottom: 0.5rem; display: inline-block;">Student</span>
                     <div class="role-icon">👨‍🎓</div>
                     <h3>Student Portal</h3>
-                    <p>Access department announcements, view allocated subjects, track semester schedules, and receive instant exam alerts.</p>
+                    <p>View your enrolled subjects, check attendance progress, receive notices, and chat with faculty.</p>
                 </div>
-                <a href="student-dashboard.html" class="btn btn-outline">Open Student Portal →</a>
+                <a href="login.html?role=student" class="btn btn-outline">Sign In as Student →</a>
             </div>
 
             <!-- Admin Portal -->
