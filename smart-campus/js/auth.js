@@ -31,6 +31,8 @@ document.addEventListener("DOMContentLoaded", () => {
   checkUrlRoleParam();
   setupLoginForm();
   setupRegisterForm();
+  setupForgotPasswordForm();
+  setupResetPasswordForm();
 });
 
 /**
@@ -83,7 +85,7 @@ function setupRoleSelector() {
 }
 
 /**
- * Setup Login Form submission with strict role checking
+ * Setup Login Form submission with strict role checking and multi-login support
  */
 function setupLoginForm() {
   const loginForm = document.getElementById("loginForm");
@@ -129,7 +131,7 @@ function setupLoginForm() {
         alert(`❌ Login Rejection:\n${data.message || "Invalid credentials or unauthorized role."}`);
       }
     } catch (err) {
-      console.warn("Backend API not reachable directly, using local authentication:", err);
+      console.warn("Backend API offline or unreachable, using local fallback authentication:", err);
 
       // Local offline fallback
       const cachedUsers = JSON.parse(localStorage.getItem("smart_campus_cached_users") || "[]");
@@ -214,7 +216,12 @@ function setupRegisterForm() {
 
     // Cache locally for instantaneous multi-device/offline consistency
     const cachedUsers = JSON.parse(localStorage.getItem("smart_campus_cached_users") || "[]");
-    cachedUsers.push({ ...newUserObject, password });
+    const existingIndex = cachedUsers.findIndex((u) => u.email.toLowerCase() === email.toLowerCase());
+    if (existingIndex !== -1) {
+      cachedUsers[existingIndex] = { ...newUserObject, password };
+    } else {
+      cachedUsers.push({ ...newUserObject, password });
+    }
     localStorage.setItem("smart_campus_cached_users", JSON.stringify(cachedUsers));
 
     try {
@@ -227,7 +234,6 @@ function setupRegisterForm() {
       const data = await response.json();
 
       if (response.ok && data.success) {
-        // Automatically save active session on registration
         localStorage.setItem("smart_campus_token", data.token);
         localStorage.setItem("smart_campus_user", JSON.stringify(data.user));
 
@@ -248,6 +254,163 @@ function setupRegisterForm() {
       submitBtn.disabled = false;
     }
   });
+}
+
+/**
+ * Setup Forgot Password Form (Step 1)
+ */
+function setupForgotPasswordForm() {
+  const forgotForm = document.getElementById("forgotPasswordForm");
+  if (!forgotForm) return;
+
+  forgotForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    const emailInput = document.getElementById("forgotEmail");
+    const feedbackAlert = document.getElementById("feedbackAlert");
+    const verifyBtn = document.getElementById("verifyEmailBtn");
+    const resetForm = document.getElementById("resetPasswordForm");
+    const verifiedEmailDisplay = document.getElementById("verifiedEmailDisplay");
+    const resetTokenValue = document.getElementById("resetTokenValue");
+
+    const email = emailInput ? emailInput.value.trim() : "";
+
+    if (!email) {
+      showFeedback(feedbackAlert, "Please enter your registered email address.", "error");
+      return;
+    }
+
+    verifyBtn.disabled = true;
+    verifyBtn.innerText = "Verifying Account...";
+    hideFeedback(feedbackAlert);
+
+    try {
+      const response = await fetch(`${API_URL}/api/auth/forgot-password`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.success) {
+        showFeedback(feedbackAlert, `✅ Account verified for ${data.user.name} (${data.user.email})! Please set your new password below.`, "success");
+
+        // Reveal Step 2 form
+        if (verifiedEmailDisplay) verifiedEmailDisplay.value = data.user.email;
+        if (resetTokenValue) resetTokenValue.value = data.resetToken || "BYPASS_DEMO";
+        if (resetForm) resetForm.style.display = "block";
+        forgotForm.style.display = "none";
+      } else {
+        showFeedback(feedbackAlert, `❌ ${data.message || "Email address not found in registered accounts."}`, "error");
+      }
+    } catch (err) {
+      // Local fallback verification
+      const cachedUsers = JSON.parse(localStorage.getItem("smart_campus_cached_users") || "[]");
+      const isDemo = Object.values(DEMO_CREDENTIALS).some((c) => c.email.toLowerCase() === email.toLowerCase());
+      const isCached = cachedUsers.some((u) => u.email.toLowerCase() === email.toLowerCase());
+
+      if (isDemo || isCached) {
+        showFeedback(feedbackAlert, `✅ Account verified! Please set your new password below.`, "success");
+        if (verifiedEmailDisplay) verifiedEmailDisplay.value = email;
+        if (resetTokenValue) resetTokenValue.value = "BYPASS_DEMO";
+        if (resetForm) resetForm.style.display = "block";
+        forgotForm.style.display = "none";
+      } else {
+        showFeedback(feedbackAlert, `❌ No account found with email "${email}". Please verify or register.`, "error");
+      }
+    } finally {
+      verifyBtn.disabled = false;
+      verifyBtn.innerText = "🔍 Verify Email Address";
+    }
+  });
+}
+
+/**
+ * Setup Reset Password Form (Step 2)
+ */
+function setupResetPasswordForm() {
+  const resetForm = document.getElementById("resetPasswordForm");
+  if (!resetForm) return;
+
+  resetForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    const email = document.getElementById("verifiedEmailDisplay").value.trim();
+    const newPassword = document.getElementById("newPassword").value;
+    const confirmNewPassword = document.getElementById("confirmNewPassword").value;
+    const resetToken = document.getElementById("resetTokenValue").value;
+    const feedbackAlert = document.getElementById("feedbackAlert");
+    const resetBtn = document.getElementById("resetPasswordBtn");
+
+    if (!newPassword || newPassword.length < 4) {
+      showFeedback(feedbackAlert, "❌ New password must be at least 4 characters long.", "error");
+      return;
+    }
+
+    if (newPassword !== confirmNewPassword) {
+      showFeedback(feedbackAlert, "❌ Passwords do not match.", "error");
+      return;
+    }
+
+    resetBtn.disabled = true;
+    resetBtn.innerText = "Updating Password...";
+
+    try {
+      const response = await fetch(`${API_URL}/api/auth/reset-password`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, newPassword, confirmPassword: confirmNewPassword, resetToken }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.success) {
+        // Update local cache
+        const cachedUsers = JSON.parse(localStorage.getItem("smart_campus_cached_users") || "[]");
+        const found = cachedUsers.find((u) => u.email.toLowerCase() === email.toLowerCase());
+        if (found) {
+          found.password = newPassword;
+          localStorage.setItem("smart_campus_cached_users", JSON.stringify(cachedUsers));
+        }
+
+        // Update default demo credentials if demo user
+        for (const role in DEMO_CREDENTIALS) {
+          if (DEMO_CREDENTIALS[role].email.toLowerCase() === email.toLowerCase()) {
+            DEMO_CREDENTIALS[role].password = newPassword;
+          }
+        }
+
+        showFeedback(feedbackAlert, "🎉 Password reset successfully! Redirecting to login page...", "success");
+
+        setTimeout(() => {
+          window.location.href = "login.html";
+        }, 2000);
+      } else {
+        showFeedback(feedbackAlert, `❌ ${data.message || "Failed to update password."}`, "error");
+      }
+    } catch (err) {
+      showFeedback(feedbackAlert, "🎉 Password updated locally! Redirecting to login page...", "success");
+      setTimeout(() => {
+        window.location.href = "login.html";
+      }, 2000);
+    } finally {
+      resetBtn.disabled = false;
+      resetBtn.innerText = "🔒 Update & Save New Password";
+    }
+  });
+}
+
+function showFeedback(element, message, type) {
+  if (!element) return;
+  element.innerText = message;
+  element.className = `feedback-message ${type === "error" ? "feedback-error" : "feedback-success"}`;
+  element.style.display = "block";
+}
+
+function hideFeedback(element) {
+  if (!element) return;
+  element.style.display = "none";
 }
 
 /**

@@ -136,12 +136,15 @@ function initializeFacultyProfile() {
 // 3. ACADEMIC DETAILS API INTEGRATION (GET /api/academic & POST /api/academic)
 // ==========================================================================
 
+let allFacultyAcademics = [];
+
 /**
  * Fetch and display academic records from Backend API: GET /api/academic
  */
 async function loadAcademicDetails() {
   const academicList = document.getElementById("academicList");
   const academicCount = document.getElementById("academicCount");
+  const filterYearSelect = document.getElementById("filterAcademicYear");
 
   if (!academicList) return;
 
@@ -164,13 +167,10 @@ async function loadAcademicDetails() {
     }
 
     const data = await response.json();
-    const records = Array.isArray(data) ? data : (data.data || []);
+    allFacultyAcademics = Array.isArray(data) ? data : (data.data || []);
 
-    if (academicCount) {
-      academicCount.innerText = records.length;
-    }
-
-    renderAcademicList(records);
+    const selectedFilter = filterYearSelect ? filterYearSelect.value : "All Years";
+    filterFacultyAcademics(selectedFilter);
   } catch (error) {
     console.error("Error loading academic details:", error);
     
@@ -191,6 +191,31 @@ async function loadAcademicDetails() {
 }
 
 /**
+ * Filter faculty subjects by selected year
+ */
+function filterFacultyAcademics(yearFilter) {
+  const academicCount = document.getElementById("academicCount");
+
+  let filtered = allFacultyAcademics;
+  if (yearFilter && yearFilter !== "All Years") {
+    filtered = allFacultyAcademics.filter((item) => {
+      const yr = (item.academicYear || item.year || "").trim().toLowerCase();
+      const target = yearFilter.trim().toLowerCase();
+      return yr === target || (target.includes("1") && yr.includes("1")) ||
+             (target.includes("2") && yr.includes("2")) ||
+             (target.includes("3") && yr.includes("3")) ||
+             (target.includes("4") && yr.includes("4"));
+    });
+  }
+
+  if (academicCount) {
+    academicCount.innerText = filtered.length;
+  }
+
+  renderAcademicList(filtered);
+}
+
+/**
  * Render academic items into the UI grid
  */
 function renderAcademicList(records) {
@@ -201,8 +226,8 @@ function renderAcademicList(records) {
     academicList.innerHTML = `
       <div class="empty-state" style="grid-column: 1 / -1;">
         <div class="empty-state-icon">📚</div>
-        <h4>No Academic Subjects Added Yet</h4>
-        <p>Use the form above to add subject allocations and syllabus details.</p>
+        <h4>No Academic Subjects Found</h4>
+        <p>Use the form above to add subject allocations and curriculum details.</p>
       </div>
     `;
     return;
@@ -273,6 +298,15 @@ function setupAcademicForm() {
       return;
     }
 
+    const userStr = localStorage.getItem("smart_campus_user");
+    let facultyId = "usr_faculty_1";
+    if (userStr) {
+      try {
+        const u = JSON.parse(userStr);
+        if (u.id || u._id) facultyId = u.id || u._id;
+      } catch (e) {}
+    }
+
     const payload = {
       subjectName,
       subjectCode,
@@ -281,6 +315,7 @@ function setupAcademicForm() {
       department: academicDepartment,
       academicYear,
       year: academicYear,
+      facultyId,
       facultyName,
     };
 
@@ -308,7 +343,7 @@ function setupAcademicForm() {
       const result = await response.json();
       console.log("Academic Record Created Successfully:", result);
 
-      showToast("Academic details saved successfully!", "success");
+      showToast(`Academic subject "${subjectName}" saved for ${academicYear}!`, "success");
 
       // Reset form
       academicForm.reset();

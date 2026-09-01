@@ -46,6 +46,8 @@ app.get("/", (req, res) => {
 // API Routes
 app.use("/api/auth", authRoutes);
 app.use("/api/academic", academicRoutes);
+app.use("/api/subjects", academicRoutes);
+app.use("/subjects", academicRoutes);
 app.use("/api/announcements", announcementRoutes);
 
 // Global 404 Handler for API routes

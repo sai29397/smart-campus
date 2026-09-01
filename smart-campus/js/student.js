@@ -244,44 +244,40 @@ async function loadStudentAcademics() {
 
   container.innerHTML = `
     <div style="grid-column: 1 / -1; text-align: center; padding: 2rem; color: var(--text-muted);">
-      <p>⏳ Loading subjects from Backend API...</p>
+      <p>⏳ Loading curriculum subjects from Server...</p>
     </div>
   `;
 
+  // Get current student profile
+  const userStr = localStorage.getItem("smart_campus_user");
+  let userDept = "Computer Science";
+  let userYear = "1st Year";
+  if (userStr) {
+    try {
+      const u = JSON.parse(userStr);
+      if (u.department) userDept = u.department;
+      if (u.year) userYear = u.year;
+    } catch (e) {}
+  }
+
   try {
-    const response = await fetch(`${API_URL}/api/academic`);
+    const response = await fetch(`${API_URL}/api/academic?year=${encodeURIComponent(userYear)}&department=${encodeURIComponent(userDept)}`);
     if (!response.ok) throw new Error("Could not fetch academic subjects");
     
     const records = await response.json();
     const list = Array.isArray(records) ? records : (records.data || []);
 
-    // Get current student profile
-    const userStr = localStorage.getItem("smart_campus_user");
-    let userDept = "";
-    let userYear = "";
-    if (userStr) {
-      try {
-        const u = JSON.parse(userStr);
-        userDept = u.department || "";
-        userYear = u.year || "";
-      } catch (e) {}
-    }
-
-    // Filter relevant subjects for student's department and year
-    let matchingSubjects = list;
-    if (userDept && userYear) {
-      const filtered = list.filter((item) => {
-        const dept = item.academicDepartment || item.department || "";
-        const yr = item.academicYear || item.year || "";
-        const isDeptMatch = !dept || dept === "All Departments" || dept.toLowerCase() === userDept.toLowerCase();
-        const isYearMatch = !yr || yr === "All Years" || yr.toLowerCase() === userYear.toLowerCase();
-        return isDeptMatch && isYearMatch;
-      });
-
-      if (filtered.length > 0) {
-        matchingSubjects = filtered;
-      }
-    }
+    // Strict year-wise isolation: only include subjects matching this student's year
+    const targetNormYear = (userYear || "1st Year").trim().toLowerCase();
+    const matchingSubjects = list.filter((item) => {
+      const itemYear = (item.academicYear || item.year || "").trim().toLowerCase();
+      if (!itemYear) return false;
+      return itemYear === targetNormYear || 
+             (targetNormYear.includes("1") && itemYear.includes("1")) ||
+             (targetNormYear.includes("2") && itemYear.includes("2")) ||
+             (targetNormYear.includes("3") && itemYear.includes("3")) ||
+             (targetNormYear.includes("4") && itemYear.includes("4"));
+    });
 
     if (countBadge) countBadge.innerText = matchingSubjects.length;
 
@@ -289,8 +285,8 @@ async function loadStudentAcademics() {
       container.innerHTML = `
         <div class="empty-state" style="grid-column: 1 / -1;">
           <div class="empty-state-icon">📚</div>
-          <h4>No Subjects Allocated for ${escapeHTML(userYear || "Your Year")} Yet</h4>
-          <p>Faculty will assign curriculum subjects for ${escapeHTML(userDept || "your department")} soon.</p>
+          <h4>No Subjects Allocated for ${escapeHTML(userYear)}</h4>
+          <p>Curriculum subjects for ${escapeHTML(userDept)} (${escapeHTML(userYear)}) will be assigned by faculty soon.</p>
         </div>
       `;
       return;

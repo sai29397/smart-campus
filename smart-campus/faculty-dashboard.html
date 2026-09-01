@@ -243,9 +243,21 @@
                 <hr style="margin: 2rem 0; border: none; border-top: 1px solid var(--border-color);">
 
                 <!-- Academic Details List -->
-                <h3 style="font-size: 1.1rem; color: var(--dark); margin-bottom: 1rem;">
-                    Allocated Academic Subjects
-                </h3>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 8px;">
+                    <h3 style="font-size: 1.1rem; color: var(--dark); margin: 0;">
+                        Allocated Academic Subjects
+                    </h3>
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <label for="filterAcademicYear" style="font-size: 0.85rem; font-weight: 700; color: var(--text-muted); margin: 0;">Filter Year:</label>
+                        <select id="filterAcademicYear" onchange="filterFacultyAcademics(this.value)" style="padding: 4px 10px; font-size: 0.85rem; border-radius: var(--radius-sm); border: 1px solid var(--border-color);">
+                            <option value="All Years" selected>All Years</option>
+                            <option value="1st Year">1st Year</option>
+                            <option value="2nd Year">2nd Year</option>
+                            <option value="3rd Year">3rd Year</option>
+                            <option value="4th Year">4th Year</option>
+                        </select>
+                    </div>
+                </div>
                 <div id="academicList" class="cards-grid">
                     <!-- Dynamic Academic items loaded via GET /api/academic -->
                 </div>
