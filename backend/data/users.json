@@ -1,0 +1,47 @@
+[
+  {
+    "_id": "usr_faculty_1",
+    "name": "Dr. Sarah Jenkins",
+    "email": "faculty@campus.edu",
+    "password": "faculty123",
+    "role": "faculty",
+    "department": "Computer Science",
+    "year": "Faculty/Staff",
+    "passwordHash": "$2a$10$PW8rZhDskwd/JIXx1i1z/uqzkA4v64gJ.TNa0FsdOozzLg5BgXkuW",
+    "createdAt": "2026-09-01T18:08:11.769Z"
+  },
+  {
+    "_id": "usr_student_1",
+    "name": "Alex Johnson",
+    "email": "student@campus.edu",
+    "password": "student123",
+    "role": "student",
+    "department": "Computer Science",
+    "year": "1st Year",
+    "passwordHash": "$2a$10$T7etP4/PRTD8L2xXC46mquoENvbcIxqR9XhiMFuPuqLTla/LVEKza",
+    "createdAt": "2026-09-01T18:08:11.824Z"
+  },
+  {
+    "_id": "usr_admin_1",
+    "name": "Campus Administrator",
+    "email": "admin@campus.edu",
+    "password": "admin123",
+    "role": "admin",
+    "department": "Campus Administration",
+    "year": "Staff",
+    "passwordHash": "$2a$10$kXfV0QOINYr4WfFCwbBsm.NmRuiKmokMJwXstkLElx4Cfaf1mDhxO",
+    "createdAt": "2026-09-01T18:08:11.876Z"
+  },
+  {
+    "_id": "usr_1788286110077",
+    "name": "Priya Patel",
+    "email": "priya@campus.edu",
+    "password": "PriyaUpdated@999",
+    "passwordHash": "$2a$10$OxHujTqTdXv8O9TyKJR9vun1LrOZRaeJPv.kb47f3gMEcqzM//pQi",
+    "role": "student",
+    "department": "Information Technology",
+    "year": "2nd Year",
+    "createdAt": "2026-09-01T18:08:30.077Z",
+    "updatedAt": "2026-09-01T18:08:40.316Z"
+  }
+]

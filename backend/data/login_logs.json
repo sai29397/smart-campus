@@ -1,0 +1,24 @@
+[
+  {
+    "userId": "usr_1788286110077",
+    "email": "priya@campus.edu",
+    "name": "Priya Patel",
+    "role": "student",
+    "department": "Information Technology",
+    "year": "2nd Year",
+    "ip": "::1",
+    "userAgent": "Mozilla/5.0 (Windows NT; Windows NT 10.0; en-US) WindowsPowerShell/5.1.26100.9278",
+    "timestamp": "2026-09-01T18:08:50.392Z"
+  },
+  {
+    "userId": "usr_1788286110077",
+    "email": "priya@campus.edu",
+    "name": "Priya Patel",
+    "role": "student",
+    "department": "Information Technology",
+    "year": "2nd Year",
+    "ip": "::1",
+    "userAgent": "Mozilla/5.0 (Windows NT; Windows NT 10.0; en-US) WindowsPowerShell/5.1.26100.9278",
+    "timestamp": "2026-09-01T18:08:40.239Z"
+  }
+]

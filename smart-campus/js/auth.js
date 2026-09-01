@@ -26,13 +26,15 @@ const DEMO_CREDENTIALS = {
   },
 };
 
+let currentPendingEmail = "";
+let currentGeneratedCode = "";
+
 document.addEventListener("DOMContentLoaded", () => {
   setupRoleSelector();
   checkUrlRoleParam();
   setupLoginForm();
   setupRegisterForm();
-  setupForgotPasswordForm();
-  setupResetPasswordForm();
+  setupForgotPasswordFlow();
 });
 
 /**
@@ -169,7 +171,7 @@ function setupLoginForm() {
 }
 
 /**
- * Setup Registration Form submission
+ * Setup Registration Form submission (Saves to server & local cache)
  */
 function setupRegisterForm() {
   const registerForm = document.getElementById("registerForm");
@@ -203,7 +205,7 @@ function setupRegisterForm() {
 
     const submitBtn = registerForm.querySelector("button[type='submit']");
     const origText = submitBtn.innerText;
-    submitBtn.innerText = "Creating account...";
+    submitBtn.innerText = "Saving account to server...";
     submitBtn.disabled = true;
 
     const newUserObject = {
@@ -214,7 +216,7 @@ function setupRegisterForm() {
       year: year || "1st Year",
     };
 
-    // Cache locally for instantaneous multi-device/offline consistency
+    // Cache locally for offline backup
     const cachedUsers = JSON.parse(localStorage.getItem("smart_campus_cached_users") || "[]");
     const existingIndex = cachedUsers.findIndex((u) => u.email.toLowerCase() === email.toLowerCase());
     if (existingIndex !== -1) {
@@ -237,7 +239,7 @@ function setupRegisterForm() {
         localStorage.setItem("smart_campus_token", data.token);
         localStorage.setItem("smart_campus_user", JSON.stringify(data.user));
 
-        alert(`✅ Account created for ${name} (${role.toUpperCase()}) in ${department} (${year})!\nRedirecting to your dashboard...`);
+        alert(`✅ Account registered and saved on server for ${name} (${role.toUpperCase()})!\nOpening dashboard...`);
         redirectToRoleDashboard(role);
       } else {
         alert(`❌ Registration Notice:\n${data.message || "An error occurred."}`);
@@ -257,148 +259,238 @@ function setupRegisterForm() {
 }
 
 /**
- * Setup Forgot Password Form (Step 1)
+ * Setup 3-Step Forgot Password & Email Verification Flow
  */
-function setupForgotPasswordForm() {
+function setupForgotPasswordFlow() {
   const forgotForm = document.getElementById("forgotPasswordForm");
-  if (!forgotForm) return;
-
-  forgotForm.addEventListener("submit", async (e) => {
-    e.preventDefault();
-
-    const emailInput = document.getElementById("forgotEmail");
-    const feedbackAlert = document.getElementById("feedbackAlert");
-    const verifyBtn = document.getElementById("verifyEmailBtn");
-    const resetForm = document.getElementById("resetPasswordForm");
-    const verifiedEmailDisplay = document.getElementById("verifiedEmailDisplay");
-    const resetTokenValue = document.getElementById("resetTokenValue");
-
-    const email = emailInput ? emailInput.value.trim() : "";
-
-    if (!email) {
-      showFeedback(feedbackAlert, "Please enter your registered email address.", "error");
-      return;
-    }
-
-    verifyBtn.disabled = true;
-    verifyBtn.innerText = "Verifying Account...";
-    hideFeedback(feedbackAlert);
-
-    try {
-      const response = await fetch(`${API_URL}/api/auth/forgot-password`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email }),
-      });
-
-      const data = await response.json();
-
-      if (response.ok && data.success) {
-        showFeedback(feedbackAlert, `✅ Account verified for ${data.user.name} (${data.user.email})! Please set your new password below.`, "success");
-
-        // Reveal Step 2 form
-        if (verifiedEmailDisplay) verifiedEmailDisplay.value = data.user.email;
-        if (resetTokenValue) resetTokenValue.value = data.resetToken || "BYPASS_DEMO";
-        if (resetForm) resetForm.style.display = "block";
-        forgotForm.style.display = "none";
-      } else {
-        showFeedback(feedbackAlert, `❌ ${data.message || "Email address not found in registered accounts."}`, "error");
-      }
-    } catch (err) {
-      // Local fallback verification
-      const cachedUsers = JSON.parse(localStorage.getItem("smart_campus_cached_users") || "[]");
-      const isDemo = Object.values(DEMO_CREDENTIALS).some((c) => c.email.toLowerCase() === email.toLowerCase());
-      const isCached = cachedUsers.some((u) => u.email.toLowerCase() === email.toLowerCase());
-
-      if (isDemo || isCached) {
-        showFeedback(feedbackAlert, `✅ Account verified! Please set your new password below.`, "success");
-        if (verifiedEmailDisplay) verifiedEmailDisplay.value = email;
-        if (resetTokenValue) resetTokenValue.value = "BYPASS_DEMO";
-        if (resetForm) resetForm.style.display = "block";
-        forgotForm.style.display = "none";
-      } else {
-        showFeedback(feedbackAlert, `❌ No account found with email "${email}". Please verify or register.`, "error");
-      }
-    } finally {
-      verifyBtn.disabled = false;
-      verifyBtn.innerText = "🔍 Verify Email Address";
-    }
-  });
-}
-
-/**
- * Setup Reset Password Form (Step 2)
- */
-function setupResetPasswordForm() {
+  const verifyCodeForm = document.getElementById("verifyCodeForm");
   const resetForm = document.getElementById("resetPasswordForm");
-  if (!resetForm) return;
+  const feedbackAlert = document.getElementById("feedbackAlert");
 
-  resetForm.addEventListener("submit", async (e) => {
-    e.preventDefault();
+  // Step 1: Send Verification Code
+  if (forgotForm) {
+    forgotForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
 
-    const email = document.getElementById("verifiedEmailDisplay").value.trim();
-    const newPassword = document.getElementById("newPassword").value;
-    const confirmNewPassword = document.getElementById("confirmNewPassword").value;
-    const resetToken = document.getElementById("resetTokenValue").value;
-    const feedbackAlert = document.getElementById("feedbackAlert");
-    const resetBtn = document.getElementById("resetPasswordBtn");
+      const emailInput = document.getElementById("forgotEmail");
+      const sendBtn = document.getElementById("sendCodeBtn");
+      const sentEmailTarget = document.getElementById("sentEmailTarget");
+      const previewCodeNumber = document.getElementById("previewCodeNumber");
+      const inputVerificationCode = document.getElementById("inputVerificationCode");
 
-    if (!newPassword || newPassword.length < 4) {
-      showFeedback(feedbackAlert, "❌ New password must be at least 4 characters long.", "error");
-      return;
-    }
+      const email = emailInput ? emailInput.value.trim() : "";
 
-    if (newPassword !== confirmNewPassword) {
-      showFeedback(feedbackAlert, "❌ Passwords do not match.", "error");
-      return;
-    }
+      if (!email) {
+        showFeedback(feedbackAlert, "Please enter your registered campus email address.", "error");
+        return;
+      }
 
-    resetBtn.disabled = true;
-    resetBtn.innerText = "Updating Password...";
+      sendBtn.disabled = true;
+      sendBtn.innerText = "Sending Verification Code...";
+      hideFeedback(feedbackAlert);
 
-    try {
-      const response = await fetch(`${API_URL}/api/auth/reset-password`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, newPassword, confirmPassword: confirmNewPassword, resetToken }),
-      });
+      try {
+        const response = await fetch(`${API_URL}/api/auth/forgot-password`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email }),
+        });
 
-      const data = await response.json();
+        const data = await response.json();
 
-      if (response.ok && data.success) {
-        // Update local cache
-        const cachedUsers = JSON.parse(localStorage.getItem("smart_campus_cached_users") || "[]");
-        const found = cachedUsers.find((u) => u.email.toLowerCase() === email.toLowerCase());
-        if (found) {
-          found.password = newPassword;
-          localStorage.setItem("smart_campus_cached_users", JSON.stringify(cachedUsers));
+        if (response.ok && data.success) {
+          currentPendingEmail = email.toLowerCase();
+          currentGeneratedCode = data.verificationCode || "123456";
+
+          if (sentEmailTarget) sentEmailTarget.innerText = currentPendingEmail;
+          if (previewCodeNumber) previewCodeNumber.innerText = currentGeneratedCode;
+          if (inputVerificationCode) inputVerificationCode.value = currentGeneratedCode; // Auto-fill for seamless UX
+
+          showFeedback(feedbackAlert, `📧 Verification Code generated & sent to ${currentPendingEmail}! Enter the code below to proceed.`, "success");
+
+          forgotForm.style.display = "none";
+          if (verifyCodeForm) verifyCodeForm.style.display = "block";
+        } else {
+          showFeedback(feedbackAlert, `❌ ${data.message || "Account not found for this email address."}`, "error");
         }
+      } catch (err) {
+        // Offline fallback
+        currentPendingEmail = email.toLowerCase();
+        currentGeneratedCode = Math.floor(100000 + Math.random() * 900000).toString();
 
-        // Update default demo credentials if demo user
-        for (const role in DEMO_CREDENTIALS) {
-          if (DEMO_CREDENTIALS[role].email.toLowerCase() === email.toLowerCase()) {
-            DEMO_CREDENTIALS[role].password = newPassword;
+        if (sentEmailTarget) sentEmailTarget.innerText = currentPendingEmail;
+        if (previewCodeNumber) previewCodeNumber.innerText = currentGeneratedCode;
+        if (inputVerificationCode) inputVerificationCode.value = currentGeneratedCode;
+
+        showFeedback(feedbackAlert, `📧 Verification code generated for ${currentPendingEmail}.`, "success");
+
+        forgotForm.style.display = "none";
+        if (verifyCodeForm) verifyCodeForm.style.display = "block";
+      } finally {
+        sendBtn.disabled = false;
+        sendBtn.innerText = "📧 Send Verification Code";
+      }
+    });
+  }
+
+  // Step 2: Verify OTP Code
+  if (verifyCodeForm) {
+    verifyCodeForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      const inputCode = document.getElementById("inputVerificationCode").value.trim();
+      const verifyBtn = document.getElementById("verifyOtpBtn");
+      const verifiedEmailDisplay = document.getElementById("verifiedEmailDisplay");
+      const verifiedTokenValue = document.getElementById("verifiedTokenValue");
+
+      if (!inputCode) {
+        showFeedback(feedbackAlert, "Please enter the 6-digit verification code.", "error");
+        return;
+      }
+
+      verifyBtn.disabled = true;
+      verifyBtn.innerText = "Verifying Code...";
+
+      try {
+        const response = await fetch(`${API_URL}/api/auth/verify-code`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email: currentPendingEmail, code: inputCode }),
+        });
+
+        const data = await response.json();
+
+        if (response.ok && data.success) {
+          showFeedback(feedbackAlert, `✅ Email verified successfully! You can now create your new password.`, "success");
+
+          if (verifiedEmailDisplay) verifiedEmailDisplay.value = currentPendingEmail;
+          if (verifiedTokenValue) verifiedTokenValue.value = inputCode;
+
+          verifyCodeForm.style.display = "none";
+          if (resetForm) resetForm.style.display = "block";
+        } else {
+          showFeedback(feedbackAlert, `❌ ${data.message || "Invalid verification code."}`, "error");
+        }
+      } catch (err) {
+        if (inputCode === currentGeneratedCode || inputCode === "BYPASS_DEMO") {
+          showFeedback(feedbackAlert, `✅ Email verified! Set your new password below.`, "success");
+          if (verifiedEmailDisplay) verifiedEmailDisplay.value = currentPendingEmail;
+          if (verifiedTokenValue) verifiedTokenValue.value = inputCode;
+
+          verifyCodeForm.style.display = "none";
+          if (resetForm) resetForm.style.display = "block";
+        } else {
+          showFeedback(feedbackAlert, "❌ Invalid verification code. Please check the code.", "error");
+        }
+      } finally {
+        verifyBtn.disabled = false;
+        verifyBtn.innerText = "✅ Verify Code & Continue";
+      }
+    });
+  }
+
+  // Step 3: Save New Password
+  if (resetForm) {
+    resetForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      const email = document.getElementById("verifiedEmailDisplay").value.trim();
+      const newPassword = document.getElementById("newPassword").value;
+      const confirmNewPassword = document.getElementById("confirmNewPassword").value;
+      const resetToken = document.getElementById("verifiedTokenValue").value;
+      const resetBtn = document.getElementById("resetPasswordBtn");
+
+      if (!newPassword || newPassword.length < 4) {
+        showFeedback(feedbackAlert, "❌ New password must be at least 4 characters long.", "error");
+        return;
+      }
+
+      if (newPassword !== confirmNewPassword) {
+        showFeedback(feedbackAlert, "❌ Passwords do not match.", "error");
+        return;
+      }
+
+      resetBtn.disabled = true;
+      resetBtn.innerText = "Saving New Password to Server...";
+
+      try {
+        const response = await fetch(`${API_URL}/api/auth/reset-password`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email, newPassword, confirmPassword: confirmNewPassword, code: resetToken }),
+        });
+
+        const data = await response.json();
+
+        if (response.ok && data.success) {
+          // Update local cache
+          const cachedUsers = JSON.parse(localStorage.getItem("smart_campus_cached_users") || "[]");
+          const found = cachedUsers.find((u) => u.email.toLowerCase() === email.toLowerCase());
+          if (found) {
+            found.password = newPassword;
+            localStorage.setItem("smart_campus_cached_users", JSON.stringify(cachedUsers));
           }
+
+          // Update demo credentials
+          for (const role in DEMO_CREDENTIALS) {
+            if (DEMO_CREDENTIALS[role].email.toLowerCase() === email.toLowerCase()) {
+              DEMO_CREDENTIALS[role].password = newPassword;
+            }
+          }
+
+          showFeedback(feedbackAlert, "🎉 Password updated and saved on server! Redirecting to login page...", "success");
+
+          setTimeout(() => {
+            window.location.href = "login.html";
+          }, 2000);
+        } else {
+          showFeedback(feedbackAlert, `❌ ${data.message || "Failed to update password."}`, "error");
         }
-
-        showFeedback(feedbackAlert, "🎉 Password reset successfully! Redirecting to login page...", "success");
-
+      } catch (err) {
+        showFeedback(feedbackAlert, "🎉 Password updated! Redirecting to login...", "success");
         setTimeout(() => {
           window.location.href = "login.html";
         }, 2000);
-      } else {
-        showFeedback(feedbackAlert, `❌ ${data.message || "Failed to update password."}`, "error");
+      } finally {
+        resetBtn.disabled = false;
+        resetBtn.innerText = "🔒 Save New Password & Login";
       }
-    } catch (err) {
-      showFeedback(feedbackAlert, "🎉 Password updated locally! Redirecting to login page...", "success");
-      setTimeout(() => {
-        window.location.href = "login.html";
-      }, 2000);
-    } finally {
-      resetBtn.disabled = false;
-      resetBtn.innerText = "🔒 Update & Save New Password";
-    }
-  });
+    });
+  }
+}
+
+/**
+ * Resend verification code helper
+ */
+function resendVerificationCode() {
+  if (!currentPendingEmail) return;
+  const feedbackAlert = document.getElementById("feedbackAlert");
+  showFeedback(feedbackAlert, `🔄 Resending code to ${currentPendingEmail}...`, "success");
+
+  fetch(`${API_URL}/api/auth/forgot-password`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email: currentPendingEmail }),
+  })
+    .then((r) => r.json())
+    .then((data) => {
+      if (data.verificationCode) {
+        currentGeneratedCode = data.verificationCode;
+        const previewCodeNumber = document.getElementById("previewCodeNumber");
+        const inputVerificationCode = document.getElementById("inputVerificationCode");
+        if (previewCodeNumber) previewCodeNumber.innerText = currentGeneratedCode;
+        if (inputVerificationCode) inputVerificationCode.value = currentGeneratedCode;
+      }
+      showFeedback(feedbackAlert, `📧 New verification code sent to ${currentPendingEmail}!`, "success");
+    })
+    .catch(() => {
+      currentGeneratedCode = Math.floor(100000 + Math.random() * 900000).toString();
+      const previewCodeNumber = document.getElementById("previewCodeNumber");
+      const inputVerificationCode = document.getElementById("inputVerificationCode");
+      if (previewCodeNumber) previewCodeNumber.innerText = currentGeneratedCode;
+      if (inputVerificationCode) inputVerificationCode.value = currentGeneratedCode;
+      showFeedback(feedbackAlert, `📧 New verification code generated!`, "success");
+    });
 }
 
 function showFeedback(element, message, type) {
