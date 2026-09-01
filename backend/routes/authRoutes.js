@@ -253,7 +253,7 @@ router.post("/register", async (req, res) => {
 });
 
 // ==========================================================================
-// 2. LOGIN USER (With Server Persistence & Audit Logging)
+// 2. LOGIN USER (Permanent Database Search & Password Verification)
 // ==========================================================================
 router.post("/login", async (req, res) => {
   try {
@@ -262,99 +262,74 @@ router.post("/login", async (req, res) => {
     if (!email || !password) {
       return res.status(400).json({
         success: false,
-        message: "Please enter both email and password.",
-      });
-    }
-
-    if (!role) {
-      return res.status(400).json({
-        success: false,
-        message: "Please select your role (Student, Faculty, or Admin).",
+        message: "Please enter both your email address and password.",
       });
     }
 
     const cleanEmail = email.toLowerCase().trim();
 
-    // Reload from server storage to ensure latest data
+    // Reload from server persistent storage
     inMemoryUsers = loadServerUsers();
 
-    const memUser = inMemoryUsers.find((u) => u.email.toLowerCase() === cleanEmail);
+    // 1. Search for user by email across server database
+    let foundUser = inMemoryUsers.find((u) => u.email.toLowerCase() === cleanEmail);
 
-    if (memUser) {
-      const isPasswordValid = await verifyPassword(password, memUser.password, memUser.passwordHash);
-
-      if (!isPasswordValid) {
-        return res.status(401).json({
-          success: false,
-          message: "Incorrect password. Please verify your credentials.",
-        });
-      }
-
-      if (memUser.role !== role.toLowerCase()) {
-        return res.status(403).json({
-          success: false,
-          message: `Access Denied: This account is registered as "${memUser.role.toUpperCase()}". You cannot log into the ${role.toUpperCase()} portal.`,
-        });
-      }
-
-      // Record login audit event permanently on server
-      recordLoginEvent(memUser, req);
-
-      return res.json({
-        success: true,
-        message: `Login successful as ${memUser.role}!`,
-        token: generateToken(memUser),
-        user: {
-          id: memUser._id,
-          name: memUser.name,
-          email: memUser.email,
-          role: memUser.role,
-          department: memUser.department,
-          year: memUser.year,
-        },
-      });
-    }
-
-    // Try MongoDB
-    try {
-      const dbUser = await User.findOne({ email: cleanEmail });
-      if (dbUser) {
-        const isMatch = await dbUser.matchPassword(password);
-        if (!isMatch) {
-          return res.status(401).json({
-            success: false,
-            message: "Incorrect password. Please verify your credentials.",
-          });
-        }
-
-        if (dbUser.role !== role.toLowerCase()) {
-          return res.status(403).json({
-            success: false,
-            message: `Access Denied: Account registered as "${dbUser.role.toUpperCase()}".`,
-          });
-        }
-
-        recordLoginEvent(dbUser, req);
-
-        return res.json({
-          success: true,
-          message: "Login successful!",
-          token: generateToken(dbUser),
-          user: {
-            id: dbUser._id,
+    // 2. Search MongoDB if not in memory
+    if (!foundUser) {
+      try {
+        const dbUser = await User.findOne({ email: cleanEmail });
+        if (dbUser) {
+          foundUser = {
+            _id: dbUser._id.toString(),
             name: dbUser.name,
             email: dbUser.email,
+            password: dbUser.password,
+            passwordHash: dbUser.password,
             role: dbUser.role,
             department: dbUser.department,
             year: dbUser.year,
-          },
-        });
-      }
-    } catch (dbErr) {}
+          };
+          // Sync to server users list
+          inMemoryUsers.push(foundUser);
+          saveServerUsers(inMemoryUsers);
+        }
+      } catch (dbErr) {}
+    }
 
-    return res.status(404).json({
-      success: false,
-      message: `Account not found for email "${email}". Please check the email address or register.`,
+    // 3. If user is not found in database, return 404 "User Not Found"
+    if (!foundUser) {
+      return res.status(404).json({
+        success: false,
+        message: `User not found with email "${email}". Please verify your email or register a new account.`,
+      });
+    }
+
+    // 4. Verify password securely using bcrypt
+    const isPasswordValid = await verifyPassword(password, foundUser.password, foundUser.passwordHash);
+
+    if (!isPasswordValid) {
+      return res.status(401).json({
+        success: false,
+        message: "Incorrect password for this account. Please try again.",
+      });
+    }
+
+    // 5. Record login audit event permanently on server
+    recordLoginEvent(foundUser, req);
+
+    // 6. Return successful session with user's verified registered role
+    return res.json({
+      success: true,
+      message: `Login successful as ${foundUser.role}!`,
+      token: generateToken(foundUser),
+      user: {
+        id: foundUser._id,
+        name: foundUser.name,
+        email: foundUser.email,
+        role: foundUser.role,
+        department: foundUser.department,
+        year: foundUser.year,
+      },
     });
   } catch (error) {
     console.error("Login Error:", error);

@@ -30,6 +30,23 @@
             border-color: var(--primary);
             color: var(--primary);
         }
+        .login-alert {
+            padding: 10px 14px;
+            border-radius: var(--radius-sm);
+            font-size: 0.875rem;
+            margin-bottom: 1.25rem;
+            display: none;
+        }
+        .login-alert-success {
+            background: #f0fdf4;
+            border: 1px solid #bbf7d0;
+            color: #166534;
+        }
+        .login-alert-error {
+            background: #fff5f5;
+            border: 1px solid #fed7d7;
+            color: #c53030;
+        }
     </style>
 </head>
 <body class="auth-page">
@@ -38,25 +55,29 @@
         <div class="auth-header">
             <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">🎓</div>
             <h2>Sign in to SmartCampus</h2>
-            <p>Select your user role to enter your dedicated portal</p>
+            <p>Enter your registered campus credentials to access your portal</p>
         </div>
 
-        <!-- 1-Click Quick Role Switchers -->
-        <label style="font-size: 0.8rem; font-weight: 700; color: var(--text-muted); margin-bottom: 6px; display: block;">
-            QUICK ROLE DEMO LOGIN:
-        </label>
+        <div id="loginStatusAlert" class="login-alert"></div>
+
+        <!-- 1-Click Quick Role Demo Switchers (Optional shortcuts) -->
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+            <label style="font-size: 0.75rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">
+                Fill Demo Credentials (Optional):
+            </label>
+        </div>
         <div class="quick-role-buttons">
-            <button type="button" class="quick-role-btn active" onclick="quickSelectRole('faculty')">👨‍🏫 Faculty</button>
-            <button type="button" class="quick-role-btn" onclick="quickSelectRole('student')">👨‍🎓 Student</button>
-            <button type="button" class="quick-role-btn" onclick="quickSelectRole('admin')">🏛️ Admin</button>
+            <button type="button" class="quick-role-btn" onclick="fillDemoCredentials('student')">👨‍🎓 Student</button>
+            <button type="button" class="quick-role-btn" onclick="fillDemoCredentials('faculty')">👨‍🏫 Faculty</button>
+            <button type="button" class="quick-role-btn" onclick="fillDemoCredentials('admin')">🏛️ Admin</button>
         </div>
 
         <form id="loginForm">
             <div class="form-group">
-                <label for="role">Selected Role *</label>
+                <label for="role">User Role *</label>
                 <select id="role" required>
-                    <option value="faculty" selected>Faculty Member</option>
-                    <option value="student">Student</option>
+                    <option value="student" selected>Student</option>
+                    <option value="faculty">Faculty Member</option>
                     <option value="admin">Administrator</option>
                 </select>
             </div>
@@ -66,9 +87,9 @@
                 <input 
                     type="email" 
                     id="email" 
-                    placeholder="e.g., faculty@campus.edu" 
-                    value="faculty@campus.edu"
+                    placeholder="e.g., yourname@campus.edu or student@campus.edu" 
                     required
+                    autocomplete="email"
                 >
             </div>
 
@@ -77,26 +98,26 @@
                 <input 
                     type="password" 
                     id="password" 
-                    placeholder="Enter your password" 
-                    value="faculty123"
+                    placeholder="Enter your registered password" 
                     required
+                    autocomplete="current-password"
                 >
             </div>
 
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; font-size: 0.875rem;">
                 <label style="display: flex; align-items: center; gap: 6px; cursor: pointer;">
-                    <input type="checkbox" id="rememberMe" checked> Remember me
+                    <input type="checkbox" id="rememberMe" checked> Remember Email
                 </label>
                 <a href="forgot-password.html">Forgot password?</a>
             </div>
 
-            <button type="submit" class="btn btn-primary" style="width: 100%;">
+            <button type="submit" id="loginSubmitBtn" class="btn btn-primary" style="width: 100%;">
                 🔐 Login to Portal
             </button>
         </form>
 
         <div class="auth-footer">
-            <p>Need a new user account? <a href="register.html">Register here</a></p>
+            <p>Need a new account? <a href="register.html">Register here</a></p>
             <p style="margin-top: 0.5rem;"><a href="index.html">← Back to Homepage</a></p>
         </div>
     </div>

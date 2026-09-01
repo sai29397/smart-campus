@@ -43,5 +43,27 @@
     "year": "2nd Year",
     "createdAt": "2026-09-01T18:08:30.077Z",
     "updatedAt": "2026-09-01T18:08:40.316Z"
+  },
+  {
+    "_id": "usr_1788286214638",
+    "name": "vimal",
+    "email": "vtu29397@veltech.edu.in",
+    "password": "1596",
+    "passwordHash": "$2a$10$J/ASQOBNmm0XjCDIQLWBJe/BmoR77sY9MubGGPL5FffLvOMxSKapS",
+    "role": "student",
+    "department": "Electronics & Communication",
+    "year": "1st Year",
+    "createdAt": "2026-09-01T18:10:14.639Z"
+  },
+  {
+    "_id": "usr_1788286990591",
+    "name": "Karthik Raja",
+    "email": "karthik@campus.edu",
+    "password": "KarthikPassword@123",
+    "passwordHash": "$2a$10$BUA3fvFCsynu6oeDMjF3V.4UjwLjrLD/0uaXzel58AMmvoepSBAqm",
+    "role": "student",
+    "department": "Mechanical Engineering",
+    "year": "3rd Year",
+    "createdAt": "2026-09-01T18:23:10.591Z"
   }
 ]
