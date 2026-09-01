@@ -25,24 +25,32 @@ document.addEventListener("DOMContentLoaded", () => {
  * Initialize student session & dynamic UI header tags
  */
 function initStudentSession() {
+  const token = localStorage.getItem("smart_campus_token");
   const userJson = localStorage.getItem("smart_campus_user");
 
-  if (userJson) {
-    try {
-      currentUser = JSON.parse(userJson);
-    } catch (e) {}
+  if (!token || !userJson) {
+    alert("⚠️ Please sign in to access the Student Portal.");
+    window.location.href = "login.html?role=student";
+    return;
   }
 
-  if (!currentUser) {
-    currentUser = {
-      id: "usr_student_1",
-      name: "Alex Johnson",
-      email: "student@campus.edu",
-      role: "student",
-      department: "Computer Science",
-      year: "1st Year",
-      specialization: "General CSE",
-    };
+  try {
+    currentUser = JSON.parse(userJson);
+  } catch (e) {
+    window.location.href = "login.html?role=student";
+    return;
+  }
+
+  if (currentUser.role !== "student") {
+    alert(`⛔ Access Denied: You are logged in as "${currentUser.role.toUpperCase()}". Only Students can access the Student Portal.\nRedirecting to your dashboard...`);
+    if (currentUser.role === "faculty") {
+      window.location.href = "faculty-dashboard.html";
+    } else if (currentUser.role === "admin") {
+      window.location.href = "admin-dashboard.html";
+    } else {
+      window.location.href = "login.html";
+    }
+    return;
   }
 
   const studentName = currentUser.name || "Alex Johnson";

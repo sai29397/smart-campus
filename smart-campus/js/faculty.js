@@ -32,19 +32,35 @@ document.addEventListener("DOMContentLoaded", () => {
  * Initialize faculty session and profile header
  */
 function initFacultySession() {
+  const token = localStorage.getItem("smart_campus_token");
   const userJson = localStorage.getItem("smart_campus_user");
-  if (userJson) {
-    try {
-      currentUser = JSON.parse(userJson);
-      const facultyNameEl = document.getElementById("facultyName");
-      const facultyTagEl = document.getElementById("facultyTag");
-      const facultyHeaderDept = document.getElementById("facultyHeaderDept");
 
-      if (facultyNameEl) facultyNameEl.innerText = currentUser.name || "Dr. Sarah Jenkins";
-      if (facultyTagEl) facultyTagEl.innerText = `${currentUser.department || "Computer Science"} • Faculty`;
-      if (facultyHeaderDept) facultyHeaderDept.innerText = currentUser.department || "Computer Science";
-    } catch (e) {}
+  if (!token || !userJson) {
+    alert("⚠️ Please sign in to access the Faculty Dashboard.");
+    window.location.href = "login.html?role=faculty";
+    return;
   }
+
+  try {
+    currentUser = JSON.parse(userJson);
+  } catch (e) {
+    window.location.href = "login.html?role=faculty";
+    return;
+  }
+
+  if (currentUser.role !== "faculty" && currentUser.role !== "admin") {
+    alert(`⛔ Access Denied: You are logged in as "${currentUser.role.toUpperCase()}". Only Faculty members can access the Faculty Dashboard.\nRedirecting to Student Dashboard...`);
+    window.location.href = "student-dashboard.html";
+    return;
+  }
+
+  const facultyNameEl = document.getElementById("facultyName");
+  const facultyTagEl = document.getElementById("facultyTag");
+  const facultyHeaderDept = document.getElementById("facultyHeaderDept");
+
+  if (facultyNameEl) facultyNameEl.innerText = currentUser.name || "Dr. Sarah Jenkins";
+  if (facultyTagEl) facultyTagEl.innerText = `${currentUser.department || "Computer Science"} • Faculty`;
+  if (facultyHeaderDept) facultyHeaderDept.innerText = currentUser.department || "Computer Science";
 
   const logoutBtn = document.getElementById("logoutBtn");
   if (logoutBtn) {

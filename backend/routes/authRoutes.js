@@ -317,10 +317,19 @@ router.post("/login", async (req, res) => {
       });
     }
 
-    // 5. Record login audit event permanently on server
+    // 5. Strict Role Enforcement (Faculty can only login to Faculty portal, Student to Student portal)
+    if (role && foundUser.role.toLowerCase() !== role.toLowerCase()) {
+      return res.status(403).json({
+        success: false,
+        message: `Access Denied: This account is registered as "${foundUser.role.toUpperCase()}". You cannot log into the ${role.toUpperCase()} portal. Please select "${foundUser.role.toUpperCase()}" role.`,
+        registeredRole: foundUser.role,
+      });
+    }
+
+    // 6. Record login audit event permanently on server
     recordLoginEvent(foundUser, req);
 
-    // 6. Return successful session with user's verified registered role
+    // 7. Return successful session with user's verified registered role
     return res.json({
       success: true,
       message: `Login successful as ${foundUser.role}!`,
