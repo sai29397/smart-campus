@@ -11,6 +11,7 @@ const subjectAssignmentRoutes = require("./routes/subjectAssignmentRoutes");
 const announcementRoutes = require("./routes/announcementRoutes");
 const chatRoutes = require("./routes/chatRoutes");
 const attendanceRoutes = require("./routes/attendanceRoutes");
+const paperRoutes = require("./routes/paperRoutes");
 
 // Initialize Express App
 const app = express();
@@ -43,11 +44,12 @@ app.use(express.static(frontendPath));
 app.get("/", (req, res) => {
   res.json({
     message: "Smart Campus Backend Running Successfully",
-    version: "2.1.0",
+    version: "2.2.0",
     features: [
       "Targeted Subject Assignment (Student/Multi-Year/Specialization)",
       "Real-time Faculty-Student Private Messaging",
       "Attendance Management & Analytics",
+      "Previous Year Question Papers (PYQs) & Exam Resources",
       "Permanent On-Disk JSON & MongoDB Persistence",
     ],
   });
@@ -62,6 +64,7 @@ app.use("/api/announcements", announcementRoutes);
 app.use("/api/messages", chatRoutes);
 app.use("/api/chat", chatRoutes);
 app.use("/api/attendance", attendanceRoutes);
+app.use("/api/papers", paperRoutes);
 
 // Global 404 Handler for API routes
 app.use("/api/*", (req, res) => {

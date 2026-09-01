@@ -1,0 +1,367 @@
+[
+  {
+    "_id": "paper_1788303958097",
+    "id": "paper_1788303958097",
+    "title": "Cyber Security & Ethical Hacking - Mid-Term 2025",
+    "subjectName": "Cyber Security & Cryptography",
+    "subjectCode": "CSCY302",
+    "department": "Computer Science",
+    "year": "3rd Year",
+    "semester": "Semester 1",
+    "examType": "Mid-Term Exam",
+    "examYear": "2025",
+    "totalMarks": 50,
+    "duration": "2 Hours",
+    "instructions": "Answer all questions. Part A is compulsory (10 Marks). Answer any two from Part B (40 Marks).",
+    "sections": [
+      {
+        "questions": "System.Collections.Hashtable System.Collections.Hashtable",
+        "sectionTitle": "Part A: Short Questions (5 x 2 = 10 Marks)"
+      },
+      {
+        "questions": "System.Collections.Hashtable System.Collections.Hashtable",
+        "sectionTitle": "Part B: Detailed Analytical Questions (2 x 20 = 40 Marks)"
+      }
+    ],
+    "fileUrl": "",
+    "uploadedBy": "Dr. Sarah Jenkins",
+    "facultyId": "usr_faculty_1",
+    "downloadsCount": 0,
+    "createdAt": "2026-09-01T23:05:58.097Z"
+  },
+  {
+    "_id": "paper_101",
+    "id": "paper_101",
+    "title": "Engineering Mathematics I - End Semester Examination 2024",
+    "subjectName": "Engineering Mathematics I",
+    "subjectCode": "MA101",
+    "department": "Computer Science",
+    "year": "1st Year",
+    "semester": "Semester 1",
+    "examType": "End-Semester Exam",
+    "examYear": "2024",
+    "totalMarks": 100,
+    "duration": "3 Hours",
+    "instructions": "Answer all questions from Section A (20 Marks). Answer any 4 questions from Section B (80 Marks).",
+    "uploadedBy": "Dr. Sarah Jenkins",
+    "facultyId": "usr_faculty_1",
+    "createdAt": "2026-09-01T10:00:00.000Z",
+    "sections": [
+      {
+        "sectionTitle": "Section A: Short Answer Questions (2 Marks Each)",
+        "description": "Answer all 10 questions.",
+        "questions": [
+          {
+            "qNumber": "Q1.a",
+            "text": "State Cayley-Hamilton theorem and verify it for a 2x2 identity matrix.",
+            "marks": 2,
+            "topic": "Linear Algebra & Matrices"
+          },
+          {
+            "qNumber": "Q1.b",
+            "text": "Find the eigenvalues of matrix A = [[3, 1], [0, 2]].",
+            "marks": 2,
+            "topic": "Eigenvalues"
+          },
+          {
+            "qNumber": "Q1.c",
+            "text": "Define radius of curvature in Cartesian coordinates.",
+            "marks": 2,
+            "topic": "Differential Calculus"
+          },
+          {
+            "qNumber": "Q1.d",
+            "text": "Evaluate limit as x approaches 0 of (sin x - x) / x^3 using L'Hopital's rule.",
+            "marks": 2,
+            "topic": "Limits & Series"
+          },
+          {
+            "qNumber": "Q1.e",
+            "text": "State Euler's theorem for homogeneous functions of degree n.",
+            "marks": 2,
+            "topic": "Partial Differentiation"
+          }
+        ]
+      },
+      {
+        "sectionTitle": "Section B: Long Descriptive & Numerical Problems (20 Marks Each)",
+        "description": "Answer any four questions.",
+        "questions": [
+          {
+            "qNumber": "Q2",
+            "text": "Diagonalize the matrix A = [[1, 6, 1], [1, 2, 0], [0, 0, 3]] using orthogonal transformation.",
+            "marks": 20,
+            "topic": "Orthogonal Matrix"
+          },
+          {
+            "qNumber": "Q3",
+            "text": "Find the maximum and minimum values of f(x, y, z) = x^2 + y^2 + z^2 subject to the constraint x + y + z = 1 using Lagrange's multipliers.",
+            "marks": 20,
+            "topic": "Multivariate Optimization"
+          },
+          {
+            "qNumber": "Q4",
+            "text": "Evaluate the double integral over the region bounded by y = x^2 and y = x.",
+            "marks": 20,
+            "topic": "Multiple Integrals"
+          },
+          {
+            "qNumber": "Q5",
+            "text": "Verify Stokes Theorem for the vector field F = (2x - y)i - yz^2 j - y^2 z k over the upper half of sphere x^2 + y^2 + z^2 = 1.",
+            "marks": 20,
+            "topic": "Vector Calculus"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "_id": "paper_102",
+    "id": "paper_102",
+    "title": "Programming in C & Data Structures - End Semester 2024",
+    "subjectName": "Programming in C & Data Structures",
+    "subjectCode": "CS102",
+    "department": "Computer Science",
+    "year": "1st Year",
+    "semester": "Semester 1",
+    "examType": "End-Semester Exam",
+    "examYear": "2024",
+    "totalMarks": 100,
+    "duration": "3 Hours",
+    "instructions": "All questions in Part A are compulsory. Answer any 5 questions from Part B.",
+    "uploadedBy": "Dr. Sarah Jenkins",
+    "facultyId": "usr_faculty_1",
+    "createdAt": "2026-09-01T11:30:00.000Z",
+    "sections": [
+      {
+        "sectionTitle": "Part A: Core Concepts (10 x 2 = 20 Marks)",
+        "description": "Answer all questions.",
+        "questions": [
+          {
+            "qNumber": "1",
+            "text": "Explain difference between pass-by-value and pass-by-reference in C using pointers.",
+            "marks": 2,
+            "topic": "Pointers"
+          },
+          {
+            "qNumber": "2",
+            "text": "What is the time complexity of searching in a Balanced Binary Search Tree (AVL Tree)?",
+            "marks": 2,
+            "topic": "Trees"
+          },
+          {
+            "qNumber": "3",
+            "text": "Differentiate between malloc() and calloc() dynamic memory functions in C.",
+            "marks": 2,
+            "topic": "Memory Management"
+          },
+          {
+            "qNumber": "4",
+            "text": "Convert infix expression ((A + B) * C - D) to Postfix expression using stack evaluation.",
+            "marks": 2,
+            "topic": "Stacks"
+          }
+        ]
+      },
+      {
+        "sectionTitle": "Part B: Algorithms & Code Implementation (16 Marks Each)",
+        "description": "Answer any 5 questions.",
+        "questions": [
+          {
+            "qNumber": "5",
+            "text": "Write a complete C program to implement a Singly Linked List with insertion, deletion, and reverse operations.",
+            "marks": 16,
+            "topic": "Linked Lists"
+          },
+          {
+            "qNumber": "6",
+            "text": "Implement QuickSort algorithm in C. Explain Partition function with time complexity analysis in best, average, and worst cases.",
+            "marks": 16,
+            "topic": "Sorting Algorithms"
+          },
+          {
+            "qNumber": "7",
+            "text": "Explain Breadth First Search (BFS) and Depth First Search (DFS) graph traversal with examples and queue/stack state representations.",
+            "marks": 16,
+            "topic": "Graph Algorithms"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "_id": "paper_201",
+    "id": "paper_201",
+    "title": "Object-Oriented Programming (Java) - End Semester 2024",
+    "subjectName": "Object-Oriented Programming (Java)",
+    "subjectCode": "CS201",
+    "department": "Computer Science",
+    "year": "2nd Year",
+    "semester": "Semester 3",
+    "examType": "End-Semester Exam",
+    "examYear": "2024",
+    "totalMarks": 100,
+    "duration": "3 Hours",
+    "instructions": "Answer all questions. Show code snippets clearly.",
+    "uploadedBy": "Dr. Sarah Jenkins",
+    "facultyId": "usr_faculty_1",
+    "createdAt": "2026-09-01T12:00:00.000Z",
+    "sections": [
+      {
+        "sectionTitle": "Section A: OOP Fundamentals & JVM Architecture",
+        "description": "20 Marks Total",
+        "questions": [
+          {
+            "qNumber": "Q1",
+            "text": "Explain the four pillars of OOP (Encapsulation, Inheritance, Polymorphism, Abstraction) in Java with code snippets.",
+            "marks": 10,
+            "topic": "OOP Concepts"
+          },
+          {
+            "qNumber": "Q2",
+            "text": "Explain Java Garbage Collection mechanisms and finalize() method lifecycle.",
+            "marks": 10,
+            "topic": "JVM & Memory"
+          }
+        ]
+      },
+      {
+        "sectionTitle": "Section B: Multithreading & Exception Handling",
+        "description": "80 Marks Total",
+        "questions": [
+          {
+            "qNumber": "Q3",
+            "text": "Write a Java program demonstrating Producer-Consumer problem using inter-thread communication (wait, notify, and notifyAll).",
+            "marks": 20,
+            "topic": "Multithreading"
+          },
+          {
+            "qNumber": "Q4",
+            "text": "Design a custom banking Exception `InsufficientFundsException` and handle it with try-catch-finally blocks.",
+            "marks": 20,
+            "topic": "Exception Handling"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "_id": "paper_301",
+    "id": "paper_301",
+    "title": "Machine Learning & Deep Neural Nets - End Semester 2024",
+    "subjectName": "Machine Learning & Deep Neural Nets",
+    "subjectCode": "CSML301",
+    "department": "Computer Science",
+    "year": "3rd Year",
+    "semester": "Semester 5",
+    "examType": "End-Semester Exam",
+    "examYear": "2024",
+    "totalMarks": 100,
+    "duration": "3 Hours",
+    "instructions": "Scientific calculators are permitted. Show intermediate gradient calculations.",
+    "uploadedBy": "Dr. Sarah Jenkins",
+    "facultyId": "usr_faculty_1",
+    "createdAt": "2026-09-01T13:00:00.000Z",
+    "sections": [
+      {
+        "sectionTitle": "Part 1: Supervised Learning & Optimization (40 Marks)",
+        "description": "Core algorithms and loss formulation",
+        "questions": [
+          {
+            "qNumber": "1",
+            "text": "Derive the gradient update rule for Linear Regression with L2 Regularization (Ridge Regression). Explain bias-variance tradeoff.",
+            "marks": 20,
+            "topic": "Regularization"
+          },
+          {
+            "qNumber": "2",
+            "text": "Explain Support Vector Machines (SVM) maximum margin formulation with soft-margin slack variables and kernel trick (RBF kernel).",
+            "marks": 20,
+            "topic": "SVM"
+          }
+        ]
+      },
+      {
+        "sectionTitle": "Part 2: Deep Learning Architectures (60 Marks)",
+        "description": "Neural Networks and Computer Vision",
+        "questions": [
+          {
+            "qNumber": "3",
+            "text": "Derive Backpropagation equations for a 3-layer Multilayer Perceptron with Cross-Entropy loss and Softmax activation.",
+            "marks": 20,
+            "topic": "Backpropagation"
+          },
+          {
+            "qNumber": "4",
+            "text": "Explain Convolutional Neural Networks (CNN): Convolution layer, Stride, Padding, Pooling, and Feature Maps.",
+            "marks": 20,
+            "topic": "CNN Architecture"
+          },
+          {
+            "qNumber": "5",
+            "text": "Compare Dropout, Batch Normalization, and Early Stopping techniques for preventing overfitting in Deep Neural Networks.",
+            "marks": 20,
+            "topic": "Optimization Techniques"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "_id": "paper_302",
+    "id": "paper_302",
+    "title": "Advanced Cloud Architecture & DevOps - End Semester 2024",
+    "subjectName": "Advanced Cloud Arch",
+    "subjectCode": "CSCC307",
+    "department": "Computer Science",
+    "year": "3rd Year",
+    "semester": "Semester 6",
+    "examType": "End-Semester Exam",
+    "examYear": "2024",
+    "totalMarks": 100,
+    "duration": "3 Hours",
+    "instructions": "Answer all sections.",
+    "uploadedBy": "Dr. Sarah Jenkins",
+    "facultyId": "usr_faculty_1",
+    "createdAt": "2026-09-01T14:00:00.000Z",
+    "sections": [
+      {
+        "sectionTitle": "Section 1: Cloud Infrastructure & Virtualization",
+        "description": "50 Marks",
+        "questions": [
+          {
+            "qNumber": "1",
+            "text": "Compare Monolithic Architecture vs Microservices Architecture in Cloud. Detail API Gateway, Service Discovery, and Circuit Breaker patterns.",
+            "marks": 25,
+            "topic": "Microservices"
+          },
+          {
+            "qNumber": "2",
+            "text": "Explain Kubernetes Architecture: Control Plane (API Server, Etcd, Controller Manager, Scheduler) and Worker Nodes (Kubelet, Kube-Proxy, Container Runtime).",
+            "marks": 25,
+            "topic": "Container Orchestration"
+          }
+        ]
+      },
+      {
+        "sectionTitle": "Section 2: High Availability & CI/CD Pipelines",
+        "description": "50 Marks",
+        "questions": [
+          {
+            "qNumber": "3",
+            "text": "Design a fault-tolerant multi-region cloud deployment on AWS/GCP with Auto Scaling, Load Balancer, and Read Replicas database.",
+            "marks": 25,
+            "topic": "Cloud Design Patterns"
+          },
+          {
+            "qNumber": "4",
+            "text": "Construct a complete CI/CD pipeline using GitHub Actions / Jenkins with automated linting, unit testing, Docker containerization, and blue-green deployment.",
+            "marks": 25,
+            "topic": "DevOps CI/CD"
+          }
+        ]
+      }
+    ],
+    "downloadsCount": 1
+  }
+]

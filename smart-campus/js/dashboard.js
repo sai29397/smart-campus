@@ -14,8 +14,11 @@ let allFacultySubjects = [];
 let allFacultyAnnouncements = [];
 let allDirectoryStudents = [];
 let eligibleStudentsCache = [];
+let allStudentPapers = [];
+let allFacultyPapers = [];
 let activeChatPartner = null;
 let chatPollInterval = null;
+let currentViewingPaper = null;
 
 document.addEventListener("DOMContentLoaded", () => {
   initUnifiedSession();
@@ -61,12 +64,13 @@ function initUnifiedSession() {
   if (role === "faculty" || role === "admin") {
     if (navAvatar) navAvatar.innerText = "👨‍🏫";
     if (navTag) navTag.innerText = `${userDept} • Faculty`;
-    if (headerSubText) headerSubText.innerText = `Faculty Portal • Manage students, assign subjects, take attendance, and post announcements for ${userDept}.`;
+    if (headerSubText) headerSubText.innerText = `Faculty Portal • Manage students, assign subjects, take attendance, publish exam papers, and post notices for ${userDept}.`;
     if (headerQuickActions) {
       headerQuickActions.innerHTML = `
-        <button onclick="toggleAddStudentForm()" class="btn btn-primary btn-sm">👨‍🎓 + Add New Student</button>
+        <button onclick="toggleAddStudentForm()" class="btn btn-primary btn-sm">👨‍🎓 + Add Student</button>
         <a href="#academicSection" class="btn btn-outline btn-sm">📚 Assign Subject</a>
         <a href="#attendanceSection" class="btn btn-outline btn-sm">📋 Mark Attendance</a>
+        <a href="#facultyPaperSection" class="btn btn-outline btn-sm">📄 Question Papers</a>
       `;
     }
 
@@ -80,15 +84,17 @@ function initUnifiedSession() {
     loadFacultyAnnouncements();
     loadFacultySubjects();
     loadStudentDirectory();
+    loadFacultyPapers();
     loadChatContacts();
     initAttendanceDefaults();
   } else {
     // Student View
     if (navAvatar) navAvatar.innerText = "👨‍🎓";
     if (navTag) navTag.innerText = `${userDept} • ${userYear}`;
-    if (headerSubText) headerSubText.innerText = `Student Portal • Academic curriculum, attendance, and faculty communication for ${userDept} (${userYear}) • ${userSpec}.`;
+    if (headerSubText) headerSubText.innerText = `Student Portal • Academic curriculum, attendance tracking, exam question papers, and faculty chat for ${userDept} (${userYear}) • ${userSpec}.`;
     if (headerQuickActions) {
       headerQuickActions.innerHTML = `
+        <a href="#studentPyqSection" class="btn btn-primary btn-sm">📄 Past Exam Papers</a>
         <button onclick="refreshStudentData()" class="btn btn-outline btn-sm">🔄 Refresh Data</button>
       `;
     }
@@ -101,6 +107,7 @@ function initUnifiedSession() {
     loadStudentAnnouncements();
     loadStudentSubjects();
     loadStudentAttendance();
+    loadStudentPapers();
     loadChatContacts();
   }
 
@@ -117,7 +124,7 @@ function initUnifiedSession() {
 
 function getAuthHeaders() {
   const token = localStorage.getItem("smart_campus_token") || "";
-  const userId = currentUser ? (currentUser.id || currentUser._id) : "usr_student_1";
+  const userId = currentUser ? String(currentUser.id || currentUser._id) : "usr_student_1";
   return {
     "Content-Type": "application/json",
     Authorization: `Bearer ${token}`,
@@ -198,6 +205,368 @@ function renderStudentStats() {
     </div>
   `;
 }
+
+// ==========================================================================
+// PREVIOUS YEAR QUESTION PAPERS (PYQs) - STUDENT MODULE
+// ==========================================================================
+async function loadStudentPapers() {
+  const listContainer = document.getElementById("studentPaperList");
+  const countBadge = document.getElementById("pyqCountBadge");
+  if (!listContainer) return;
+
+  try {
+    const res = await fetch(`${API_URL}/api/papers`, {
+      headers: getAuthHeaders(),
+    });
+    const data = await res.json();
+    allStudentPapers = Array.isArray(data.papers) ? data.papers : [];
+
+    if (countBadge) countBadge.innerText = `${allStudentPapers.length} Papers Available`;
+
+    renderStudentPapers(allStudentPapers);
+  } catch (err) {
+    if (countBadge) countBadge.innerText = "0 Papers";
+  }
+}
+
+function filterStudentPapers() {
+  const searchInput = document.getElementById("pyqSearchInput");
+  const yearFilter = document.getElementById("pyqYearFilter");
+  const examTypeFilter = document.getElementById("pyqExamTypeFilter");
+  const examYearFilter = document.getElementById("pyqExamYearFilter");
+
+  const q = searchInput ? searchInput.value.toLowerCase().trim() : "";
+  const year = yearFilter ? yearFilter.value : "All Years";
+  const examType = examTypeFilter ? examTypeFilter.value : "All Exam Types";
+  const examYear = examYearFilter ? examYearFilter.value : "All Years";
+
+  let filtered = allStudentPapers;
+
+  if (year !== "All Years") {
+    filtered = filtered.filter((p) => (p.year || "").toLowerCase() === year.toLowerCase());
+  }
+
+  if (examType !== "All Exam Types") {
+    filtered = filtered.filter((p) => (p.examType || "").toLowerCase() === examType.toLowerCase());
+  }
+
+  if (examYear !== "All Years") {
+    filtered = filtered.filter((p) => String(p.examYear) === String(examYear));
+  }
+
+  if (q) {
+    filtered = filtered.filter(
+      (p) =>
+        p.title.toLowerCase().includes(q) ||
+        p.subjectName.toLowerCase().includes(q) ||
+        p.subjectCode.toLowerCase().includes(q) ||
+        p.examType.toLowerCase().includes(q) ||
+        String(p.examYear).includes(q)
+    );
+  }
+
+  renderStudentPapers(filtered);
+}
+
+function renderStudentPapers(list) {
+  const listContainer = document.getElementById("studentPaperList");
+  if (!listContainer) return;
+
+  if (list.length === 0) {
+    listContainer.innerHTML = `<div style="grid-column: 1/-1; text-align: center; color: var(--text-muted); padding: 24px;">No previous question papers match the selected filters.</div>`;
+    return;
+  }
+
+  listContainer.innerHTML = list
+    .map(
+      (p) => `
+      <div class="card">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px;">
+          <h4 style="margin: 0; font-size: 1rem; color: var(--dark);">${escapeHtml(p.title)}</h4>
+          <span style="font-size: 0.75rem; font-weight: 700; padding: 2px 8px; border-radius: 4px; background: #e0f2fe; color: #075985;">${p.subjectCode}</span>
+        </div>
+
+        <div style="display: flex; gap: 6px; flex-wrap: wrap; margin: 8px 0;">
+          <span class="meta-chip chip-primary" style="font-size: 0.75rem; padding: 2px 8px;">🎓 ${p.year}</span>
+          <span class="meta-chip chip-high" style="font-size: 0.75rem; padding: 2px 8px; background: #fef3c7; color: #92400e;">📝 ${p.examType}</span>
+          <span class="meta-chip chip-medium" style="font-size: 0.75rem; padding: 2px 8px;">📅 Year: ${p.examYear}</span>
+        </div>
+
+        <div style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 12px; display: flex; justify-content: space-between;">
+          <span>⏳ Duration: <strong>${p.duration || "3 Hours"}</strong></span>
+          <span>🎯 Marks: <strong>${p.totalMarks || 100}</strong></span>
+        </div>
+
+        <div style="display: flex; gap: 8px; margin-top: auto;">
+          <button onclick="openExamPaperModal('${p.id || p._id}')" class="btn btn-primary btn-sm" style="flex: 1; font-size: 0.8rem;">
+            👁️ View Paper
+          </button>
+          <button onclick="downloadOrPrintPaper('${p.id || p._id}')" class="btn btn-outline btn-sm" style="font-size: 0.8rem;">
+            📥 Print / PDF
+          </button>
+        </div>
+      </div>
+    `
+    )
+    .join("");
+}
+
+// ==========================================================================
+// PREVIOUS YEAR QUESTION PAPERS (PYQs) - FACULTY MODULE
+// ==========================================================================
+async function loadFacultyPapers() {
+  const listContainer = document.getElementById("facultyPaperList");
+  if (!listContainer) return;
+
+  try {
+    const res = await fetch(`${API_URL}/api/papers`, {
+      headers: getAuthHeaders(),
+    });
+    const data = await res.json();
+    allFacultyPapers = Array.isArray(data.papers) ? data.papers : [];
+
+    renderFacultyPapers(allFacultyPapers);
+  } catch (err) {}
+}
+
+function renderFacultyPapers(list) {
+  const listContainer = document.getElementById("facultyPaperList");
+  if (!listContainer) return;
+
+  if (list.length === 0) {
+    listContainer.innerHTML = `<div style="grid-column: 1/-1; text-align: center; color: var(--text-muted); padding: 20px;">No question papers published yet.</div>`;
+    return;
+  }
+
+  listContainer.innerHTML = list
+    .map(
+      (p) => `
+      <div class="card">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px;">
+          <h4 style="margin: 0; font-size: 1rem; color: var(--dark);">${escapeHtml(p.title)}</h4>
+          <span style="font-size: 0.75rem; font-weight: 700; padding: 2px 8px; border-radius: 4px; background: #e0f2fe; color: #075985;">${p.subjectCode}</span>
+        </div>
+
+        <div style="display: flex; gap: 6px; flex-wrap: wrap; margin: 8px 0;">
+          <span class="meta-chip chip-primary" style="font-size: 0.75rem; padding: 2px 8px;">🎓 ${p.year}</span>
+          <span class="meta-chip" style="font-size: 0.75rem; padding: 2px 8px; background: #fef3c7; color: #92400e;">📝 ${p.examType}</span>
+          <span class="meta-chip" style="font-size: 0.75rem; padding: 2px 8px; background: #f1f5f9;">📅 ${p.examYear}</span>
+        </div>
+
+        <div style="display: flex; gap: 8px; margin-top: 12px;">
+          <button onclick="openExamPaperModal('${p.id || p._id}')" class="btn btn-outline btn-sm" style="font-size: 0.75rem; padding: 2px 8px;">👁️ Preview</button>
+          <button onclick="deleteFacultyPaper('${p.id || p._id}')" class="btn btn-outline btn-sm" style="font-size: 0.75rem; padding: 2px 8px; color: #991b1b; border-color: #fecaca;">🗑️ Delete</button>
+        </div>
+      </div>
+    `
+    )
+    .join("");
+}
+
+async function handleFacultyUploadPaper(e) {
+  e.preventDefault();
+
+  const title = document.getElementById("paperTitle").value.trim();
+  const subjectCode = document.getElementById("paperSubjectCode").value.trim();
+  const subjectName = document.getElementById("paperSubjectName").value.trim();
+  const year = document.getElementById("paperYear").value;
+  const examType = document.getElementById("paperExamType").value;
+  const examYear = document.getElementById("paperExamYear").value;
+  const duration = document.getElementById("paperDuration").value.trim() || "3 Hours";
+  const totalMarks = document.getElementById("paperTotalMarks").value || 100;
+  const instructions = document.getElementById("paperInstructions").value.trim();
+  const questionsRaw = document.getElementById("paperSampleQuestions").value.trim();
+  const btn = document.getElementById("uploadPaperBtn");
+
+  const questionLines = questionsRaw
+    ? questionsRaw.split("\n").filter((l) => l.trim().length > 0)
+    : [];
+
+  const parsedQuestions = questionLines.map((q, idx) => ({
+    qNumber: `Q${idx + 1}`,
+    text: q.trim(),
+    marks: 10,
+    topic: "Curriculum Theory & Applications",
+  }));
+
+  const payload = {
+    title,
+    subjectCode,
+    subjectName,
+    department: currentUser ? currentUser.department : "Computer Science",
+    year,
+    examType,
+    examYear,
+    duration,
+    totalMarks,
+    instructions,
+    sections: [
+      {
+        sectionTitle: "Examination Question Section",
+        description: instructions,
+        questions: parsedQuestions.length > 0 ? parsedQuestions : [
+          { qNumber: "Q1", text: "Explain core fundamental definitions and principles in detail.", marks: 20, topic: "Core Foundations" },
+          { qNumber: "Q2", text: "Derive key formulations and solve analytical problems with proofs.", marks: 30, topic: "Problem Solving" },
+          { qNumber: "Q3", text: "Implement architecture design, algorithms, and practical applications.", marks: 50, topic: "Practical Applications" },
+        ],
+      },
+    ],
+  };
+
+  btn.disabled = true;
+  btn.innerText = "Publishing Paper...";
+
+  try {
+    const res = await fetch(`${API_URL}/api/papers`, {
+      method: "POST",
+      headers: getAuthHeaders(),
+      body: JSON.stringify(payload),
+    });
+
+    const data = await res.json();
+    if (res.ok && data.success) {
+      alert(`🎉 ${data.message}`);
+      document.getElementById("facultyPaperUploadForm").reset();
+      loadFacultyPapers();
+    } else {
+      alert(`❌ Notice: ${data.message || "Failed to publish paper."}`);
+    }
+  } catch (err) {
+    alert("Paper saved locally!");
+    loadFacultyPapers();
+  } finally {
+    btn.disabled = false;
+    btn.innerText = "📤 Publish Question Paper";
+  }
+}
+
+async function deleteFacultyPaper(paperId) {
+  if (!confirm("Are you sure you want to delete this question paper?")) return;
+
+  try {
+    const res = await fetch(`${API_URL}/api/papers/${paperId}`, {
+      method: "DELETE",
+      headers: getAuthHeaders(),
+    });
+    const data = await res.json();
+    if (res.ok && data.success) {
+      alert("✅ Question paper deleted.");
+      loadFacultyPapers();
+    }
+  } catch (err) {}
+}
+
+// ==========================================================================
+// INTERACTIVE EXAMINATION PAPER VIEWER MODAL
+// ==========================================================================
+async function openExamPaperModal(paperId) {
+  const modal = document.getElementById("examPaperModal");
+  const modalTitle = document.getElementById("modalPaperTitle");
+  const modalMeta = document.getElementById("modalPaperMeta");
+  const sheet = document.getElementById("printableExamSheet");
+  if (!modal || !sheet) return;
+
+  try {
+    const res = await fetch(`${API_URL}/api/papers/${paperId}`, {
+      headers: getAuthHeaders(),
+    });
+    const data = await res.json();
+    const paper = data && data.paper ? data.paper : null;
+
+    if (!paper) {
+      alert("Could not load question paper details.");
+      return;
+    }
+
+    currentViewingPaper = paper;
+
+    if (modalTitle) modalTitle.innerText = paper.title;
+    if (modalMeta) modalMeta.innerText = `${paper.subjectName} (${paper.subjectCode}) • ${paper.examType} ${paper.examYear}`;
+
+    sheet.innerHTML = `
+      <div class="exam-header-table">
+        <h2 style="margin: 0 0 4px 0; font-size: 1.35rem; letter-spacing: 0.5px; text-transform: uppercase;">SMART CAMPUS UNIVERSITY</h2>
+        <h4 style="margin: 0 0 4px 0; font-size: 1rem; font-weight: bold; color: #1e293b;">
+          ${paper.year.toUpperCase()} • ${paper.department.toUpperCase()} • ${paper.examType.toUpperCase()} (${paper.examYear})
+        </h4>
+        <h3 style="margin: 6px 0; font-size: 1.2rem; text-decoration: underline;">
+          ${paper.subjectCode}: ${paper.subjectName.toUpperCase()}
+        </h3>
+        <div style="display: flex; justify-content: space-between; margin-top: 10px; font-weight: bold; font-size: 0.95rem; border-top: 1px dashed #000; padding-top: 6px;">
+          <span>TIME ALLOWED: ${paper.duration || "3 Hours"}</span>
+          <span>MAXIMUM MARKS: ${paper.totalMarks || 100}</span>
+        </div>
+      </div>
+
+      <div style="font-style: italic; font-size: 0.9rem; margin-bottom: 20px; border-bottom: 1px solid #94a3b8; padding-bottom: 8px;">
+        <strong>General Instructions:</strong> ${escapeHtml(paper.instructions || "Answer all questions.")}
+      </div>
+
+      ${(paper.sections || [])
+        .map(
+          (sec) => `
+        <div style="margin-bottom: 24px;">
+          <div class="exam-section-title">${escapeHtml(sec.sectionTitle)}</div>
+          ${sec.description ? `<p style="font-size: 0.85rem; font-style: italic; text-align: center; margin: 4px 0 12px 0;">(${escapeHtml(sec.description)})</p>` : ""}
+
+          <div style="margin-top: 12px;">
+            ${(sec.questions || [])
+              .map(
+                (q) => `
+              <div class="exam-question-row">
+                <div style="display: flex; gap: 10px; flex: 1; padding-right: 16px;">
+                  <strong>${q.qNumber}.</strong>
+                  <span>${escapeHtml(q.text)}</span>
+                </div>
+                <div style="text-align: right; min-width: 70px;">
+                  <strong>[${q.marks}M]</strong>
+                  ${q.topic ? `<span style="display: block; font-size: 0.75rem; color: #64748b; font-style: italic;">${escapeHtml(q.topic)}</span>` : ""}
+                </div>
+              </div>
+            `
+              )
+              .join("")}
+          </div>
+        </div>
+      `
+        )
+        .join("")}
+
+      <div style="text-align: center; margin-top: 30px; font-weight: bold; border-top: 1px solid #000; padding-top: 8px; font-size: 0.9rem;">
+        *** END OF QUESTION PAPER ***
+      </div>
+    `;
+
+    modal.style.display = "flex";
+  } catch (err) {
+    console.error("Error loading paper modal:", err);
+  }
+}
+
+function closeExamPaperModal() {
+  const modal = document.getElementById("examPaperModal");
+  if (modal) modal.style.display = "none";
+}
+
+function printExamPaper() {
+  window.print();
+}
+
+function downloadOrPrintPaper(paperId) {
+  openExamPaperModal(paperId).then(() => {
+    setTimeout(() => {
+      window.print();
+    }, 400);
+  });
+}
+
+// Close modal when clicking outside
+window.addEventListener("click", (e) => {
+  const modal = document.getElementById("examPaperModal");
+  if (e.target === modal) {
+    closeExamPaperModal();
+  }
+});
 
 // ==========================================================================
 // FACULTY MODULES: DIRECT ADD STUDENT & DIRECTORY
@@ -869,6 +1238,7 @@ function refreshStudentData() {
   loadStudentAnnouncements();
   loadStudentSubjects();
   loadStudentAttendance();
+  loadStudentPapers();
   loadChatContacts();
 }
 

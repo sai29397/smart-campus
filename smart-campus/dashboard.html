@@ -126,32 +126,88 @@
             border-radius: 4px;
             transition: width 0.4s ease;
         }
-        .dashboard-tab-bar {
+        
+        /* Interactive Exam Paper Modal Styles */
+        .paper-modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(15, 23, 42, 0.75);
+            backdrop-filter: blur(4px);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            padding: 20px;
+        }
+        .paper-modal-container {
+            background: #fff;
+            width: 100%;
+            max-width: 860px;
+            max-height: 90vh;
+            border-radius: var(--radius-md);
             display: flex;
-            gap: 8px;
-            margin-bottom: 1.5rem;
-            border-bottom: 1px solid var(--border-color);
-            padding-bottom: 10px;
-            overflow-x: auto;
+            flex-direction: column;
+            overflow: hidden;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2);
         }
-        .dashboard-tab-btn {
-            background: none;
-            border: none;
-            padding: 8px 16px;
-            border-radius: var(--radius-sm);
-            font-weight: 700;
-            font-size: 0.9rem;
-            color: var(--text-muted);
-            cursor: pointer;
-            transition: var(--transition);
+        .paper-modal-header {
+            padding: 16px 20px;
+            background: #0f172a;
+            color: #fff;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
-        .dashboard-tab-btn:hover {
-            background: #f1f5f9;
-            color: var(--dark);
+        .paper-modal-body {
+            padding: 24px;
+            overflow-y: auto;
+            background: #f8fafc;
         }
-        .dashboard-tab-btn.active {
-            background: var(--primary-light);
-            color: var(--primary);
+        .exam-sheet {
+            background: #fff;
+            border: 2px solid #334155;
+            padding: 30px;
+            border-radius: 4px;
+            font-family: 'Times New Roman', Times, serif;
+            color: #000;
+        }
+        .exam-header-table {
+            width: 100%;
+            border-bottom: 2px solid #000;
+            padding-bottom: 12px;
+            margin-bottom: 16px;
+            text-align: center;
+        }
+        .exam-section-title {
+            font-weight: bold;
+            font-size: 1.1rem;
+            text-align: center;
+            margin: 20px 0 10px 0;
+            text-decoration: underline;
+        }
+        .exam-question-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 12px;
+            font-size: 1rem;
+            line-height: 1.5;
+        }
+        @media print {
+            body * {
+                visibility: hidden;
+            }
+            #printableExamSheet, #printableExamSheet * {
+                visibility: visible;
+            }
+            #printableExamSheet {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+            }
         }
     </style>
 </head>
@@ -193,9 +249,7 @@
         </div>
 
         <!-- ================= DYNAMIC SUMMARY STATS ================= -->
-        <div class="stats-grid" id="dashboardStatsGrid">
-            <!-- Dynamic stats rendered for Faculty vs Student -->
-        </div>
+        <div class="stats-grid" id="dashboardStatsGrid"></div>
 
         <!-- ================================================================= -->
         <!-- VIEW A: FACULTY DASHBOARD VIEW (Shown only if role === 'faculty')  -->
@@ -514,7 +568,91 @@
                 </div>
             </section>
 
-            <!-- SECTION F4: ANNOUNCEMENTS -->
+            <!-- SECTION F4: UPLOAD & MANAGE QUESTION PAPERS (PYQs) -->
+            <section class="section-card" id="facultyPaperSection">
+                <div class="section-header">
+                    <h2>📄 Upload & Manage Previous Exam Papers (PYQs)</h2>
+                </div>
+                <div class="section-body">
+                    <form id="facultyPaperUploadForm" onsubmit="handleFacultyUploadPaper(event)">
+                        <div class="form-row">
+                            <div class="form-group" style="flex: 2;">
+                                <label for="paperTitle">Paper Title *</label>
+                                <input type="text" id="paperTitle" placeholder="e.g., Machine Learning & Deep Neural Nets - End Semester 2024" required>
+                            </div>
+                            <div class="form-group" style="flex: 1;">
+                                <label for="paperSubjectCode">Subject Code *</label>
+                                <input type="text" id="paperSubjectCode" placeholder="e.g., CSML301" required>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="paperSubjectName">Subject Name *</label>
+                                <input type="text" id="paperSubjectName" placeholder="e.g., Machine Learning & Deep Neural Nets" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="paperYear">Academic Year *</label>
+                                <select id="paperYear" required>
+                                    <option value="1st Year">1st Year</option>
+                                    <option value="2nd Year">2nd Year</option>
+                                    <option value="3rd Year" selected>3rd Year</option>
+                                    <option value="4th Year">4th Year</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="paperExamType">Exam Type *</label>
+                                <select id="paperExamType" required>
+                                    <option value="End-Semester Exam" selected>End-Semester Exam</option>
+                                    <option value="Mid-Term Exam">Mid-Term Exam</option>
+                                    <option value="Practical / Lab Exam">Practical / Lab Exam</option>
+                                    <option value="Model Question Paper">Model Question Paper</option>
+                                    <option value="Supplementary Exam">Supplementary Exam</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="paperExamYear">Exam Year *</label>
+                                <select id="paperExamYear" required>
+                                    <option value="2025">2025</option>
+                                    <option value="2024" selected>2024</option>
+                                    <option value="2023">2023</option>
+                                    <option value="2022">2022</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="paperDuration">Exam Duration</label>
+                                <input type="text" id="paperDuration" value="3 Hours">
+                            </div>
+                            <div class="form-group">
+                                <label for="paperTotalMarks">Total Marks</label>
+                                <input type="number" id="paperTotalMarks" value="100">
+                            </div>
+                            <div class="form-group" style="flex: 2;">
+                                <label for="paperInstructions">Exam Instructions</label>
+                                <input type="text" id="paperInstructions" value="Answer all questions from Section A. Answer any 4 questions from Section B.">
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="paperSampleQuestions">Question Contents (One question per line)</label>
+                            <textarea id="paperSampleQuestions" rows="4" placeholder="Q1. Explain core concepts and definitions (10 Marks)&#10;Q2. Derive algorithm equations with step-by-step proof (20 Marks)&#10;Q3. Implement code or numerical problem solution (20 Marks)"></textarea>
+                        </div>
+
+                        <div style="margin-top: 1rem;">
+                            <button type="submit" id="uploadPaperBtn" class="btn btn-primary">📤 Publish Question Paper</button>
+                        </div>
+                    </form>
+
+                    <hr style="margin: 2rem 0; border: none; border-top: 1px solid var(--border-color);">
+                    <h3 style="font-size: 1.1rem; color: var(--dark); margin-bottom: 1rem;">Published Question Papers</h3>
+                    <div id="facultyPaperList" class="cards-grid"></div>
+                </div>
+            </section>
+
+            <!-- SECTION F5: ANNOUNCEMENTS -->
             <section class="section-card" id="announcementSection">
                 <div class="section-header">
                     <h2>📢 Targeted Announcements</h2>
@@ -608,10 +746,62 @@
             <section class="section-card" id="studentAttendanceSection">
                 <div class="section-header">
                     <h2>📊 Subject-Wise Attendance Tracking</h2>
-                    <span class="badge-count" id="attendanceTrackBadge">0 Subjects</span>
+                    <span class="badge-count" id="attendanceTrackBadge">0 Subjects Tracked</span>
                 </div>
                 <div class="section-body">
                     <div id="studentAttendanceGrid" class="cards-grid"></div>
+                </div>
+            </section>
+
+            <!-- SECTION S4: PREVIOUS YEAR QUESTION PAPERS (PYQs) & EXAM RESOURCES -->
+            <section class="section-card" id="studentPyqSection">
+                <div class="section-header">
+                    <h2>📄 Previous Year Question Papers (PYQs) & Exam Resources</h2>
+                    <span class="badge-count" id="pyqCountBadge">0 Papers</span>
+                </div>
+                <div class="section-body">
+                    
+                    <!-- Search & Filter Controls -->
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; flex-wrap: wrap; gap: 10px;">
+                        <div style="flex: 1; min-width: 240px;">
+                            <input 
+                                type="text" 
+                                id="pyqSearchInput" 
+                                placeholder="🔍 Search question papers by subject, code, or topic..." 
+                                oninput="filterStudentPapers()"
+                                style="padding: 8px 12px; font-size: 0.875rem;"
+                            >
+                        </div>
+
+                        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                            <select id="pyqYearFilter" onchange="filterStudentPapers()" style="padding: 6px 10px; font-size: 0.85rem; border-radius: var(--radius-sm); border: 1px solid var(--border-color);">
+                                <option value="All Years" selected>All Years</option>
+                                <option value="1st Year">1st Year</option>
+                                <option value="2nd Year">2nd Year</option>
+                                <option value="3rd Year">3rd Year</option>
+                                <option value="4th Year">4th Year</option>
+                            </select>
+
+                            <select id="pyqExamTypeFilter" onchange="filterStudentPapers()" style="padding: 6px 10px; font-size: 0.85rem; border-radius: var(--radius-sm); border: 1px solid var(--border-color);">
+                                <option value="All Exam Types" selected>All Exam Types</option>
+                                <option value="End-Semester Exam">End-Semester Exam</option>
+                                <option value="Mid-Term Exam">Mid-Term Exam</option>
+                                <option value="Practical / Lab Exam">Lab / Practical Exam</option>
+                                <option value="Model Question Paper">Model Paper</option>
+                            </select>
+
+                            <select id="pyqExamYearFilter" onchange="filterStudentPapers()" style="padding: 6px 10px; font-size: 0.85rem; border-radius: var(--radius-sm); border: 1px solid var(--border-color);">
+                                <option value="All Years" selected>All Exam Years</option>
+                                <option value="2025">2025</option>
+                                <option value="2024">2024</option>
+                                <option value="2023">2023</option>
+                                <option value="2022">2022</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Question Papers Grid -->
+                    <div id="studentPaperList" class="cards-grid"></div>
                 </div>
             </section>
         </div>
@@ -625,7 +815,6 @@
             </div>
             <div class="section-body">
                 <div class="chat-container">
-                    <!-- Left Sidebar: Contacts -->
                     <div class="chat-sidebar">
                         <div style="padding: 12px; border-bottom: 1px solid var(--border-color);">
                             <input 
@@ -639,7 +828,6 @@
                         <div id="chatContactList" style="flex: 1; overflow-y: auto;"></div>
                     </div>
 
-                    <!-- Right Pane: Active Conversation -->
                     <div class="chat-main">
                         <div class="chat-header-bar">
                             <div>
@@ -674,6 +862,28 @@
         </section>
 
     </main>
+
+    <!-- ================= MODAL: INTERACTIVE EXAM PAPER VIEWER ================= -->
+    <div id="examPaperModal" class="paper-modal-overlay">
+        <div class="paper-modal-container">
+            <div class="paper-modal-header">
+                <div>
+                    <h3 style="margin: 0; font-size: 1.15rem; color: #fff;" id="modalPaperTitle">Examination Question Paper</h3>
+                    <span style="font-size: 0.8rem; color: #94a3b8;" id="modalPaperMeta">Semester Exam</span>
+                </div>
+                <div style="display: flex; gap: 8px;">
+                    <button type="button" onclick="printExamPaper()" class="btn btn-sm btn-primary" style="font-size: 0.8rem;">🖨️ Print / Save PDF</button>
+                    <button type="button" onclick="closeExamPaperModal()" class="btn btn-sm btn-outline" style="color: #fff; border-color: #475569; font-size: 0.8rem;">✕ Close</button>
+                </div>
+            </div>
+
+            <div class="paper-modal-body">
+                <div class="exam-sheet" id="printableExamSheet">
+                    <!-- Dynamic Exam Sheet Content Rendered via JS -->
+                </div>
+            </div>
+        </div>
+    </div>
 
     <!-- Connect Unified Dashboard Script -->
     <script src="js/dashboard.js"></script>
