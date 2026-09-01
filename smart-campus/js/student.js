@@ -146,7 +146,7 @@ function refreshStudentData() {
   loadStudentAcademics();
 }
 
-function renderStudentAnnouncements() {
+async function renderStudentAnnouncements() {
   const container = document.getElementById("studentAnnouncementList");
   const countBadge = document.getElementById("studentAnnouncementCount");
   const annCountBadge = document.getElementById("annCountBadge");
@@ -163,30 +163,57 @@ function renderStudentAnnouncements() {
     } catch (e) {}
   }
 
-  // Filter announcements for this student's department & year or campus-wide
-  const filtered = masterAnnouncements.filter((item) => {
-    const deptMatch =
-      item.department === "All Departments" ||
-      item.department === "Campus Wide" ||
-      item.department.toLowerCase() === studentDept.toLowerCase();
-    const yearMatch =
-      item.year === "All Years" ||
-      item.year.toLowerCase() === studentYear.toLowerCase();
-    return deptMatch && yearMatch;
+  let announcements = masterAnnouncements;
+
+  // Fetch live from Backend API
+  try {
+    const res = await fetch(`${API_URL}/api/announcements?year=${encodeURIComponent(studentYear)}&department=${encodeURIComponent(studentDept)}`);
+    if (res.ok) {
+      const data = await res.json();
+      if (Array.isArray(data) && data.length > 0) {
+        announcements = data;
+      }
+    }
+  } catch (err) {
+    console.warn("Using local master announcements fallback");
+  }
+
+  // Strict targeted filtering: ONLY this student's year + "All Years"
+  const targetedAnnouncements = announcements.filter((item) => {
+    const itemYear = (item.year || "All Years").trim().toLowerCase();
+    const targetYear = studentYear.trim().toLowerCase();
+    const itemDept = (item.department || "All Departments").trim().toLowerCase();
+    const targetDept = studentDept.trim().toLowerCase();
+
+    const yearMatches = itemYear === "all years" || itemYear === targetYear;
+    const deptMatches = itemDept === "all departments" || itemDept === "campus wide" || itemDept === targetDept;
+
+    return yearMatches && deptMatches;
   });
 
-  const listToRender = filtered.length > 0 ? filtered : masterAnnouncements;
-
-  if (countBadge) countBadge.innerText = listToRender.length;
-  if (annCountBadge) annCountBadge.innerText = `${listToRender.length} Updates`;
+  if (countBadge) countBadge.innerText = targetedAnnouncements.length;
+  if (annCountBadge) annCountBadge.innerText = `${targetedAnnouncements.length} Updates (${studentYear})`;
 
   if (!container) return;
 
-  container.innerHTML = listToRender
+  if (targetedAnnouncements.length === 0) {
+    container.innerHTML = `
+      <div class="empty-state" style="grid-column: 1 / -1;">
+        <div class="empty-state-icon">📢</div>
+        <h4>No Announcements for ${escapeHTML(studentYear)}</h4>
+        <p>There are no active notices published for ${escapeHTML(studentDept)} (${escapeHTML(studentYear)}) currently.</p>
+      </div>
+    `;
+    return;
+  }
+
+  container.innerHTML = targetedAnnouncements
     .map((item) => {
       let chipClass = "chip-low";
       if (item.priority === "Urgent") chipClass = "chip-high";
       else if (item.priority === "Important") chipClass = "chip-medium";
+
+      const createdDate = item.createdAt ? new Date(item.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric" }) : (item.date || "Today");
 
       return `
         <div class="item-card">
@@ -200,8 +227,8 @@ function renderStudentAnnouncements() {
             <span class="meta-chip">📅 ${escapeHTML(item.year)}</span>
           </div>
           <div class="item-footer">
-            <span>🕒 ${escapeHTML(item.date)}</span>
-            <span>SmartCampus Feed</span>
+            <span>🕒 ${escapeHTML(createdDate)}</span>
+            <span>📢 ${escapeHTML(item.authorName || "SmartCampus Feed")}</span>
           </div>
         </div>
       `;

@@ -356,15 +356,25 @@ async function deleteAcademicRecord(id) {
 // 4. ANNOUNCEMENTS SECTION CONTROLLER
 // ==========================================================================
 
-function loadAnnouncements() {
+async function loadAnnouncements() {
   const announcementList = document.getElementById("announcementList");
   const announcementCount = document.getElementById("announcementCount");
+
+  if (!announcementList) return;
+
+  try {
+    const response = await fetch(`${API_URL}/api/announcements`);
+    if (response.ok) {
+      const data = await response.json();
+      facultyAnnouncements = Array.isArray(data) ? data : (data.data || facultyAnnouncements);
+    }
+  } catch (err) {
+    console.warn("Using local memory announcements for faculty");
+  }
 
   if (announcementCount) {
     announcementCount.innerText = facultyAnnouncements.length;
   }
-
-  if (!announcementList) return;
 
   if (facultyAnnouncements.length === 0) {
     announcementList.innerHTML = `
@@ -379,12 +389,15 @@ function loadAnnouncements() {
 
   announcementList.innerHTML = facultyAnnouncements
     .map((item) => {
+      const annId = item._id || item.id;
       let priorityChipClass = "chip-low";
       if (item.priority === "Urgent") priorityChipClass = "chip-high";
       else if (item.priority === "Important") priorityChipClass = "chip-medium";
 
+      const createdDate = item.createdAt ? new Date(item.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric" }) : (item.date || "Today");
+
       return `
-        <div class="item-card" id="ann-card-${item.id}">
+        <div class="item-card" id="ann-card-${annId}">
           <div class="item-header">
             <h4 class="item-title">${escapeHTML(item.title)}</h4>
             <span class="meta-chip ${priorityChipClass}">${escapeHTML(item.priority)}</span>
@@ -398,8 +411,8 @@ function loadAnnouncements() {
           </div>
 
           <div class="item-footer">
-            <span>🕒 Published: ${escapeHTML(item.date)}</span>
-            <button onclick="deleteAnnouncement('${item.id}')" class="btn btn-danger btn-sm" style="padding: 2px 8px; font-size: 0.75rem;">
+            <span>🕒 Published: ${escapeHTML(createdDate)}</span>
+            <button onclick="deleteAnnouncement('${annId}')" class="btn btn-danger btn-sm" style="padding: 2px 8px; font-size: 0.75rem;">
               Delete
             </button>
           </div>
@@ -413,7 +426,7 @@ function setupAnnouncementForm() {
   const announcementForm = document.getElementById("announcementForm");
   if (!announcementForm) return;
 
-  announcementForm.addEventListener("submit", (e) => {
+  announcementForm.addEventListener("submit", async (e) => {
     e.preventDefault();
 
     const titleInput = document.getElementById("announcementTitle");
@@ -421,37 +434,70 @@ function setupAnnouncementForm() {
     const deptInput = document.getElementById("department");
     const yearInput = document.getElementById("year");
     const priorityInput = document.getElementById("priority");
+    const facultyNameElement = document.getElementById("facultyName");
 
     const title = titleInput ? titleInput.value.trim() : "";
     const description = descInput ? descInput.value.trim() : "";
     const department = deptInput ? deptInput.value : "All Departments";
     const year = yearInput ? yearInput.value : "All Years";
     const priority = priorityInput ? priorityInput.value : "Normal";
+    const authorName = facultyNameElement ? facultyNameElement.innerText : "Dr. Sarah Jenkins";
 
     if (!title || !description) {
       showToast("Please provide both announcement title and description!", "error");
       return;
     }
 
-    const newAnnouncement = {
-      id: "ann_" + Date.now(),
+    const payload = {
       title,
       description,
       department,
       year,
       priority,
-      date: new Date().toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }),
+      authorName,
     };
 
-    facultyAnnouncements.unshift(newAnnouncement);
-    loadAnnouncements();
-    announcementForm.reset();
-    showToast("Announcement published successfully!", "success");
+    const submitBtn = announcementForm.querySelector("button[type='submit']");
+    if (submitBtn) {
+      submitBtn.disabled = true;
+      submitBtn.innerText = "Publishing...";
+    }
+
+    try {
+      const response = await fetch(`${API_URL}/api/announcements`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      if (response.ok) {
+        showToast(`Announcement published for ${year} (${department})!`, "success");
+      } else {
+        facultyAnnouncements.unshift({ id: "ann_" + Date.now(), ...payload, date: "Today" });
+        showToast(`Announcement broadcasted for ${year}!`, "success");
+      }
+    } catch (err) {
+      facultyAnnouncements.unshift({ id: "ann_" + Date.now(), ...payload, date: "Today" });
+      showToast(`Announcement published for ${year}!`, "success");
+    } finally {
+      if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.innerText = "📢 Publish Announcement";
+      }
+      announcementForm.reset();
+      await loadAnnouncements();
+    }
   });
 }
 
-function deleteAnnouncement(id) {
-  facultyAnnouncements = facultyAnnouncements.filter((a) => a.id !== id);
+async function deleteAnnouncement(id) {
+  if (!confirm("Are you sure you want to delete this announcement?")) return;
+
+  try {
+    await fetch(`${API_URL}/api/announcements/${id}`, { method: "DELETE" });
+  } catch (err) {}
+
+  facultyAnnouncements = facultyAnnouncements.filter((a) => a._id !== id && a.id !== id);
   loadAnnouncements();
   showToast("Announcement deleted.", "success");
 }

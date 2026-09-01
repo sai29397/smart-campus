@@ -7,6 +7,7 @@ require("dotenv").config();
 // Route Imports
 const authRoutes = require("./routes/authRoutes");
 const academicRoutes = require("./routes/academicRoutes");
+const announcementRoutes = require("./routes/announcementRoutes");
 
 // Initialize Express App
 const app = express();
@@ -45,6 +46,7 @@ app.get("/", (req, res) => {
 // API Routes
 app.use("/api/auth", authRoutes);
 app.use("/api/academic", academicRoutes);
+app.use("/api/announcements", announcementRoutes);
 
 // Global 404 Handler for API routes
 app.use("/api/*", (req, res) => {
