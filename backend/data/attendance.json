@@ -1,0 +1,47 @@
+[
+  {
+    "_id": "att_1788290829180_577",
+    "id": "att_1788290829180_933",
+    "studentId": "usr_1788290798643",
+    "studentName": "Rahul Sharma",
+    "studentEmail": "rahul_ai@campus.edu",
+    "subjectId": "sub_1788290829080",
+    "subjectName": "Deep Neural Nets Lab",
+    "facultyId": "usr_faculty_1",
+    "date": "2026-09-02",
+    "status": "Present",
+    "year": "3rd Year",
+    "specialization": "Artificial Intelligence and Machine Learning",
+    "markedAt": "2026-09-01T19:27:09.180Z"
+  },
+  {
+    "_id": "att_1",
+    "id": "att_1",
+    "studentId": "usr_student_1",
+    "studentName": "Alex Johnson",
+    "studentEmail": "student@campus.edu",
+    "subjectId": "sub_101",
+    "subjectName": "Engineering Mathematics I",
+    "facultyId": "usr_faculty_1",
+    "date": "2026-09-01",
+    "status": "Present",
+    "year": "1st Year",
+    "specialization": "General CSE",
+    "markedAt": "2026-09-01T19:26:21.355Z"
+  },
+  {
+    "_id": "att_2",
+    "id": "att_2",
+    "studentId": "usr_student_1",
+    "studentName": "Alex Johnson",
+    "studentEmail": "student@campus.edu",
+    "subjectId": "sub_102",
+    "subjectName": "Programming in C & Data Structures",
+    "facultyId": "usr_faculty_1",
+    "date": "2026-09-01",
+    "status": "Present",
+    "year": "1st Year",
+    "specialization": "General CSE",
+    "markedAt": "2026-09-01T19:26:21.355Z"
+  }
+]

@@ -174,7 +174,7 @@ let resetTokens = {};
 // ==========================================================================
 router.post("/register", async (req, res) => {
   try {
-    const { name, email, password, role, department, year } = req.body;
+    const { name, email, password, role, department, year, specialization } = req.body;
 
     if (!name || !email || !password || !role) {
       return res.status(400).json({
@@ -213,6 +213,7 @@ router.post("/register", async (req, res) => {
       role: role.toLowerCase(),
       department: department || "Computer Science",
       year: year || "1st Year",
+      specialization: specialization || "General CSE",
       createdAt: new Date().toISOString(),
     };
 
@@ -225,6 +226,7 @@ router.post("/register", async (req, res) => {
         role: newUser.role,
         department: newUser.department,
         year: newUser.year,
+        specialization: newUser.specialization,
       });
       newUser._id = dbUser._id.toString();
     } catch (dbErr) {}
@@ -244,6 +246,7 @@ router.post("/register", async (req, res) => {
         role: newUser.role,
         department: newUser.department,
         year: newUser.year,
+        specialization: newUser.specialization,
       },
     });
   } catch (error) {
@@ -329,6 +332,7 @@ router.post("/login", async (req, res) => {
         role: foundUser.role,
         department: foundUser.department,
         year: foundUser.year,
+        specialization: foundUser.specialization || "General CSE",
       },
     });
   } catch (error) {

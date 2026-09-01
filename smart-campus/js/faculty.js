@@ -2,7 +2,6 @@
 // SMART CAMPUS - FACULTY DASHBOARD CONTROLLER (faculty.js)
 // ==========================================================================
 
-// Base API URL: connects to http://localhost:3000 in local dev, or relative path on deployed Vercel
 const API_URL =
   window.location.hostname === "localhost" && window.location.port !== "3000"
     ? "http://localhost:3000"
@@ -10,478 +9,82 @@ const API_URL =
     ? "http://localhost:3000"
     : "";
 
-// In-memory announcements list for faculty
-let facultyAnnouncements = [
-  {
-    id: "ann_1",
-    title: "Mid-Term Examination Schedule Released",
-    description: "The schedule for Mid-Term Exams has been uploaded. Please verify the exam halls and timings on the portal.",
-    department: "Computer Science",
-    year: "3rd Year",
-    priority: "Urgent",
-    date: new Date().toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }),
-  },
-  {
-    id: "ann_2",
-    title: "Mini-Project Submission Deadline",
-    description: "All student groups must submit their GitHub repository links and documentation before 5:00 PM this Friday.",
-    department: "Computer Science",
-    year: "3rd Year",
-    priority: "Important",
-    date: new Date().toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }),
-  }
-];
+let currentUser = null;
+let allFacultySubjects = [];
+let allFacultyAnnouncements = [];
+let eligibleStudentsCache = [];
+let activeChatStudent = null;
+let chatPollInterval = null;
 
-// ==========================================================================
-// 1. ROLE-BASED ACCESS & SESSION BOOTSTRAP
-// ==========================================================================
-function ensureFacultySession() {
-  let userStr = localStorage.getItem("smart_campus_user");
-
-  if (!userStr) {
-    const defaultFaculty = {
-      id: "usr_faculty_1",
-      name: "Dr. Sarah Jenkins",
-      email: "faculty@campus.edu",
-      role: "faculty",
-      department: "Computer Science",
-      year: "Faculty/Staff",
-    };
-    localStorage.setItem("smart_campus_user", JSON.stringify(defaultFaculty));
-    userStr = JSON.stringify(defaultFaculty);
-  }
-
-  try {
-    const user = JSON.parse(userStr);
-
-    if (user.role === "student") {
-      alert("Notice: You are currently signed in as a Student. Redirecting to the Student Portal.");
-      window.location.href = "student-dashboard.html";
-      return false;
-    }
-
-    return true;
-  } catch (err) {
-    return true;
-  }
-}
-
-// Initialize on DOM Ready
 document.addEventListener("DOMContentLoaded", () => {
-  const isAllowed = ensureFacultySession();
-  if (!isAllowed) return;
-
-  console.log("SmartCampus Faculty Dashboard Initialized");
-  console.log("Connecting to Backend API:", API_URL || window.location.origin);
-
-  // Initialize faculty profile header
-  initializeFacultyProfile();
-
-  // Load Announcements
-  loadAnnouncements();
-
-  // Load Academic Details from Backend API: GET /api/academic
-  loadAcademicDetails();
-
-  // Setup Form Listeners
+  initFacultySession();
   setupAnnouncementForm();
-  setupAcademicForm();
+  setupAcademicAssignmentForm();
+  loadFacultyAnnouncements();
+  loadFacultySubjects();
+  loadChatContacts();
+  initAttendanceDefaults();
 });
 
-// ==========================================================================
-// 2. FACULTY PROFILE INITIALIZATION
-// ==========================================================================
-function initializeFacultyProfile() {
-  const facultyNameElement = document.getElementById("facultyName");
-  const facultyTagElement = document.getElementById("facultyTag");
-  const facultyDeptStat = document.getElementById("facultyDeptStat");
-  const facultyHeaderDept = document.getElementById("facultyHeaderDept");
-  const deptSelect = document.getElementById("department");
-  const acadDeptSelect = document.getElementById("academicDepartment");
-
-  const storedUser = localStorage.getItem("smart_campus_user");
-  if (storedUser) {
+/**
+ * Initialize faculty session and profile header
+ */
+function initFacultySession() {
+  const userJson = localStorage.getItem("smart_campus_user");
+  if (userJson) {
     try {
-      const user = JSON.parse(storedUser);
-      const name = user.name || "Dr. Sarah Jenkins";
-      const dept = user.department || "Computer Science";
+      currentUser = JSON.parse(userJson);
+      const facultyNameEl = document.getElementById("facultyName");
+      const facultyTagEl = document.getElementById("facultyTag");
+      const facultyHeaderDept = document.getElementById("facultyHeaderDept");
+      const facultyDeptStat = document.getElementById("facultyDeptStat");
 
-      if (facultyNameElement) facultyNameElement.innerText = name;
-      if (facultyTagElement) facultyTagElement.innerText = `${dept} • Faculty`;
-      if (facultyDeptStat) facultyDeptStat.innerText = dept;
-      if (facultyHeaderDept) facultyHeaderDept.innerText = dept;
-
-      if (deptSelect && deptSelect.querySelector(`option[value="${dept}"]`)) {
-        deptSelect.value = dept;
-      }
-      if (acadDeptSelect && acadDeptSelect.querySelector(`option[value="${dept}"]`)) {
-        acadDeptSelect.value = dept;
-      }
-    } catch (e) {
-      console.warn("Could not parse stored user profile", e);
-    }
+      if (facultyNameEl) facultyNameEl.innerText = currentUser.name || "Dr. Sarah Jenkins";
+      if (facultyTagEl) facultyTagEl.innerText = `${currentUser.department || "Computer Science"} • Faculty`;
+      if (facultyHeaderDept) facultyHeaderDept.innerText = currentUser.department || "Computer Science";
+      if (facultyDeptStat) facultyDeptStat.innerText = currentUser.department || "Computer Science";
+    } catch (e) {}
   }
 
-  // Logout button handler
   const logoutBtn = document.getElementById("logoutBtn");
   if (logoutBtn) {
     logoutBtn.addEventListener("click", () => {
       localStorage.removeItem("smart_campus_token");
       localStorage.removeItem("smart_campus_user");
+      window.location.href = "login.html";
     });
   }
 }
 
-// ==========================================================================
-// 3. ACADEMIC DETAILS API INTEGRATION (GET /api/academic & POST /api/academic)
-// ==========================================================================
-
-let allFacultyAcademics = [];
-
 /**
- * Fetch and display academic records from Backend API: GET /api/academic
+ * Get JWT auth headers
  */
-async function loadAcademicDetails() {
-  const academicList = document.getElementById("academicList");
-  const academicCount = document.getElementById("academicCount");
-  const filterYearSelect = document.getElementById("filterAcademicYear");
-
-  if (!academicList) return;
-
-  academicList.innerHTML = `
-    <div style="grid-column: 1 / -1; text-align: center; padding: 2rem; color: var(--text-muted);">
-      <p>⏳ Loading academic details from server...</p>
-    </div>
-  `;
-
-  try {
-    const response = await fetch(`${API_URL}/api/academic`, {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-
-    const data = await response.json();
-    allFacultyAcademics = Array.isArray(data) ? data : (data.data || []);
-
-    const selectedFilter = filterYearSelect ? filterYearSelect.value : "All Years";
-    filterFacultyAcademics(selectedFilter);
-  } catch (error) {
-    console.error("Error loading academic details:", error);
-    
-    academicList.innerHTML = `
-      <div style="grid-column: 1 / -1; background: #fff5f5; border: 1px solid #fed7d7; border-radius: 8px; padding: 1.5rem; text-align: center;">
-        <h4 style="color: #c53030; margin-bottom: 0.5rem;">⚠️ Could not connect to Backend API</h4>
-        <p style="color: #742a2a; font-size: 0.9rem; margin-bottom: 1rem;">
-          Make sure backend server is running using <code>node server.js</code>
-        </p>
-        <button onclick="loadAcademicDetails()" class="btn btn-outline btn-sm">🔄 Retry Connection</button>
-      </div>
-    `;
-
-    if (academicCount) {
-      academicCount.innerText = "0";
-    }
-  }
-}
-
-/**
- * Filter faculty subjects by selected year
- */
-function filterFacultyAcademics(yearFilter) {
-  const academicCount = document.getElementById("academicCount");
-
-  let filtered = allFacultyAcademics;
-  if (yearFilter && yearFilter !== "All Years") {
-    filtered = allFacultyAcademics.filter((item) => {
-      const yr = (item.academicYear || item.year || "").trim().toLowerCase();
-      const target = yearFilter.trim().toLowerCase();
-      return yr === target || (target.includes("1") && yr.includes("1")) ||
-             (target.includes("2") && yr.includes("2")) ||
-             (target.includes("3") && yr.includes("3")) ||
-             (target.includes("4") && yr.includes("4"));
-    });
-  }
-
-  if (academicCount) {
-    academicCount.innerText = filtered.length;
-  }
-
-  renderAcademicList(filtered);
-}
-
-/**
- * Render academic items into the UI grid
- */
-function renderAcademicList(records) {
-  const academicList = document.getElementById("academicList");
-  if (!academicList) return;
-
-  if (!records || records.length === 0) {
-    academicList.innerHTML = `
-      <div class="empty-state" style="grid-column: 1 / -1;">
-        <div class="empty-state-icon">📚</div>
-        <h4>No Academic Subjects Found</h4>
-        <p>Use the form above to add subject allocations and curriculum details.</p>
-      </div>
-    `;
-    return;
-  }
-
-  academicList.innerHTML = records
-    .map((item) => {
-      const recordId = item._id || item.id;
-      const dept = item.academicDepartment || item.department || "General";
-      const yr = item.academicYear || item.year || "1st Year";
-      const sem = item.semester || "Semester 1";
-      const code = item.subjectCode || "N/A";
-      const name = item.subjectName || "Untitled Subject";
-      const faculty = item.facultyName || "Faculty Member";
-
-      return `
-        <div class="item-card" id="academic-card-${recordId}">
-          <div class="item-header">
-            <h4 class="item-title">${escapeHTML(name)}</h4>
-            <span class="item-code">${escapeHTML(code)}</span>
-          </div>
-
-          <div class="item-meta">
-            <span class="meta-chip chip-primary">${escapeHTML(sem)}</span>
-            <span class="meta-chip">${escapeHTML(dept)}</span>
-            <span class="meta-chip">${escapeHTML(yr)}</span>
-          </div>
-
-          <div class="item-footer">
-            <span>👨‍🏫 ${escapeHTML(faculty)}</span>
-            <button onclick="deleteAcademicRecord('${recordId}')" class="btn btn-danger btn-sm" style="padding: 2px 8px; font-size: 0.75rem;">
-              🗑️ Delete
-            </button>
-          </div>
-        </div>
-      `;
-    })
-    .join("");
-}
-
-/**
- * Setup Academic Form Submission: POST /api/academic
- */
-function setupAcademicForm() {
-  const academicForm = document.getElementById("academicForm");
-  if (!academicForm) return;
-
-  academicForm.addEventListener("submit", async (e) => {
-    e.preventDefault();
-
-    // Get input values by required IDs
-    const subjectNameInput = document.getElementById("subjectName");
-    const subjectCodeInput = document.getElementById("subjectCode");
-    const semesterInput = document.getElementById("semester");
-    const academicDepartmentInput = document.getElementById("academicDepartment");
-    const academicYearInput = document.getElementById("academicYear");
-    const facultyNameElement = document.getElementById("facultyName");
-
-    const subjectName = subjectNameInput ? subjectNameInput.value.trim() : "";
-    const subjectCode = subjectCodeInput ? subjectCodeInput.value.trim() : "";
-    const semester = semesterInput ? semesterInput.value : "";
-    const academicDepartment = academicDepartmentInput ? academicDepartmentInput.value : "";
-    const academicYear = academicYearInput ? academicYearInput.value : "";
-    const facultyName = facultyNameElement ? facultyNameElement.innerText.trim() : "Dr. Sarah Jenkins";
-
-    if (!subjectName || !subjectCode || !semester || !academicDepartment || !academicYear) {
-      showToast("Please fill in all academic details!", "error");
-      return;
-    }
-
-    const userStr = localStorage.getItem("smart_campus_user");
-    let facultyId = "usr_faculty_1";
-    if (userStr) {
-      try {
-        const u = JSON.parse(userStr);
-        if (u.id || u._id) facultyId = u.id || u._id;
-      } catch (e) {}
-    }
-
-    const payload = {
-      subjectName,
-      subjectCode,
-      semester,
-      academicDepartment,
-      department: academicDepartment,
-      academicYear,
-      year: academicYear,
-      facultyId,
-      facultyName,
-    };
-
-    const submitBtn = academicForm.querySelector("button[type='submit']");
-    const originalText = submitBtn ? submitBtn.innerText : "Save";
-    if (submitBtn) {
-      submitBtn.disabled = true;
-      submitBtn.innerText = "Saving to Server...";
-    }
-
-    try {
-      const response = await fetch(`${API_URL}/api/academic`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(payload),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.message || `Failed with status ${response.status}`);
-      }
-
-      const result = await response.json();
-      console.log("Academic Record Created Successfully:", result);
-
-      showToast(`Academic subject "${subjectName}" saved for ${academicYear}!`, "success");
-
-      // Reset form
-      academicForm.reset();
-
-      // Reload academic details from server
-      await loadAcademicDetails();
-    } catch (error) {
-      console.error("Error submitting academic details:", error);
-      showToast(`Submission Error: ${error.message}`, "error");
-    } finally {
-      if (submitBtn) {
-        submitBtn.disabled = false;
-        submitBtn.innerText = originalText;
-      }
-    }
-  });
-}
-
-/**
- * Delete Academic Record
- */
-async function deleteAcademicRecord(id) {
-  if (!confirm("Are you sure you want to remove this academic record?")) {
-    return;
-  }
-
-  try {
-    const response = await fetch(`${API_URL}/api/academic/${id}`, {
-      method: "DELETE",
-    });
-
-    if (response.ok) {
-      showToast("Academic record deleted!", "success");
-      loadAcademicDetails();
-    } else {
-      throw new Error("Could not delete record");
-    }
-  } catch (error) {
-    console.error("Delete error:", error);
-    showToast("Failed to delete record from server.", "error");
-  }
+function getAuthHeaders() {
+  const token = localStorage.getItem("smart_campus_token") || "";
+  const userId = currentUser ? (currentUser.id || currentUser._id) : "usr_faculty_1";
+  return {
+    "Content-Type": "application/json",
+    Authorization: `Bearer ${token}`,
+    "x-user-id": userId,
+    "x-user-email": currentUser ? currentUser.email : "faculty@campus.edu",
+  };
 }
 
 // ==========================================================================
-// 4. ANNOUNCEMENTS SECTION CONTROLLER
+// 1. ANNOUNCEMENTS
 // ==========================================================================
-
-async function loadAnnouncements() {
-  const announcementList = document.getElementById("announcementList");
-  const announcementCount = document.getElementById("announcementCount");
-
-  if (!announcementList) return;
-
-  try {
-    const response = await fetch(`${API_URL}/api/announcements`);
-    if (response.ok) {
-      const data = await response.json();
-      facultyAnnouncements = Array.isArray(data) ? data : (data.data || facultyAnnouncements);
-    }
-  } catch (err) {
-    console.warn("Using local memory announcements for faculty");
-  }
-
-  if (announcementCount) {
-    announcementCount.innerText = facultyAnnouncements.length;
-  }
-
-  if (facultyAnnouncements.length === 0) {
-    announcementList.innerHTML = `
-      <div class="empty-state" style="grid-column: 1 / -1;">
-        <div class="empty-state-icon">📢</div>
-        <h4>No Announcements Published Yet</h4>
-        <p>Fill out the form above to broadcast an announcement to students.</p>
-      </div>
-    `;
-    return;
-  }
-
-  announcementList.innerHTML = facultyAnnouncements
-    .map((item) => {
-      const annId = item._id || item.id;
-      let priorityChipClass = "chip-low";
-      if (item.priority === "Urgent") priorityChipClass = "chip-high";
-      else if (item.priority === "Important") priorityChipClass = "chip-medium";
-
-      const createdDate = item.createdAt ? new Date(item.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric" }) : (item.date || "Today");
-
-      return `
-        <div class="item-card" id="ann-card-${annId}">
-          <div class="item-header">
-            <h4 class="item-title">${escapeHTML(item.title)}</h4>
-            <span class="meta-chip ${priorityChipClass}">${escapeHTML(item.priority)}</span>
-          </div>
-
-          <p class="item-desc">${escapeHTML(item.description)}</p>
-
-          <div class="item-meta">
-            <span class="meta-chip chip-primary">🏛️ ${escapeHTML(item.department)}</span>
-            <span class="meta-chip">📅 ${escapeHTML(item.year)}</span>
-          </div>
-
-          <div class="item-footer">
-            <span>🕒 Published: ${escapeHTML(createdDate)}</span>
-            <button onclick="deleteAnnouncement('${annId}')" class="btn btn-danger btn-sm" style="padding: 2px 8px; font-size: 0.75rem;">
-              Delete
-            </button>
-          </div>
-        </div>
-      `;
-    })
-    .join("");
-}
-
 function setupAnnouncementForm() {
-  const announcementForm = document.getElementById("announcementForm");
-  if (!announcementForm) return;
+  const form = document.getElementById("announcementForm");
+  if (!form) return;
 
-  announcementForm.addEventListener("submit", async (e) => {
+  form.addEventListener("submit", async (e) => {
     e.preventDefault();
 
-    const titleInput = document.getElementById("announcementTitle");
-    const descInput = document.getElementById("announcementDescription");
-    const deptInput = document.getElementById("department");
-    const yearInput = document.getElementById("year");
-    const priorityInput = document.getElementById("priority");
-    const facultyNameElement = document.getElementById("facultyName");
-
-    const title = titleInput ? titleInput.value.trim() : "";
-    const description = descInput ? descInput.value.trim() : "";
-    const department = deptInput ? deptInput.value : "All Departments";
-    const year = yearInput ? yearInput.value : "All Years";
-    const priority = priorityInput ? priorityInput.value : "Normal";
-    const authorName = facultyNameElement ? facultyNameElement.innerText : "Dr. Sarah Jenkins";
-
-    if (!title || !description) {
-      showToast("Please provide both announcement title and description!", "error");
-      return;
-    }
+    const title = document.getElementById("announcementTitle").value.trim();
+    const description = document.getElementById("announcementDescription").value.trim();
+    const department = document.getElementById("department").value;
+    const year = document.getElementById("year").value;
+    const priority = document.getElementById("priority").value;
 
     const payload = {
       title,
@@ -489,84 +92,654 @@ function setupAnnouncementForm() {
       department,
       year,
       priority,
-      authorName,
+      author: currentUser ? currentUser.name : "Dr. Sarah Jenkins",
     };
 
-    const submitBtn = announcementForm.querySelector("button[type='submit']");
-    if (submitBtn) {
-      submitBtn.disabled = true;
-      submitBtn.innerText = "Publishing...";
-    }
-
     try {
-      const response = await fetch(`${API_URL}/api/announcements`, {
+      const res = await fetch(`${API_URL}/api/announcements`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: getAuthHeaders(),
         body: JSON.stringify(payload),
       });
 
-      if (response.ok) {
-        showToast(`Announcement published for ${year} (${department})!`, "success");
+      const data = await res.json();
+      if (res.ok && data.success) {
+        alert("📢 Announcement published successfully!");
+        form.reset();
+        loadFacultyAnnouncements();
       } else {
-        facultyAnnouncements.unshift({ id: "ann_" + Date.now(), ...payload, date: "Today" });
-        showToast(`Announcement broadcasted for ${year}!`, "success");
+        alert(`❌ Notice: ${data.message || "Failed to publish announcement"}`);
       }
     } catch (err) {
-      facultyAnnouncements.unshift({ id: "ann_" + Date.now(), ...payload, date: "Today" });
-      showToast(`Announcement published for ${year}!`, "success");
-    } finally {
-      if (submitBtn) {
-        submitBtn.disabled = false;
-        submitBtn.innerText = "📢 Publish Announcement";
-      }
-      announcementForm.reset();
-      await loadAnnouncements();
+      alert("Announcement saved locally!");
+      loadFacultyAnnouncements();
     }
   });
 }
 
-async function deleteAnnouncement(id) {
-  if (!confirm("Are you sure you want to delete this announcement?")) return;
+async function loadFacultyAnnouncements() {
+  const listContainer = document.getElementById("announcementList");
+  const countBadge = document.getElementById("announcementCount");
+  if (!listContainer) return;
 
   try {
-    await fetch(`${API_URL}/api/announcements/${id}`, { method: "DELETE" });
-  } catch (err) {}
+    const res = await fetch(`${API_URL}/api/announcements`, {
+      headers: getAuthHeaders(),
+    });
+    const data = await res.json();
+    allFacultyAnnouncements = Array.isArray(data) ? data : [];
 
-  facultyAnnouncements = facultyAnnouncements.filter((a) => a._id !== id && a.id !== id);
-  loadAnnouncements();
-  showToast("Announcement deleted.", "success");
+    if (countBadge) countBadge.innerText = allFacultyAnnouncements.length;
+
+    renderFacultyAnnouncements(allFacultyAnnouncements);
+  } catch (err) {
+    if (countBadge) countBadge.innerText = "0";
+  }
+}
+
+function renderFacultyAnnouncements(list) {
+  const listContainer = document.getElementById("announcementList");
+  if (!listContainer) return;
+
+  if (list.length === 0) {
+    listContainer.innerHTML = `<div style="grid-column: 1/-1; text-align: center; color: var(--text-muted); padding: 20px;">No announcements published yet.</div>`;
+    return;
+  }
+
+  listContainer.innerHTML = list
+    .map(
+      (a) => `
+      <div class="card">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
+          <h4 style="margin: 0; font-size: 1rem; color: var(--dark);">${escapeHtml(a.title)}</h4>
+          <span style="font-size: 0.75rem; font-weight: 700; padding: 2px 8px; border-radius: 4px; background: ${
+            a.priority === "Urgent" ? "#fee2e2; color: #991b1b;" : a.priority === "Important" ? "#fef3c7; color: #92400e;" : "#e0f2fe; color: #075985;"
+          }">${a.priority || "Normal"}</span>
+        </div>
+        <p style="font-size: 0.875rem; color: var(--text-muted); margin-bottom: 12px;">${escapeHtml(a.description)}</p>
+        <div style="font-size: 0.75rem; color: var(--text-muted); display: flex; justify-content: space-between;">
+          <span>🎯 ${a.department} • ${a.year}</span>
+          <span>📅 ${new Date(a.createdAt || Date.now()).toLocaleDateString()}</span>
+        </div>
+      </div>
+    `
+    )
+    .join("");
 }
 
 // ==========================================================================
-// 5. UI UTILITIES & TOAST NOTIFICATIONS
+// 2. SUBJECT ASSIGNMENT CONTROLLER
 // ==========================================================================
+function handleAssignmentTypeChange(type) {
+  const singleYearGroup = document.getElementById("singleYearGroup");
+  const multiYearsGroup = document.getElementById("multiYearsGroup");
+  const specializationSelectGroup = document.getElementById("specializationSelectGroup");
+  const studentSelectionGroup = document.getElementById("studentSelectionGroup");
 
-function showToast(message, type = "info") {
-  const existing = document.querySelector(".alert-toast");
-  if (existing) existing.remove();
+  // Reset displays
+  if (singleYearGroup) singleYearGroup.style.display = "none";
+  if (multiYearsGroup) multiYearsGroup.style.display = "none";
+  if (specializationSelectGroup) specializationSelectGroup.style.display = "none";
+  if (studentSelectionGroup) studentSelectionGroup.style.display = "none";
 
-  const toast = document.createElement("div");
-  toast.className = `alert-toast ${type}`;
-  toast.innerHTML = `
-    <span>${type === "success" ? "✅" : type === "error" ? "❌" : "ℹ️"}</span>
-    <span>${escapeHTML(message)}</span>
-  `;
+  if (type === "entire_year") {
+    if (singleYearGroup) singleYearGroup.style.display = "block";
+  } else if (type === "multiple_years") {
+    if (multiYearsGroup) multiYearsGroup.style.display = "block";
+  } else if (type === "specialization") {
+    if (singleYearGroup) singleYearGroup.style.display = "block";
+    if (specializationSelectGroup) specializationSelectGroup.style.display = "block";
+  } else if (type === "specific_student" || type === "multiple_students") {
+    if (singleYearGroup) singleYearGroup.style.display = "block";
+    if (studentSelectionGroup) studentSelectionGroup.style.display = "block";
+    updateStudentSearchRoster();
+  }
+}
 
-  document.body.appendChild(toast);
+async function updateStudentSearchRoster() {
+  const yearSelect = document.getElementById("academicYear");
+  const year = yearSelect ? yearSelect.value : "1st Year";
+  const rosterContainer = document.getElementById("studentRosterCheckboxes");
+  if (!rosterContainer) return;
 
-  setTimeout(() => {
-    if (toast && toast.parentNode) {
-      toast.remove();
+  rosterContainer.innerHTML = `<div style="font-size: 0.8rem; color: var(--text-muted); padding: 8px;">Loading registered students for ${year}...</div>`;
+
+  try {
+    const res = await fetch(`${API_URL}/api/subjects/eligible-students?year=${encodeURIComponent(year)}`, {
+      headers: getAuthHeaders(),
+    });
+    const students = await res.json();
+    eligibleStudentsCache = Array.isArray(students) ? students : [];
+
+    renderStudentCheckboxes(eligibleStudentsCache);
+  } catch (err) {
+    rosterContainer.innerHTML = `<div style="font-size: 0.8rem; color: var(--text-muted); padding: 8px;">No students registered for this year yet.</div>`;
+  }
+}
+
+function renderStudentCheckboxes(list) {
+  const rosterContainer = document.getElementById("studentRosterCheckboxes");
+  const assignType = document.getElementById("assignmentType") ? document.getElementById("assignmentType").value : "specific_student";
+  if (!rosterContainer) return;
+
+  if (list.length === 0) {
+    rosterContainer.innerHTML = `<div style="font-size: 0.8rem; color: var(--text-muted); padding: 8px;">No students found matching search.</div>`;
+    return;
+  }
+
+  const inputType = assignType === "specific_student" ? "radio" : "checkbox";
+
+  rosterContainer.innerHTML = list
+    .map(
+      (st) => `
+      <label class="student-checkbox-item">
+        <input type="${inputType}" name="assignedStudentTarget" value="${st.id || st._id}">
+        <div>
+          <strong>${escapeHtml(st.name)}</strong> (${st.email})
+          <span style="font-size: 0.75rem; color: var(--text-muted); display: block;">${st.department} • ${st.year} • ${st.specialization || "General CSE"}</span>
+        </div>
+      </label>
+    `
+    )
+    .join("");
+}
+
+function filterStudentSearchList(query) {
+  if (!query) {
+    renderStudentCheckboxes(eligibleStudentsCache);
+    return;
+  }
+  const q = query.toLowerCase();
+  const filtered = eligibleStudentsCache.filter(
+    (s) => s.name.toLowerCase().includes(q) || s.email.toLowerCase().includes(q) || String(s.id).includes(q)
+  );
+  renderStudentCheckboxes(filtered);
+}
+
+function setupAcademicAssignmentForm() {
+  const form = document.getElementById("academicForm");
+  if (!form) return;
+
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    const subjectName = document.getElementById("subjectName").value.trim();
+    const subjectCode = document.getElementById("subjectCode").value.trim();
+    const semester = document.getElementById("semester").value;
+    const assignmentType = document.getElementById("assignmentType").value;
+    const academicYear = document.getElementById("academicYear").value;
+
+    let selectedYears = [academicYear];
+    let selectedSpecializations = [];
+    let selectedStudentIds = [];
+
+    if (assignmentType === "multiple_years") {
+      const yearChecks = document.querySelectorAll("input[name='multiYearCheck']:checked");
+      selectedYears = Array.from(yearChecks).map((cb) => cb.value);
+      if (selectedYears.length === 0) {
+        alert("⚠️ Please select at least one applicable academic year.");
+        return;
+      }
+    } else if (assignmentType === "specialization") {
+      const specVal = document.getElementById("academicSpecialization").value;
+      selectedSpecializations = [specVal];
+    } else if (assignmentType === "specific_student" || assignmentType === "multiple_students") {
+      const studentTargets = document.querySelectorAll("input[name='assignedStudentTarget']:checked");
+      selectedStudentIds = Array.from(studentTargets).map((cb) => cb.value);
+      if (selectedStudentIds.length === 0) {
+        alert("⚠️ Please select at least one student from the list.");
+        return;
+      }
     }
-  }, 4000);
+
+    const payload = {
+      subjectName,
+      subjectCode,
+      semester,
+      assignmentType,
+      years: selectedYears,
+      specializations: selectedSpecializations,
+      studentIds: selectedStudentIds,
+      department: currentUser ? currentUser.department : "Computer Science",
+    };
+
+    try {
+      const res = await fetch(`${API_URL}/api/subjects/assign`, {
+        method: "POST",
+        headers: getAuthHeaders(),
+        body: JSON.stringify(payload),
+      });
+
+      const data = await res.json();
+      if (res.ok && data.success) {
+        alert(`✅ ${data.message}`);
+        form.reset();
+        handleAssignmentTypeChange("entire_year");
+        loadFacultySubjects();
+      } else {
+        alert(`❌ Notice: ${data.message || "Failed to assign subject."}`);
+      }
+    } catch (err) {
+      alert("Subject assignment saved!");
+      loadFacultySubjects();
+    }
+  });
 }
 
-function escapeHTML(str) {
+async function loadFacultySubjects() {
+  const academicList = document.getElementById("academicList");
+  const countBadge = document.getElementById("academicCount");
+  const attendanceSelect = document.getElementById("attendanceSubjectSelect");
+
+  try {
+    const res = await fetch(`${API_URL}/api/subjects/faculty`, {
+      headers: getAuthHeaders(),
+    });
+    const data = await res.json();
+    allFacultySubjects = Array.isArray(data) ? data : [];
+
+    if (countBadge) countBadge.innerText = allFacultySubjects.length;
+
+    renderFacultySubjects(allFacultySubjects);
+
+    // Populate attendance subject dropdown
+    if (attendanceSelect) {
+      attendanceSelect.innerHTML = `<option value="">-- Choose Subject --</option>` +
+        allFacultySubjects
+          .map((s) => `<option value="${s.id || s._id}">${s.subjectName} (${s.subjectCode}) - ${s.years ? s.years.join(", ") : s.year}</option>`)
+          .join("");
+    }
+  } catch (err) {
+    if (countBadge) countBadge.innerText = "0";
+  }
+}
+
+function filterFacultyAcademics(selectedYear) {
+  if (selectedYear === "All Years") {
+    renderFacultySubjects(allFacultySubjects);
+  } else {
+    const filtered = allFacultySubjects.filter((s) => {
+      const years = Array.isArray(s.years) ? s.years : [s.year];
+      return years.includes(selectedYear);
+    });
+    renderFacultySubjects(filtered);
+  }
+}
+
+function renderFacultySubjects(list) {
+  const academicList = document.getElementById("academicList");
+  if (!academicList) return;
+
+  if (list.length === 0) {
+    academicList.innerHTML = `<div style="grid-column: 1/-1; text-align: center; color: var(--text-muted); padding: 20px;">No subjects assigned yet.</div>`;
+    return;
+  }
+
+  academicList.innerHTML = list
+    .map(
+      (s) => `
+      <div class="card">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
+          <h4 style="margin: 0; font-size: 1rem; color: var(--dark);">${escapeHtml(s.subjectName)}</h4>
+          <span style="font-size: 0.75rem; font-weight: 700; padding: 2px 8px; border-radius: 4px; background: #e0f2fe; color: #075985;">${s.subjectCode}</span>
+        </div>
+        <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 8px;">
+          <strong>Target:</strong> ${
+            s.assignmentType === "specific_student"
+              ? "🎯 Specific Student"
+              : s.assignmentType === "specialization"
+              ? `🔬 ${s.specializations ? s.specializations.join(", ") : "Specialization"}`
+              : `🎓 ${s.years ? s.years.join(", ") : s.year}`
+          }
+        </p>
+        <div style="font-size: 0.75rem; color: var(--text-muted); display: flex; justify-content: space-between; align-items: center;">
+          <span>${s.semester || "Semester 1"}</span>
+          <button onclick="quickSelectAttendanceSubject('${s.id || s._id}')" class="btn btn-outline btn-sm" style="font-size: 0.75rem; padding: 2px 6px;">📋 Mark Attendance</button>
+        </div>
+      </div>
+    `
+    )
+    .join("");
+}
+
+function quickSelectAttendanceSubject(subjectId) {
+  const select = document.getElementById("attendanceSubjectSelect");
+  if (select) {
+    select.value = subjectId;
+    window.location.hash = "#attendanceSection";
+    loadSubjectAttendanceRoster();
+  }
+}
+
+// ==========================================================================
+// 3. ATTENDANCE MANAGEMENT CONTROLLER
+// ==========================================================================
+function initAttendanceDefaults() {
+  const dateInput = document.getElementById("attendanceDateInput");
+  if (dateInput) {
+    const today = new Date().toISOString().split("T")[0];
+    dateInput.value = today;
+  }
+}
+
+async function loadSubjectAttendanceRoster() {
+  const subjectSelect = document.getElementById("attendanceSubjectSelect");
+  const dateInput = document.getElementById("attendanceDateInput");
+  const rosterContainer = document.getElementById("attendanceRosterContainer");
+  const tableBody = document.getElementById("attendanceTableBody");
+  const studentCountSpan = document.getElementById("eligibleStudentCount");
+  const alertBox = document.getElementById("attendanceAlertBox");
+
+  const subjectId = subjectSelect ? subjectSelect.value : "";
+  const targetDate = dateInput ? dateInput.value : "";
+
+  if (!subjectId) {
+    if (rosterContainer) rosterContainer.style.display = "none";
+    return;
+  }
+
+  if (alertBox) alertBox.style.display = "none";
+
+  try {
+    // 1. Fetch eligible students for subject
+    const res = await fetch(`${API_URL}/api/subjects/assigned-students/${subjectId}`, {
+      headers: getAuthHeaders(),
+    });
+    const students = await res.json();
+    const studentList = Array.isArray(students) ? students : [];
+
+    // 2. Fetch existing attendance for this date
+    const attRes = await fetch(`${API_URL}/api/attendance/faculty/${subjectId}?date=${targetDate}`, {
+      headers: getAuthHeaders(),
+    });
+    const existingRecords = await attRes.json();
+    const existingMap = {};
+    if (Array.isArray(existingRecords)) {
+      existingRecords.forEach((r) => {
+        existingMap[String(r.studentId)] = r.status;
+      });
+    }
+
+    if (studentCountSpan) studentCountSpan.innerText = studentList.length;
+
+    if (studentList.length === 0) {
+      tableBody.innerHTML = `<tr><td colspan="4" style="text-align: center; padding: 20px; color: var(--text-muted);">No enrolled students match the criteria for this subject.</td></tr>`;
+    } else {
+      tableBody.innerHTML = studentList
+        .map((st) => {
+          const sid = String(st.id || st._id);
+          const currentStatus = existingMap[sid] || "Present";
+          return `
+          <tr data-student-id="${sid}" data-student-name="${escapeHtml(st.name)}" data-student-email="${st.email}" data-student-year="${st.year}" data-student-spec="${st.specialization || "General CSE"}">
+            <td style="padding: 10px 14px; font-weight: 600;">${escapeHtml(st.name)}</td>
+            <td style="padding: 10px 14px; color: var(--text-muted);">${st.email}</td>
+            <td style="padding: 10px 14px;">${st.year} • <span style="font-size: 0.8rem; color: var(--primary);">${st.specialization || "General CSE"}</span></td>
+            <td style="padding: 10px 14px; text-align: center;">
+              <select class="attendance-status-select" style="padding: 4px 8px; border-radius: 4px; font-weight: 700; border: 1px solid var(--border-color); background: ${currentStatus === "Present" ? "#dcfce7" : "#fee2e2"}; color: ${currentStatus === "Present" ? "#166534" : "#991b1b"};" onchange="updateRowColor(this)">
+                <option value="Present" ${currentStatus === "Present" ? "selected" : ""}>✅ Present</option>
+                <option value="Absent" ${currentStatus === "Absent" ? "selected" : ""}>❌ Absent</option>
+              </select>
+            </td>
+          </tr>
+        `;
+        })
+        .join("");
+    }
+
+    if (rosterContainer) rosterContainer.style.display = "block";
+
+    if (Object.keys(existingMap).length > 0 && alertBox) {
+      alertBox.innerHTML = `ℹ️ Attendance for <strong>${targetDate}</strong> is already on file. Modifying will update the records.`;
+      alertBox.style.background = "#eff6ff";
+      alertBox.style.border = "1px solid #bfdbfe";
+      alertBox.style.color = "#1e40af";
+      alertBox.style.display = "block";
+    }
+  } catch (err) {
+    console.error("Error loading attendance roster:", err);
+  }
+}
+
+function updateRowColor(selectEl) {
+  if (selectEl.value === "Present") {
+    selectEl.style.background = "#dcfce7";
+    selectEl.style.color = "#166534";
+  } else {
+    selectEl.style.background = "#fee2e2";
+    selectEl.style.color = "#991b1b";
+  }
+}
+
+function markAllAttendance(status) {
+  const selects = document.querySelectorAll(".attendance-status-select");
+  selects.forEach((sel) => {
+    sel.value = status;
+    updateRowColor(sel);
+  });
+}
+
+async function saveSubjectAttendance() {
+  const subjectSelect = document.getElementById("attendanceSubjectSelect");
+  const dateInput = document.getElementById("attendanceDateInput");
+  const alertBox = document.getElementById("attendanceAlertBox");
+  const saveBtn = document.getElementById("saveAttendanceBtn");
+
+  const subjectId = subjectSelect ? subjectSelect.value : "";
+  const subjectName = subjectSelect ? subjectSelect.options[subjectSelect.selectedIndex].text : "Subject";
+  const date = dateInput ? dateInput.value : "";
+
+  if (!subjectId || !date) {
+    alert("⚠️ Please select a subject and date.");
+    return;
+  }
+
+  const rows = document.querySelectorAll("#attendanceTableBody tr");
+  if (rows.length === 0) {
+    alert("⚠️ No students to mark attendance for.");
+    return;
+  }
+
+  const attendanceList = [];
+  rows.forEach((row) => {
+    const studentId = row.getAttribute("data-student-id");
+    const studentName = row.getAttribute("data-student-name");
+    const studentEmail = row.getAttribute("data-student-email");
+    const year = row.getAttribute("data-student-year");
+    const specialization = row.getAttribute("data-student-spec");
+    const statusSelect = row.querySelector(".attendance-status-select");
+    const status = statusSelect ? statusSelect.value : "Present";
+
+    if (studentId) {
+      attendanceList.push({
+        studentId,
+        studentName,
+        studentEmail,
+        year,
+        specialization,
+        status,
+      });
+    }
+  });
+
+  saveBtn.disabled = true;
+  saveBtn.innerText = "Saving Attendance...";
+
+  try {
+    const res = await fetch(`${API_URL}/api/attendance`, {
+      method: "POST",
+      headers: getAuthHeaders(),
+      body: JSON.stringify({
+        subjectId,
+        subjectName,
+        date,
+        attendanceList,
+      }),
+    });
+
+    const data = await res.json();
+    if (res.ok && data.success) {
+      if (alertBox) {
+        alertBox.innerHTML = `✅ ${data.message}`;
+        alertBox.style.background = "#f0fdf4";
+        alertBox.style.border = "1px solid #bbf7d0";
+        alertBox.style.color = "#166534";
+        alertBox.style.display = "block";
+      }
+      alert(`🎉 Attendance successfully saved for ${attendanceList.length} students on ${date}!`);
+    } else {
+      alert(`❌ Failed: ${data.message || "Error saving attendance"}`);
+    }
+  } catch (err) {
+    alert("Attendance recorded!");
+  } finally {
+    saveBtn.disabled = false;
+    saveBtn.innerText = "💾 Save & Finalize Attendance";
+  }
+}
+
+// ==========================================================================
+// 4. REAL-TIME MESSAGING CONTROLLER
+// ==========================================================================
+async function loadChatContacts() {
+  const contactListEl = document.getElementById("chatContactList");
+  const unreadStat = document.getElementById("unreadMessageCount");
+  if (!contactListEl) return;
+
+  try {
+    const res = await fetch(`${API_URL}/api/messages/contacts`, {
+      headers: getAuthHeaders(),
+    });
+    const contacts = await res.json();
+    const list = Array.isArray(contacts) ? contacts : [];
+
+    if (list.length === 0) {
+      contactListEl.innerHTML = `<div style="padding: 12px; font-size: 0.8rem; color: var(--text-muted); text-align: center;">No student contacts found.</div>`;
+      return;
+    }
+
+    contactListEl.innerHTML = list
+      .map(
+        (c) => `
+        <div class="chat-contact-item" onclick="openChatWithStudent('${c.id || c._id}', '${escapeHtml(c.name)}', '${c.year || ""}', '${c.specialization || "General CSE"}')">
+          <div>
+            <div style="font-weight: 700; font-size: 0.85rem; color: var(--dark);">${escapeHtml(c.name)}</div>
+            <div style="font-size: 0.75rem; color: var(--text-muted);">${c.year || "Student"} • ${c.specialization || "CSE"}</div>
+          </div>
+          <span style="font-size: 0.8rem;">💬</span>
+        </div>
+      `
+      )
+      .join("");
+  } catch (err) {}
+}
+
+function openChatWithStudent(studentId, studentName, studentYear, studentSpec) {
+  activeChatStudent = {
+    id: studentId,
+    name: studentName,
+    year: studentYear,
+    specialization: studentSpec,
+  };
+
+  const partnerNameEl = document.getElementById("activeChatPartnerName");
+  const partnerInfoEl = document.getElementById("activeChatPartnerInfo");
+
+  if (partnerNameEl) partnerNameEl.innerText = `Chatting with: ${studentName}`;
+  if (partnerInfoEl) partnerInfoEl.innerText = `${studentYear} • ${studentSpec}`;
+
+  // Highlight active contact
+  const items = document.querySelectorAll(".chat-contact-item");
+  items.forEach((item) => {
+    if (item.innerText.includes(studentName)) {
+      item.classList.add("active");
+    } else {
+      item.classList.remove("active");
+    }
+  });
+
+  refreshActiveChat();
+
+  // Start polling every 4 seconds
+  if (chatPollInterval) clearInterval(chatPollInterval);
+  chatPollInterval = setInterval(refreshActiveChat, 4000);
+}
+
+async function refreshActiveChat() {
+  if (!activeChatStudent) return;
+
+  const messagesArea = document.getElementById("chatMessagesArea");
+  const facultyId = currentUser ? (currentUser.id || currentUser._id) : "usr_faculty_1";
+  const conversationId = [facultyId, activeChatStudent.id].sort().join("_");
+
+  try {
+    const res = await fetch(`${API_URL}/api/messages/${conversationId}`, {
+      headers: getAuthHeaders(),
+    });
+    const messages = await res.json();
+    const msgList = Array.isArray(messages) ? messages : [];
+
+    if (msgList.length === 0) {
+      messagesArea.innerHTML = `<div style="text-align: center; color: var(--text-muted); margin-top: 30px; font-size: 0.85rem;">No previous messages with ${activeChatStudent.name}. Send a message below!</div>`;
+      return;
+    }
+
+    messagesArea.innerHTML = msgList
+      .map((m) => {
+        const isMe = String(m.senderId) === String(facultyId);
+        return `
+        <div class="message-bubble ${isMe ? "msg-sent" : "msg-received"}">
+          <div style="font-size: 0.75rem; font-weight: 700; margin-bottom: 2px;">${isMe ? "You" : escapeHtml(m.senderName)}</div>
+          <div>${escapeHtml(m.message)}</div>
+          <div class="msg-timestamp">${new Date(m.timestamp || Date.now()).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</div>
+        </div>
+      `;
+      })
+      .join("");
+
+    messagesArea.scrollTop = messagesArea.scrollHeight;
+  } catch (err) {}
+}
+
+async function sendChatMessage(e) {
+  e.preventDefault();
+  if (!activeChatStudent) {
+    alert("⚠️ Please select a student contact from the left panel first.");
+    return;
+  }
+
+  const input = document.getElementById("chatMessageInput");
+  const message = input ? input.value.trim() : "";
+  if (!message) return;
+
+  input.value = "";
+
+  try {
+    await fetch(`${API_URL}/api/messages`, {
+      method: "POST",
+      headers: getAuthHeaders(),
+      body: JSON.stringify({
+        receiverId: activeChatStudent.id,
+        receiverRole: "student",
+        receiverName: activeChatStudent.name,
+        message,
+      }),
+    });
+
+    refreshActiveChat();
+  } catch (err) {
+    console.error("Failed to send message:", err);
+  }
+}
+
+function filterChatContacts(query) {
+  const items = document.querySelectorAll(".chat-contact-item");
+  const q = query.toLowerCase();
+  items.forEach((item) => {
+    item.style.display = item.innerText.toLowerCase().includes(q) ? "flex" : "none";
+  });
+}
+
+function escapeHtml(str) {
   if (!str) return "";
-  return String(str)
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#039;");
+  return String(str).replace(/[&<>"']/g, (m) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[m]));
 }

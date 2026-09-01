@@ -207,6 +207,8 @@ function setupRegisterForm() {
     const email = document.getElementById("regEmail").value.trim();
     const department = document.getElementById("regDepartment").value;
     const year = document.getElementById("regYear").value;
+    const specializationEl = document.getElementById("regSpecialization");
+    const specialization = specializationEl ? specializationEl.value : "General CSE";
     const password = document.getElementById("regPassword").value;
     const confirmPassword = document.getElementById("regConfirmPassword").value;
 
@@ -236,6 +238,7 @@ function setupRegisterForm() {
       role: role.toLowerCase(),
       department: department || "Computer Science",
       year: year || "1st Year",
+      specialization: specialization || "General CSE",
     };
 
     // Store in local backup
@@ -254,7 +257,7 @@ function setupRegisterForm() {
       const response = await fetch(`${API_URL}/api/auth/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, email, password, role, department, year }),
+        body: JSON.stringify({ name, email, password, role, department, year, specialization }),
       });
 
       const data = await response.json();

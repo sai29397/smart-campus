@@ -6,6 +6,103 @@
     <title>Student Dashboard - Smart Campus</title>
     <!-- Connect CSS -->
     <link rel="stylesheet" href="css/style.css">
+    <style>
+        .chat-container {
+            display: grid;
+            grid-template-columns: 280px 1fr;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            overflow: hidden;
+            min-height: 400px;
+            background: #fff;
+        }
+        .chat-sidebar {
+            background: #f8fafc;
+            border-right: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+        }
+        .chat-contact-item {
+            padding: 12px 14px;
+            border-bottom: 1px solid var(--border-color);
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .chat-contact-item:hover, .chat-contact-item.active {
+            background: #e2e8f0;
+        }
+        .chat-main {
+            display: flex;
+            flex-direction: column;
+            background: #fff;
+        }
+        .chat-header-bar {
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--border-color);
+            background: #f8fafc;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .chat-messages-area {
+            flex: 1;
+            padding: 16px;
+            overflow-y: auto;
+            max-height: 300px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            background: #fcfdfd;
+        }
+        .message-bubble {
+            max-width: 75%;
+            padding: 10px 14px;
+            border-radius: var(--radius-md);
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+        .msg-sent {
+            align-self: flex-end;
+            background: var(--primary);
+            color: #fff;
+            border-bottom-right-radius: 2px;
+        }
+        .msg-received {
+            align-self: flex-start;
+            background: #e2e8f0;
+            color: var(--text-main);
+            border-bottom-left-radius: 2px;
+        }
+        .msg-timestamp {
+            font-size: 0.7rem;
+            opacity: 0.75;
+            margin-top: 4px;
+            text-align: right;
+        }
+        .chat-input-bar {
+            padding: 12px;
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            gap: 8px;
+            background: #fff;
+        }
+        .progress-bar-container {
+            height: 8px;
+            background: #e2e8f0;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 8px;
+        }
+        .progress-bar-fill {
+            height: 100%;
+            border-radius: 4px;
+            transition: width 0.4s ease;
+        }
+    </style>
 </head>
 <body>
 
@@ -25,8 +122,8 @@
             <div class="user-profile-badge">
                 <div class="user-avatar">👨‍🎓</div>
                 <div>
-                    <span class="user-info" id="studentName">Alex Johnson</span>
-                    <span class="user-role-tag" id="studentTag">Computer Science • 1st Year</span>
+                    <span class="user-info" id="studentName">Student</span>
+                    <span class="user-role-tag" id="studentTag">Loading...</span>
                 </div>
             </div>
 
@@ -41,7 +138,7 @@
         <div class="page-header">
             <div class="page-title">
                 <h1>Welcome Back, <span id="welcomeStudentName">Student</span>! 👋</h1>
-                <p>Stay updated with announcements and academic curriculum for <strong id="studentHeaderDept">Computer Science</strong> (<span id="studentHeaderYear">1st Year</span>).</p>
+                <p>Curriculum, attendance, and faculty communication for <strong id="studentHeaderDept">Computer Science</strong> (<span id="studentHeaderYear">1st Year</span>) • <span id="studentHeaderSpec" style="color: var(--primary); font-weight: 700;">Core</span>.</p>
             </div>
             <div>
                 <button onclick="refreshStudentData()" class="btn btn-outline btn-sm">🔄 Refresh Data</button>
@@ -52,7 +149,7 @@
         <div class="stats-grid">
             <div class="stat-card">
                 <div class="stat-info">
-                    <h3>Announcements</h3>
+                    <h3>Targeted Notices</h3>
                     <div class="stat-number" id="studentAnnouncementCount">0</div>
                 </div>
                 <div class="stat-icon-wrapper stat-icon-blue">📢</div>
@@ -68,18 +165,18 @@
 
             <div class="stat-card">
                 <div class="stat-info">
-                    <h3>Current Semester</h3>
-                    <div class="stat-number" id="studentSemesterStat" style="font-size: 1.2rem; margin-top: 6px;">Semester 1</div>
+                    <h3>Overall Attendance</h3>
+                    <div class="stat-number" id="studentOverallAttendance" style="color: var(--success);">--%</div>
                 </div>
-                <div class="stat-icon-wrapper stat-icon-purple">🎯</div>
+                <div class="stat-icon-wrapper stat-icon-amber">📊</div>
             </div>
 
             <div class="stat-card">
                 <div class="stat-info">
-                    <h3>Attendance Rate</h3>
-                    <div class="stat-number" style="font-size: 1.2rem; margin-top: 6px; color: var(--success);">96.5%</div>
+                    <h3>Specialization</h3>
+                    <div class="stat-number" id="studentSpecStat" style="font-size: 1rem; margin-top: 6px; word-break: break-word;">General CSE</div>
                 </div>
-                <div class="stat-icon-wrapper stat-icon-amber">📊</div>
+                <div class="stat-icon-wrapper stat-icon-purple">🎯</div>
             </div>
         </div>
 
@@ -90,28 +187,84 @@
                 <span class="badge-count" id="annCountBadge">Loading...</span>
             </div>
             <div class="section-body">
-                <div id="studentAnnouncementList" class="cards-grid">
-                    <!-- Dynamic Announcements -->
-                </div>
+                <div id="studentAnnouncementList" class="cards-grid"></div>
             </div>
         </section>
 
-        <!-- ================= SECTION 2: ACADEMIC SUBJECTS ================= -->
+        <!-- ================= SECTION 2: ENROLLED SUBJECTS ================= -->
         <section class="section-card">
             <div class="section-header">
-                <h2>📚 Enrolled Subjects & Faculty (Live API)</h2>
-                <span class="badge-count" id="acadCountBadge">Live from Server</span>
+                <h2>📚 My Enrolled Subjects & Curriculum</h2>
+                <span class="badge-count" id="subCountBadge">Loading...</span>
             </div>
             <div class="section-body">
-                <div id="studentAcademicList" class="cards-grid">
-                    <!-- Dynamic Subjects loaded via GET /api/academic -->
+                <div id="studentSubjectList" class="cards-grid"></div>
+            </div>
+        </section>
+
+        <!-- ================= SECTION 3: ATTENDANCE ANALYTICS ================= -->
+        <section class="section-card" id="attendanceSection">
+            <div class="section-header">
+                <h2>📊 Subject-Wise Attendance Tracking</h2>
+                <span class="badge-count" id="attendanceTrackBadge">0 Subjects</span>
+            </div>
+            <div class="section-body">
+                <div id="studentAttendanceGrid" class="cards-grid"></div>
+            </div>
+        </section>
+
+        <!-- ================= SECTION 4: FACULTY MESSAGING ================= -->
+        <section class="section-card" id="chatSection">
+            <div class="section-header">
+                <h2>💬 Faculty Direct Messaging & Doubts</h2>
+            </div>
+            <div class="section-body">
+                <div class="chat-container">
+                    <!-- Left Sidebar: Faculty Contacts -->
+                    <div class="chat-sidebar">
+                        <div style="padding: 12px; border-bottom: 1px solid var(--border-color); font-weight: 700; font-size: 0.85rem; color: var(--dark);">
+                            👨‍🏫 Your Faculty Contacts:
+                        </div>
+                        <div id="studentFacultyChatList" style="flex: 1; overflow-y: auto;"></div>
+                    </div>
+
+                    <!-- Right Pane: Active Conversation -->
+                    <div class="chat-main">
+                        <div class="chat-header-bar">
+                            <div>
+                                <span id="activeFacultyName">Select a faculty member to start chat</span>
+                                <span style="font-size: 0.75rem; font-weight: normal; color: var(--text-muted); display: block;" id="activeFacultyInfo"></span>
+                            </div>
+                            <button onclick="refreshStudentChat()" class="btn btn-outline btn-sm" style="font-size: 0.75rem; padding: 4px 8px;">🔄 Refresh</button>
+                        </div>
+
+                        <div class="chat-messages-area" id="studentChatMessagesArea">
+                            <div style="text-align: center; color: var(--text-muted); margin-top: 40px; font-size: 0.9rem;">
+                                💬 Select a faculty member from the left panel to message them directly.
+                            </div>
+                        </div>
+
+                        <form class="chat-input-bar" id="studentChatSendForm" onsubmit="sendStudentChatMessage(event)">
+                            <input 
+                                type="text" 
+                                id="studentChatMessageInput" 
+                                placeholder="Type a message to your faculty..." 
+                                required
+                                autocomplete="off"
+                                style="flex: 1; font-size: 0.9rem;"
+                            >
+                            <button type="submit" class="btn btn-primary btn-sm" style="padding: 8px 16px;">
+                                Send ✉️
+                            </button>
+                        </form>
+                    </div>
                 </div>
             </div>
         </section>
 
     </main>
 
-    <!-- Connect JS -->
+    <!-- Connect JavaScript -->
     <script src="js/student.js"></script>
 </body>
 </html>

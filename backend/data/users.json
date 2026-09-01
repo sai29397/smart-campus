@@ -65,5 +65,53 @@
     "department": "Mechanical Engineering",
     "year": "3rd Year",
     "createdAt": "2026-09-01T18:23:10.591Z"
+  },
+  {
+    "_id": "usr_1788287068278",
+    "name": "vimal",
+    "email": "saibudeti1@gmail.com",
+    "password": "1563",
+    "passwordHash": "$2a$10$qouBPGP0iEf3JFA40TqXAOqryPAAYyOMMF2csZP/TvkCTmlIqEPxO",
+    "role": "student",
+    "department": "Computer Science",
+    "year": "1st Year",
+    "createdAt": "2026-09-01T18:24:28.278Z",
+    "updatedAt": "2026-09-01T18:26:35.836Z"
+  },
+  {
+    "_id": "usr_1788290798643",
+    "name": "Rahul Sharma",
+    "email": "rahul_ai@campus.edu",
+    "password": "RahulPassword@123",
+    "passwordHash": "$2a$10$YyRLqSD7NZYN1Ujqy.sOFOXg.nys22TH51TmWvLlT7da/w9q46GTC",
+    "role": "student",
+    "department": "Computer Science",
+    "year": "3rd Year",
+    "specialization": "Artificial Intelligence and Machine Learning",
+    "createdAt": "2026-09-01T19:26:38.643Z"
+  },
+  {
+    "_id": "usr_1788290808817",
+    "name": "Sneha Reddy",
+    "email": "sneha_ds@campus.edu",
+    "password": "SnehaPassword@123",
+    "passwordHash": "$2a$10$qdoEDnvWYMpKNNtQipQE5uvBbFcasVZV2Ndojieo0wxGHIMMTj9qG",
+    "role": "student",
+    "department": "Computer Science",
+    "year": "3rd Year",
+    "specialization": "Data Science",
+    "createdAt": "2026-09-01T19:26:48.817Z"
+  },
+  {
+    "_id": "usr_1788290818939",
+    "name": "Manoj Kumar",
+    "email": "manoj_1st@campus.edu",
+    "password": "ManojPassword@123",
+    "passwordHash": "$2a$10$bVKldXgbsiBfMgMhJK7a3OCGjrY2W7l.UyWp.nblzCE1nq53zGRf2",
+    "role": "student",
+    "department": "Computer Science",
+    "year": "1st Year",
+    "specialization": "General CSE",
+    "createdAt": "2026-09-01T19:26:58.939Z"
   }
 ]

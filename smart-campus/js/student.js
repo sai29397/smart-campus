@@ -2,7 +2,6 @@
 // SMART CAMPUS - STUDENT DASHBOARD CONTROLLER (student.js)
 // ==========================================================================
 
-// Base API URL: connects to http://localhost:3000 in local dev, or relative path on deployed Vercel
 const API_URL =
   window.location.hostname === "localhost" && window.location.port !== "3000"
     ? "http://localhost:3000"
@@ -10,333 +9,404 @@ const API_URL =
     ? "http://localhost:3000"
     : "";
 
-const masterAnnouncements = [
-  {
-    title: "1st Year Orientation & Bridge Course Schedule",
-    description: "Welcome to campus! Orientation sessions and campus map tours are scheduled in Hall A.",
-    department: "Computer Science",
-    year: "1st Year",
-    priority: "Important",
-    date: "Today",
-  },
-  {
-    title: "Freshman Lab Induction & Safety Workshop",
-    description: "All newly admitted students must attend the introductory laboratory induction session.",
-    department: "All Departments",
-    year: "1st Year",
-    priority: "Normal",
-    date: "Today",
-  },
-  {
-    title: "Mid-Term Examination Schedule Released",
-    description: "The schedule for Mid-Term Exams has been uploaded. Check your assigned exam rooms.",
-    department: "Computer Science",
-    year: "3rd Year",
-    priority: "Urgent",
-    date: "Yesterday",
-  },
-  {
-    title: "Hackathon 2026 Registration Open",
-    description: "Registration for the annual university hackathon is now open. Teams of up to 4 can register.",
-    department: "All Departments",
-    year: "All Years",
-    priority: "Important",
-    date: "Yesterday",
-  },
-  {
-    title: "Library Extended Hours for Examinations",
-    description: "The main campus library will remain open 24/7 during exam revision weeks.",
-    department: "All Departments",
-    year: "All Years",
-    priority: "Normal",
-    date: "2 days ago",
-  },
-];
+let currentUser = null;
+let activeFacultyChat = null;
+let studentChatPollInterval = null;
 
-// ==========================================================================
-// 1. ROLE-BASED ACCESS & SESSION BOOTSTRAP
-// ==========================================================================
-function ensureStudentSession() {
-  let userStr = localStorage.getItem("smart_campus_user");
+document.addEventListener("DOMContentLoaded", () => {
+  initStudentSession();
+  loadStudentAnnouncements();
+  loadStudentSubjects();
+  loadStudentAttendance();
+  loadStudentFacultyContacts();
+});
 
-  if (!userStr) {
-    const defaultStudent = {
+/**
+ * Initialize student session & dynamic UI header tags
+ */
+function initStudentSession() {
+  const userJson = localStorage.getItem("smart_campus_user");
+
+  if (userJson) {
+    try {
+      currentUser = JSON.parse(userJson);
+    } catch (e) {}
+  }
+
+  if (!currentUser) {
+    currentUser = {
       id: "usr_student_1",
       name: "Alex Johnson",
       email: "student@campus.edu",
       role: "student",
       department: "Computer Science",
       year: "1st Year",
+      specialization: "General CSE",
     };
-    localStorage.setItem("smart_campus_user", JSON.stringify(defaultStudent));
-    userStr = JSON.stringify(defaultStudent);
   }
 
-  try {
-    const user = JSON.parse(userStr);
+  const studentName = currentUser.name || "Alex Johnson";
+  const studentDept = currentUser.department || "Computer Science";
+  const studentYear = currentUser.year || "1st Year";
+  const studentSpec = currentUser.specialization || "General CSE";
 
-    if (user.role === "faculty") {
-      alert("Notice: You are currently signed in as a Faculty member. Redirecting to Faculty Dashboard.");
-      window.location.href = "faculty-dashboard.html";
-      return false;
-    }
+  const studentNameEl = document.getElementById("studentName");
+  const welcomeNameEl = document.getElementById("welcomeStudentName");
+  const studentTagEl = document.getElementById("studentTag");
+  const headerDeptEl = document.getElementById("studentHeaderDept");
+  const headerYearEl = document.getElementById("studentHeaderYear");
+  const headerSpecEl = document.getElementById("studentHeaderSpec");
+  const specStatEl = document.getElementById("studentSpecStat");
 
-    return true;
-  } catch (err) {
-    return true;
-  }
-}
+  if (studentNameEl) studentNameEl.innerText = studentName;
+  if (welcomeNameEl) welcomeNameEl.innerText = studentName;
+  if (studentTagEl) studentTagEl.innerText = `${studentDept} • ${studentYear}`;
+  if (headerDeptEl) headerDeptEl.innerText = studentDept;
+  if (headerYearEl) headerYearEl.innerText = studentYear;
+  if (headerSpecEl) headerSpecEl.innerText = studentSpec;
+  if (specStatEl) specStatEl.innerText = studentSpec;
 
-document.addEventListener("DOMContentLoaded", () => {
-  const isAllowed = ensureStudentSession();
-  if (!isAllowed) return;
-
-  initializeStudentProfile();
-  renderStudentAnnouncements();
-  loadStudentAcademics();
-});
-
-function initializeStudentProfile() {
-  const userStr = localStorage.getItem("smart_campus_user");
-  if (!userStr) return;
-
-  try {
-    const user = JSON.parse(userStr);
-    const nameElem = document.getElementById("studentName");
-    const welcomeName = document.getElementById("welcomeStudentName");
-    const studentTag = document.getElementById("studentTag");
-    const headerDept = document.getElementById("studentHeaderDept");
-    const headerYear = document.getElementById("studentHeaderYear");
-    const studentSemesterStat = document.getElementById("studentSemesterStat");
-
-    const dept = user.department || "Computer Science";
-    const year = user.year || "1st Year";
-    const fullName = user.name || "Student";
-
-    if (nameElem) nameElem.innerText = fullName;
-    if (welcomeName) welcomeName.innerText = fullName.split(" ")[0];
-    if (studentTag) studentTag.innerText = `${dept} • ${year}`;
-    if (headerDept) headerDept.innerText = dept;
-    if (headerYear) headerYear.innerText = year;
-
-    if (studentSemesterStat) {
-      if (year === "1st Year") studentSemesterStat.innerText = "Semester 1";
-      else if (year === "2nd Year") studentSemesterStat.innerText = "Semester 3";
-      else if (year === "3rd Year") studentSemesterStat.innerText = "Semester 5";
-      else if (year === "4th Year") studentSemesterStat.innerText = "Semester 7";
-      else studentSemesterStat.innerText = "Active";
-    }
-  } catch (e) {
-    console.warn("Could not parse student profile", e);
-  }
-
-  // Logout button handler
   const logoutBtn = document.getElementById("logoutBtn");
   if (logoutBtn) {
     logoutBtn.addEventListener("click", () => {
       localStorage.removeItem("smart_campus_token");
       localStorage.removeItem("smart_campus_user");
+      window.location.href = "login.html";
     });
   }
+}
+
+function getAuthHeaders() {
+  const token = localStorage.getItem("smart_campus_token") || "";
+  const userId = currentUser ? (currentUser.id || currentUser._id) : "usr_student_1";
+  return {
+    "Content-Type": "application/json",
+    Authorization: `Bearer ${token}`,
+    "x-user-id": userId,
+    "x-user-email": currentUser ? currentUser.email : "student@campus.edu",
+  };
 }
 
 function refreshStudentData() {
-  initializeStudentProfile();
-  renderStudentAnnouncements();
-  loadStudentAcademics();
+  loadStudentAnnouncements();
+  loadStudentSubjects();
+  loadStudentAttendance();
+  loadStudentFacultyContacts();
 }
 
-async function renderStudentAnnouncements() {
-  const container = document.getElementById("studentAnnouncementList");
-  const countBadge = document.getElementById("studentAnnouncementCount");
-  const annCountBadge = document.getElementById("annCountBadge");
+// ==========================================================================
+// 1. TARGETED ANNOUNCEMENTS
+// ==========================================================================
+async function loadStudentAnnouncements() {
+  const listContainer = document.getElementById("studentAnnouncementList");
+  const countBadge = document.getElementById("annCountBadge");
+  const countStat = document.getElementById("studentAnnouncementCount");
 
-  const userStr = localStorage.getItem("smart_campus_user");
-  let studentDept = "Computer Science";
-  let studentYear = "1st Year";
+  const studentYear = currentUser.year || "1st Year";
+  const studentDept = currentUser.department || "Computer Science";
 
-  if (userStr) {
-    try {
-      const u = JSON.parse(userStr);
-      if (u.department) studentDept = u.department;
-      if (u.year) studentYear = u.year;
-    } catch (e) {}
-  }
-
-  let announcements = masterAnnouncements;
-
-  // Fetch live from Backend API
   try {
-    const res = await fetch(`${API_URL}/api/announcements?year=${encodeURIComponent(studentYear)}&department=${encodeURIComponent(studentDept)}`);
-    if (res.ok) {
-      const data = await res.json();
-      if (Array.isArray(data) && data.length > 0) {
-        announcements = data;
-      }
-    }
+    const res = await fetch(
+      `${API_URL}/api/announcements?year=${encodeURIComponent(studentYear)}&department=${encodeURIComponent(studentDept)}`,
+      { headers: getAuthHeaders() }
+    );
+    const data = await res.json();
+    const list = Array.isArray(data) ? data : [];
+
+    if (countBadge) countBadge.innerText = `${list.length} Notices`;
+    if (countStat) countStat.innerText = list.length;
+
+    renderStudentAnnouncements(list);
   } catch (err) {
-    console.warn("Using local master announcements fallback");
+    if (countBadge) countBadge.innerText = "0 Notices";
+    if (countStat) countStat.innerText = "0";
   }
+}
 
-  // Strict targeted filtering: ONLY this student's year + "All Years"
-  const targetedAnnouncements = announcements.filter((item) => {
-    const itemYear = (item.year || "All Years").trim().toLowerCase();
-    const targetYear = studentYear.trim().toLowerCase();
-    const itemDept = (item.department || "All Departments").trim().toLowerCase();
-    const targetDept = studentDept.trim().toLowerCase();
+function renderStudentAnnouncements(list) {
+  const listContainer = document.getElementById("studentAnnouncementList");
+  if (!listContainer) return;
 
-    const yearMatches = itemYear === "all years" || itemYear === targetYear;
-    const deptMatches = itemDept === "all departments" || itemDept === "campus wide" || itemDept === targetDept;
-
-    return yearMatches && deptMatches;
-  });
-
-  if (countBadge) countBadge.innerText = targetedAnnouncements.length;
-  if (annCountBadge) annCountBadge.innerText = `${targetedAnnouncements.length} Updates (${studentYear})`;
-
-  if (!container) return;
-
-  if (targetedAnnouncements.length === 0) {
-    container.innerHTML = `
-      <div class="empty-state" style="grid-column: 1 / -1;">
-        <div class="empty-state-icon">📢</div>
-        <h4>No Announcements for ${escapeHTML(studentYear)}</h4>
-        <p>There are no active notices published for ${escapeHTML(studentDept)} (${escapeHTML(studentYear)}) currently.</p>
-      </div>
-    `;
+  if (list.length === 0) {
+    listContainer.innerHTML = `<div style="grid-column: 1/-1; text-align: center; color: var(--text-muted); padding: 24px;">No new announcements for your academic year.</div>`;
     return;
   }
 
-  container.innerHTML = targetedAnnouncements
-    .map((item) => {
-      let chipClass = "chip-low";
-      if (item.priority === "Urgent") chipClass = "chip-high";
-      else if (item.priority === "Important") chipClass = "chip-medium";
-
-      const createdDate = item.createdAt ? new Date(item.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric" }) : (item.date || "Today");
-
-      return `
-        <div class="item-card">
-          <div class="item-header">
-            <h4 class="item-title">${escapeHTML(item.title)}</h4>
-            <span class="meta-chip ${chipClass}">${escapeHTML(item.priority)}</span>
-          </div>
-          <p class="item-desc">${escapeHTML(item.description)}</p>
-          <div class="item-meta">
-            <span class="meta-chip chip-primary">🏛️ ${escapeHTML(item.department)}</span>
-            <span class="meta-chip">📅 ${escapeHTML(item.year)}</span>
-          </div>
-          <div class="item-footer">
-            <span>🕒 ${escapeHTML(createdDate)}</span>
-            <span>📢 ${escapeHTML(item.authorName || "SmartCampus Feed")}</span>
-          </div>
+  listContainer.innerHTML = list
+    .map(
+      (a) => `
+      <div class="card">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
+          <h4 style="margin: 0; font-size: 1rem; color: var(--dark);">${escapeHtml(a.title)}</h4>
+          <span style="font-size: 0.75rem; font-weight: 700; padding: 2px 8px; border-radius: 4px; background: ${
+            a.priority === "Urgent" ? "#fee2e2; color: #991b1b;" : a.priority === "Important" ? "#fef3c7; color: #92400e;" : "#e0f2fe; color: #075985;"
+          }">${a.priority || "Normal"}</span>
         </div>
-      `;
-    })
+        <p style="font-size: 0.875rem; color: var(--text-muted); margin-bottom: 12px;">${escapeHtml(a.description)}</p>
+        <div style="font-size: 0.75rem; color: var(--text-muted); display: flex; justify-content: space-between;">
+          <span>👤 ${escapeHtml(a.author || "Faculty")}</span>
+          <span>📅 ${new Date(a.createdAt || Date.now()).toLocaleDateString()}</span>
+        </div>
+      </div>
+    `
+    )
     .join("");
 }
 
-async function loadStudentAcademics() {
-  const container = document.getElementById("studentAcademicList");
-  const countBadge = document.getElementById("studentSubjectCount");
-
-  if (!container) return;
-
-  container.innerHTML = `
-    <div style="grid-column: 1 / -1; text-align: center; padding: 2rem; color: var(--text-muted);">
-      <p>⏳ Loading curriculum subjects from Server...</p>
-    </div>
-  `;
-
-  // Get current student profile
-  const userStr = localStorage.getItem("smart_campus_user");
-  let userDept = "Computer Science";
-  let userYear = "1st Year";
-  if (userStr) {
-    try {
-      const u = JSON.parse(userStr);
-      if (u.department) userDept = u.department;
-      if (u.year) userYear = u.year;
-    } catch (e) {}
-  }
+// ==========================================================================
+// 2. ENROLLED SUBJECTS (Strict Backend Authorization)
+// ==========================================================================
+async function loadStudentSubjects() {
+  const listContainer = document.getElementById("studentSubjectList");
+  const countBadge = document.getElementById("subCountBadge");
+  const countStat = document.getElementById("studentSubjectCount");
 
   try {
-    const response = await fetch(`${API_URL}/api/academic?year=${encodeURIComponent(userYear)}&department=${encodeURIComponent(userDept)}`);
-    if (!response.ok) throw new Error("Could not fetch academic subjects");
-    
-    const records = await response.json();
-    const list = Array.isArray(records) ? records : (records.data || []);
-
-    // Strict year-wise isolation: only include subjects matching this student's year
-    const targetNormYear = (userYear || "1st Year").trim().toLowerCase();
-    const matchingSubjects = list.filter((item) => {
-      const itemYear = (item.academicYear || item.year || "").trim().toLowerCase();
-      if (!itemYear) return false;
-      return itemYear === targetNormYear || 
-             (targetNormYear.includes("1") && itemYear.includes("1")) ||
-             (targetNormYear.includes("2") && itemYear.includes("2")) ||
-             (targetNormYear.includes("3") && itemYear.includes("3")) ||
-             (targetNormYear.includes("4") && itemYear.includes("4"));
+    const res = await fetch(`${API_URL}/api/subjects/student`, {
+      headers: getAuthHeaders(),
     });
+    const subjects = await res.json();
+    const list = Array.isArray(subjects) ? subjects : [];
 
-    if (countBadge) countBadge.innerText = matchingSubjects.length;
+    if (countBadge) countBadge.innerText = `${list.length} Subjects`;
+    if (countStat) countStat.innerText = list.length;
 
-    if (matchingSubjects.length === 0) {
-      container.innerHTML = `
-        <div class="empty-state" style="grid-column: 1 / -1;">
-          <div class="empty-state-icon">📚</div>
-          <h4>No Subjects Allocated for ${escapeHTML(userYear)}</h4>
-          <p>Curriculum subjects for ${escapeHTML(userDept)} (${escapeHTML(userYear)}) will be assigned by faculty soon.</p>
-        </div>
-      `;
-      return;
-    }
-
-    container.innerHTML = matchingSubjects
-      .map((item) => {
-        const name = item.subjectName || "Subject";
-        const code = item.subjectCode || "N/A";
-        const sem = item.semester || "Semester 1";
-        const dept = item.academicDepartment || item.department || "Computer Science";
-        const yr = item.academicYear || item.year || "1st Year";
-        const faculty = item.facultyName || "Faculty Member";
-
-        return `
-          <div class="item-card">
-            <div class="item-header">
-              <h4 class="item-title">${escapeHTML(name)}</h4>
-              <span class="item-code">${escapeHTML(code)}</span>
-            </div>
-            <div class="item-meta">
-              <span class="meta-chip chip-primary">${escapeHTML(sem)}</span>
-              <span class="meta-chip">${escapeHTML(dept)}</span>
-              <span class="meta-chip">${escapeHTML(yr)}</span>
-            </div>
-            <div class="item-footer">
-              <span>👨‍🏫 Instructor: ${escapeHTML(faculty)}</span>
-              <span style="color: var(--success); font-weight: 700;">Enrolled</span>
-            </div>
-          </div>
-        `;
-      })
-      .join("");
-  } catch (error) {
-    console.warn("Could not connect to live API in student dashboard:", error);
-    container.innerHTML = `
-      <div style="grid-column: 1 / -1; background: #fff5f5; border: 1px solid #fed7d7; border-radius: 8px; padding: 1.5rem; text-align: center;">
-        <h4 style="color: #c53030;">⚠️ Backend Offline</h4>
-        <p style="color: #742a2a; font-size: 0.9rem;">Start the backend server using <code>node server.js</code></p>
-      </div>
-    `;
+    renderStudentSubjects(list);
+  } catch (err) {
+    if (countBadge) countBadge.innerText = "0 Subjects";
+    if (countStat) countStat.innerText = "0";
   }
 }
 
-function escapeHTML(str) {
+function renderStudentSubjects(list) {
+  const listContainer = document.getElementById("studentSubjectList");
+  if (!listContainer) return;
+
+  if (list.length === 0) {
+    listContainer.innerHTML = `<div style="grid-column: 1/-1; text-align: center; color: var(--text-muted); padding: 24px;">No academic subjects assigned to your profile yet.</div>`;
+    return;
+  }
+
+  listContainer.innerHTML = list
+    .map(
+      (s) => `
+      <div class="card">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
+          <h4 style="margin: 0; font-size: 1rem; color: var(--dark);">${escapeHtml(s.subjectName)}</h4>
+          <span style="font-size: 0.75rem; font-weight: 700; padding: 2px 8px; border-radius: 4px; background: #e0f2fe; color: #075985;">${s.subjectCode}</span>
+        </div>
+        <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 8px;">
+          👨‍🏫 <strong>Instructor:</strong> ${escapeHtml(s.facultyName || "Faculty Member")}
+        </p>
+        <div style="font-size: 0.75rem; color: var(--text-muted); display: flex; justify-content: space-between; align-items: center;">
+          <span>🎯 ${s.semester || "Semester 1"}</span>
+          <a href="#chatSection" onclick="quickChatFaculty('${s.facultyId || "usr_faculty_1"}', '${escapeHtml(s.facultyName || "Dr. Sarah Jenkins")}')" class="btn btn-outline btn-sm" style="font-size: 0.75rem; padding: 2px 6px;">💬 Ask Faculty</a>
+        </div>
+      </div>
+    `
+    )
+    .join("");
+}
+
+// ==========================================================================
+// 3. ATTENDANCE ANALYTICS
+// ==========================================================================
+async function loadStudentAttendance() {
+  const gridContainer = document.getElementById("studentAttendanceGrid");
+  const overallStat = document.getElementById("studentOverallAttendance");
+  const trackBadge = document.getElementById("attendanceTrackBadge");
+  if (!gridContainer) return;
+
+  try {
+    const res = await fetch(`${API_URL}/api/attendance/student`, {
+      headers: getAuthHeaders(),
+    });
+    const data = await res.json();
+    const summaries = data && Array.isArray(data.attendanceSummary) ? data.attendanceSummary : [];
+
+    if (trackBadge) trackBadge.innerText = `${summaries.length} Subjects`;
+
+    if (summaries.length === 0) {
+      gridContainer.innerHTML = `<div style="grid-column: 1/-1; text-align: center; color: var(--text-muted); padding: 24px;">No attendance records published yet.</div>`;
+      if (overallStat) overallStat.innerText = "100%";
+      return;
+    }
+
+    let totalClassesAll = 0;
+    let totalPresentAll = 0;
+
+    gridContainer.innerHTML = summaries
+      .map((item) => {
+        totalClassesAll += item.totalClasses;
+        totalPresentAll += item.classesPresent;
+        const pct = item.percentage;
+        const color = pct >= 85 ? "#16a34a" : pct >= 75 ? "#d97706" : "#dc2626";
+
+        return `
+        <div class="card">
+          <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px;">
+            <h4 style="margin: 0; font-size: 1rem; color: var(--dark);">${escapeHtml(item.subjectName)}</h4>
+            <span style="font-size: 1.1rem; font-weight: 800; color: ${color};">${pct}%</span>
+          </div>
+          
+          <div style="font-size: 0.85rem; color: var(--text-muted); margin: 8px 0; display: flex; justify-content: space-between;">
+            <span>Total Classes: <strong>${item.totalClasses}</strong></span>
+            <span style="color: #166534;">Present: <strong>${item.classesPresent}</strong></span>
+            <span style="color: #991b1b;">Absent: <strong>${item.classesAbsent}</strong></span>
+          </div>
+
+          <div class="progress-bar-container">
+            <div class="progress-bar-fill" style="width: ${pct}%; background: ${color};"></div>
+          </div>
+        </div>
+      `;
+      })
+      .join("");
+
+    if (overallStat) {
+      const overallPct = totalClassesAll > 0 ? ((totalPresentAll / totalClassesAll) * 100).toFixed(1) : "100.0";
+      overallStat.innerText = `${overallPct}%`;
+    }
+  } catch (err) {
+    if (overallStat) overallStat.innerText = "--%";
+  }
+}
+
+// ==========================================================================
+// 4. STUDENT-FACULTY CHAT
+// ==========================================================================
+async function loadStudentFacultyContacts() {
+  const contactListEl = document.getElementById("studentFacultyChatList");
+  if (!contactListEl) return;
+
+  try {
+    const res = await fetch(`${API_URL}/api/messages/contacts`, {
+      headers: getAuthHeaders(),
+    });
+    const contacts = await res.json();
+    const list = Array.isArray(contacts) ? contacts : [];
+
+    if (list.length === 0) {
+      contactListEl.innerHTML = `<div style="padding: 12px; font-size: 0.8rem; color: var(--text-muted); text-align: center;">No faculty contacts available.</div>`;
+      return;
+    }
+
+    contactListEl.innerHTML = list
+      .map(
+        (f) => `
+        <div class="chat-contact-item" onclick="openStudentChatWithFaculty('${f.id || f._id}', '${escapeHtml(f.name)}', '${f.department}')">
+          <div>
+            <div style="font-weight: 700; font-size: 0.85rem; color: var(--dark);">${escapeHtml(f.name)}</div>
+            <div style="font-size: 0.75rem; color: var(--text-muted);">${f.department || "Faculty"}</div>
+          </div>
+          <span style="font-size: 0.8rem;">💬</span>
+        </div>
+      `
+      )
+      .join("");
+  } catch (err) {}
+}
+
+function quickChatFaculty(facultyId, facultyName) {
+  openStudentChatWithFaculty(facultyId, facultyName, "Faculty Member");
+}
+
+function openStudentChatWithFaculty(facultyId, facultyName, facultyDept) {
+  activeFacultyChat = {
+    id: facultyId,
+    name: facultyName,
+    department: facultyDept,
+  };
+
+  const nameEl = document.getElementById("activeFacultyName");
+  const infoEl = document.getElementById("activeFacultyInfo");
+
+  if (nameEl) nameEl.innerText = `Chatting with: ${facultyName}`;
+  if (infoEl) infoEl.innerText = `${facultyDept}`;
+
+  const items = document.querySelectorAll(".chat-contact-item");
+  items.forEach((item) => {
+    if (item.innerText.includes(facultyName)) {
+      item.classList.add("active");
+    } else {
+      item.classList.remove("active");
+    }
+  });
+
+  refreshStudentChat();
+
+  if (studentChatPollInterval) clearInterval(studentChatPollInterval);
+  studentChatPollInterval = setInterval(refreshStudentChat, 4000);
+}
+
+async function refreshStudentChat() {
+  if (!activeFacultyChat) return;
+
+  const messagesArea = document.getElementById("studentChatMessagesArea");
+  const studentId = currentUser ? (currentUser.id || currentUser._id) : "usr_student_1";
+  const conversationId = [studentId, activeFacultyChat.id].sort().join("_");
+
+  try {
+    const res = await fetch(`${API_URL}/api/messages/${conversationId}`, {
+      headers: getAuthHeaders(),
+    });
+    const messages = await res.json();
+    const msgList = Array.isArray(messages) ? messages : [];
+
+    if (msgList.length === 0) {
+      messagesArea.innerHTML = `<div style="text-align: center; color: var(--text-muted); margin-top: 30px; font-size: 0.85rem;">No previous messages with ${activeFacultyChat.name}. Send your question below!</div>`;
+      return;
+    }
+
+    messagesArea.innerHTML = msgList
+      .map((m) => {
+        const isMe = String(m.senderId) === String(studentId);
+        return `
+        <div class="message-bubble ${isMe ? "msg-sent" : "msg-received"}">
+          <div style="font-size: 0.75rem; font-weight: 700; margin-bottom: 2px;">${isMe ? "You" : escapeHtml(m.senderName)}</div>
+          <div>${escapeHtml(m.message)}</div>
+          <div class="msg-timestamp">${new Date(m.timestamp || Date.now()).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</div>
+        </div>
+      `;
+      })
+      .join("");
+
+    messagesArea.scrollTop = messagesArea.scrollHeight;
+  } catch (err) {}
+}
+
+async function sendStudentChatMessage(e) {
+  e.preventDefault();
+  if (!activeFacultyChat) {
+    alert("⚠️ Please select a faculty member from the left contact list first.");
+    return;
+  }
+
+  const input = document.getElementById("studentChatMessageInput");
+  const message = input ? input.value.trim() : "";
+  if (!message) return;
+
+  input.value = "";
+
+  try {
+    await fetch(`${API_URL}/api/messages`, {
+      method: "POST",
+      headers: getAuthHeaders(),
+      body: JSON.stringify({
+        receiverId: activeFacultyChat.id,
+        receiverRole: "faculty",
+        receiverName: activeFacultyChat.name,
+        message,
+      }),
+    });
+
+    refreshStudentChat();
+  } catch (err) {
+    console.error("Failed to send message:", err);
+  }
+}
+
+function escapeHtml(str) {
   if (!str) return "";
-  return String(str)
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#039;");
+  return String(str).replace(/[&<>"']/g, (m) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[m]));
 }

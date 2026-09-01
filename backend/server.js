@@ -7,7 +7,10 @@ require("dotenv").config();
 // Route Imports
 const authRoutes = require("./routes/authRoutes");
 const academicRoutes = require("./routes/academicRoutes");
+const subjectAssignmentRoutes = require("./routes/subjectAssignmentRoutes");
 const announcementRoutes = require("./routes/announcementRoutes");
+const chatRoutes = require("./routes/chatRoutes");
+const attendanceRoutes = require("./routes/attendanceRoutes");
 
 // Initialize Express App
 const app = express();
@@ -18,7 +21,7 @@ app.use(
   cors({
     origin: "*",
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"],
+    allowedHeaders: ["Content-Type", "Authorization", "x-user-id", "x-user-email"],
   })
 );
 
@@ -40,15 +43,25 @@ app.use(express.static(frontendPath));
 app.get("/", (req, res) => {
   res.json({
     message: "Smart Campus Backend Running Successfully",
+    version: "2.1.0",
+    features: [
+      "Targeted Subject Assignment (Student/Multi-Year/Specialization)",
+      "Real-time Faculty-Student Private Messaging",
+      "Attendance Management & Analytics",
+      "Permanent On-Disk JSON & MongoDB Persistence",
+    ],
   });
 });
 
 // API Routes
 app.use("/api/auth", authRoutes);
-app.use("/api/academic", academicRoutes);
-app.use("/api/subjects", academicRoutes);
-app.use("/subjects", academicRoutes);
+app.use("/api/subjects", subjectAssignmentRoutes);
+app.use("/subjects", subjectAssignmentRoutes);
+app.use("/api/academic", subjectAssignmentRoutes);
 app.use("/api/announcements", announcementRoutes);
+app.use("/api/messages", chatRoutes);
+app.use("/api/chat", chatRoutes);
+app.use("/api/attendance", attendanceRoutes);
 
 // Global 404 Handler for API routes
 app.use("/api/*", (req, res) => {
@@ -79,7 +92,7 @@ mongoose
   })
   .catch((err) => {
     console.warn(
-      "MongoDB Connection Notice: MongoDB is not running locally. In-memory data store is active for immediate use."
+      "MongoDB Connection Notice: MongoDB is not running locally. In-memory & JSON disk data store is active for immediate use."
     );
   });
 
@@ -89,7 +102,9 @@ app.listen(PORT, () => {
   console.log(` Smart Campus Server is running on port ${PORT}`);
   console.log(` URL: http://localhost:${PORT}`);
   console.log(` Test Route: http://localhost:${PORT}/`);
-  console.log(` Academic API: http://localhost:${PORT}/api/academic`);
+  console.log(` Subjects API: http://localhost:${PORT}/api/subjects/student`);
+  console.log(` Chat API: http://localhost:${PORT}/api/messages/conversations`);
+  console.log(` Attendance API: http://localhost:${PORT}/api/attendance/student`);
   console.log(` Static Frontend: http://localhost:${PORT}/index.html`);
   console.log("==================================================");
 });

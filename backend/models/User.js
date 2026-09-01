@@ -34,6 +34,11 @@ const UserSchema = new mongoose.Schema(
       type: String,
       default: "1st Year",
     },
+    specialization: {
+      type: String,
+      default: "General CSE",
+      trim: true,
+    },
   },
   {
     timestamps: true,
