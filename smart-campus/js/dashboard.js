@@ -1063,7 +1063,7 @@ async function loadChatContacts() {
     contactListEl.innerHTML = list
       .map(
         (c) => `
-        <div class="chat-contact-item" onclick="quickMessageUser('${c.id || c._id}', '${escapeHtml(c.name)}', '${c.year || ""}', '${c.specialization || ""}', '${c.role || "user"}')">
+        <div class="chat-contact-item" data-contact-id="${c.id || c._id}" onclick="quickMessageUser('${c.id || c._id}', '${escapeHtml(c.name)}', '${c.year || ""}', '${c.specialization || ""}', '${c.role || "user"}')">
           <div>
             <div style="font-weight: 700; font-size: 0.85rem; color: var(--dark);">${escapeHtml(c.name)}</div>
             <div style="font-size: 0.75rem; color: var(--text-muted);">${c.role === "faculty" ? c.department || "Faculty" : `${c.year || "Student"} • ${c.specialization || "CSE"}`}</div>
@@ -1073,7 +1073,15 @@ async function loadChatContacts() {
       `
       )
       .join("");
-  } catch (err) {}
+
+    // Auto-select first contact if none currently active
+    if (!activeChatPartner && list.length > 0) {
+      const first = list[0];
+      quickMessageUser(first.id || first._id, first.name, first.year || "", first.specialization || "", first.role || "user");
+    }
+  } catch (err) {
+    console.error("Error loading chat contacts:", err);
+  }
 }
 
 function quickMessageUser(partnerId, partnerName, partnerYear, partnerSpec, partnerRole) {
@@ -1092,7 +1100,8 @@ function quickMessageUser(partnerId, partnerName, partnerYear, partnerSpec, part
 
   const items = document.querySelectorAll(".chat-contact-item");
   items.forEach((item) => {
-    if (item.innerText.includes(partnerName)) {
+    const cid = item.getAttribute("data-contact-id");
+    if (cid === String(partnerId) || item.innerText.includes(partnerName)) {
       item.classList.add("active");
     } else {
       item.classList.remove("active");
@@ -1101,14 +1110,19 @@ function quickMessageUser(partnerId, partnerName, partnerYear, partnerSpec, part
 
   refreshActiveChat();
 
+  const chatInput = document.getElementById("chatMessageInput");
+  if (chatInput) chatInput.focus();
+
   if (chatPollInterval) clearInterval(chatPollInterval);
-  chatPollInterval = setInterval(refreshActiveChat, 4000);
+  chatPollInterval = setInterval(refreshActiveChat, 3000);
 }
 
 async function refreshActiveChat() {
   if (!activeChatPartner) return;
 
   const messagesArea = document.getElementById("chatMessagesArea");
+  if (!messagesArea) return;
+
   const currentUserId = currentUser ? String(currentUser.id || currentUser._id) : "usr_user_1";
   const conversationId = [currentUserId, activeChatPartner.id].sort().join("_");
 
@@ -1120,7 +1134,7 @@ async function refreshActiveChat() {
     const msgList = Array.isArray(messages) ? messages : [];
 
     if (msgList.length === 0) {
-      messagesArea.innerHTML = `<div style="text-align: center; color: var(--text-muted); margin-top: 30px; font-size: 0.85rem;">No previous messages with ${activeChatPartner.name}. Send your message below!</div>`;
+      messagesArea.innerHTML = `<div style="text-align: center; color: var(--text-muted); margin-top: 30px; font-size: 0.85rem;">No previous messages with ${escapeHtml(activeChatPartner.name)}. Send your message below!</div>`;
       return;
     }
 
@@ -1138,11 +1152,13 @@ async function refreshActiveChat() {
       .join("");
 
     messagesArea.scrollTop = messagesArea.scrollHeight;
-  } catch (err) {}
+  } catch (err) {
+    console.error("Error refreshing chat:", err);
+  }
 }
 
 async function sendChatMessage(e) {
-  e.preventDefault();
+  if (e && e.preventDefault) e.preventDefault();
   if (!activeChatPartner) {
     alert("⚠️ Please select a contact from the left panel first.");
     return;
@@ -1155,7 +1171,7 @@ async function sendChatMessage(e) {
   input.value = "";
 
   try {
-    await fetch(`${API_URL}/api/messages`, {
+    const res = await fetch(`${API_URL}/api/messages`, {
       method: "POST",
       headers: getAuthHeaders(),
       body: JSON.stringify({
@@ -1166,7 +1182,12 @@ async function sendChatMessage(e) {
       }),
     });
 
-    refreshActiveChat();
+    const resData = await res.json();
+    if (!res.ok) {
+      alert("❌ Message send error: " + (resData.message || "Could not deliver message"));
+    }
+
+    await refreshActiveChat();
   } catch (err) {
     console.error("Failed to send message:", err);
   }
