@@ -132,6 +132,16 @@ function setupLoginForm() {
       console.warn("Backend API not reachable directly, using local authentication:", err);
 
       // Local offline fallback
+      const cachedUsers = JSON.parse(localStorage.getItem("smart_campus_cached_users") || "[]");
+      const foundCached = cachedUsers.find((u) => u.email.toLowerCase() === email.toLowerCase() && u.password === password);
+
+      if (foundCached) {
+        localStorage.setItem("smart_campus_token", "local_token_" + Date.now());
+        localStorage.setItem("smart_campus_user", JSON.stringify(foundCached));
+        redirectToRoleDashboard(foundCached.role);
+        return;
+      }
+
       if (DEMO_CREDENTIALS[role] && email.toLowerCase() === DEMO_CREDENTIALS[role].email && password === DEMO_CREDENTIALS[role].password) {
         const fallbackUser = {
           id: "local_" + role,
@@ -139,7 +149,7 @@ function setupLoginForm() {
           email: email,
           role: role,
           department: "Computer Science",
-          year: role === "faculty" ? "Faculty/Staff" : "3rd Year",
+          year: role === "faculty" ? "Faculty/Staff" : "1st Year",
         };
 
         localStorage.setItem("smart_campus_token", "local_token_" + Date.now());
@@ -194,6 +204,19 @@ function setupRegisterForm() {
     submitBtn.innerText = "Creating account...";
     submitBtn.disabled = true;
 
+    const newUserObject = {
+      name,
+      email: email.toLowerCase(),
+      role,
+      department: department || "Computer Science",
+      year: year || "1st Year",
+    };
+
+    // Cache locally for instantaneous multi-device/offline consistency
+    const cachedUsers = JSON.parse(localStorage.getItem("smart_campus_cached_users") || "[]");
+    cachedUsers.push({ ...newUserObject, password });
+    localStorage.setItem("smart_campus_cached_users", JSON.stringify(cachedUsers));
+
     try {
       const response = await fetch(`${API_URL}/api/auth/register`, {
         method: "POST",
@@ -204,14 +227,22 @@ function setupRegisterForm() {
       const data = await response.json();
 
       if (response.ok && data.success) {
-        alert(`✅ Account created for ${name} (${role.toUpperCase()})! Redirecting to login.`);
-        window.location.href = `login.html?role=${role}`;
+        // Automatically save active session on registration
+        localStorage.setItem("smart_campus_token", data.token);
+        localStorage.setItem("smart_campus_user", JSON.stringify(data.user));
+
+        alert(`✅ Account created for ${name} (${role.toUpperCase()}) in ${department} (${year})!\nRedirecting to your dashboard...`);
+        redirectToRoleDashboard(role);
       } else {
-        alert(`❌ Registration Failed:\n${data.message || "An error occurred."}`);
+        alert(`❌ Registration Notice:\n${data.message || "An error occurred."}`);
+        window.location.href = `login.html?role=${role}`;
       }
     } catch (err) {
-      alert(`✅ Registered locally for ${name} (${role})!`);
-      window.location.href = `login.html?role=${role}`;
+      localStorage.setItem("smart_campus_token", "local_token_" + Date.now());
+      localStorage.setItem("smart_campus_user", JSON.stringify(newUserObject));
+
+      alert(`✅ Registered for ${name} in ${department} (${year})!\nOpening dashboard...`);
+      redirectToRoleDashboard(role);
     } finally {
       submitBtn.innerText = origText;
       submitBtn.disabled = false;

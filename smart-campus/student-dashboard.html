@@ -26,11 +26,11 @@
                 <div class="user-avatar">👨‍🎓</div>
                 <div>
                     <span class="user-info" id="studentName">Alex Johnson</span>
-                    <span class="user-role-tag">CS • 3rd Year</span>
+                    <span class="user-role-tag" id="studentTag">Computer Science • 1st Year</span>
                 </div>
             </div>
 
-            <a href="login.html" class="btn btn-outline btn-sm">Logout</a>
+            <a href="login.html" class="btn btn-outline btn-sm" id="logoutBtn">Logout</a>
         </div>
     </nav>
 
@@ -40,8 +40,8 @@
         <!-- Page Header -->
         <div class="page-header">
             <div class="page-title">
-                <h1>Welcome Back, <span id="welcomeStudentName">Alex</span>! 👋</h1>
-                <p>Stay updated with department announcements, curriculum subjects, and examination alerts.</p>
+                <h1>Welcome Back, <span id="welcomeStudentName">Student</span>! 👋</h1>
+                <p>Stay updated with announcements and academic curriculum for <strong id="studentHeaderDept">Computer Science</strong> (<span id="studentHeaderYear">1st Year</span>).</p>
             </div>
             <div>
                 <button onclick="refreshStudentData()" class="btn btn-outline btn-sm">🔄 Refresh Data</button>
@@ -53,7 +53,7 @@
             <div class="stat-card">
                 <div class="stat-info">
                     <h3>Announcements</h3>
-                    <div class="stat-number" id="studentAnnouncementCount">3</div>
+                    <div class="stat-number" id="studentAnnouncementCount">0</div>
                 </div>
                 <div class="stat-icon-wrapper stat-icon-blue">📢</div>
             </div>
@@ -61,7 +61,7 @@
             <div class="stat-card">
                 <div class="stat-info">
                     <h3>Enrolled Subjects</h3>
-                    <div class="stat-number" id="studentSubjectCount">2</div>
+                    <div class="stat-number" id="studentSubjectCount">0</div>
                 </div>
                 <div class="stat-icon-wrapper stat-icon-emerald">📚</div>
             </div>
@@ -69,7 +69,7 @@
             <div class="stat-card">
                 <div class="stat-info">
                     <h3>Current Semester</h3>
-                    <div class="stat-number" style="font-size: 1.2rem; margin-top: 6px;">Semester 5</div>
+                    <div class="stat-number" id="studentSemesterStat" style="font-size: 1.2rem; margin-top: 6px;">Semester 1</div>
                 </div>
                 <div class="stat-icon-wrapper stat-icon-purple">🎯</div>
             </div>
@@ -77,7 +77,7 @@
             <div class="stat-card">
                 <div class="stat-info">
                     <h3>Attendance Rate</h3>
-                    <div class="stat-number" style="font-size: 1.2rem; margin-top: 6px; color: var(--success);">94.5%</div>
+                    <div class="stat-number" style="font-size: 1.2rem; margin-top: 6px; color: var(--success);">96.5%</div>
                 </div>
                 <div class="stat-icon-wrapper stat-icon-amber">📊</div>
             </div>
@@ -87,7 +87,7 @@
         <section class="section-card">
             <div class="section-header">
                 <h2>📢 Department & Campus Announcements</h2>
-                <span class="badge-count" id="annCountBadge">3 Updates</span>
+                <span class="badge-count" id="annCountBadge">Loading...</span>
             </div>
             <div class="section-body">
                 <div id="studentAnnouncementList" class="cards-grid">

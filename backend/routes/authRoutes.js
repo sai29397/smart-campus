@@ -30,7 +30,7 @@ const initialUsers = [
     password: "student123",
     role: "student",
     department: "Computer Science",
-    year: "3rd Year",
+    year: "1st Year",
   },
   {
     _id: "usr_admin_1",

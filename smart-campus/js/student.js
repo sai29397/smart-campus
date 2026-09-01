@@ -10,14 +10,30 @@ const API_URL =
     ? "http://localhost:3000"
     : "";
 
-const studentAnnouncements = [
+const masterAnnouncements = [
+  {
+    title: "1st Year Orientation & Bridge Course Schedule",
+    description: "Welcome to campus! Orientation sessions and campus map tours are scheduled in Hall A.",
+    department: "Computer Science",
+    year: "1st Year",
+    priority: "Important",
+    date: "Today",
+  },
+  {
+    title: "Freshman Lab Induction & Safety Workshop",
+    description: "All newly admitted students must attend the introductory laboratory induction session.",
+    department: "All Departments",
+    year: "1st Year",
+    priority: "Normal",
+    date: "Today",
+  },
   {
     title: "Mid-Term Examination Schedule Released",
     description: "The schedule for Mid-Term Exams has been uploaded. Check your assigned exam rooms.",
     department: "Computer Science",
     year: "3rd Year",
     priority: "Urgent",
-    date: "Today",
+    date: "Yesterday",
   },
   {
     title: "Hackathon 2026 Registration Open",
@@ -28,9 +44,9 @@ const studentAnnouncements = [
     date: "Yesterday",
   },
   {
-    title: "Library Extended Hours for Final Exams",
-    description: "The main campus library will remain open 24/7 starting next Monday.",
-    department: "Campus Wide",
+    title: "Library Extended Hours for Examinations",
+    description: "The main campus library will remain open 24/7 during exam revision weeks.",
+    department: "All Departments",
     year: "All Years",
     priority: "Normal",
     date: "2 days ago",
@@ -50,7 +66,7 @@ function ensureStudentSession() {
       email: "student@campus.edu",
       role: "student",
       department: "Computer Science",
-      year: "3rd Year",
+      year: "1st Year",
     };
     localStorage.setItem("smart_campus_user", JSON.stringify(defaultStudent));
     userStr = JSON.stringify(defaultStudent);
@@ -88,15 +104,44 @@ function initializeStudentProfile() {
     const user = JSON.parse(userStr);
     const nameElem = document.getElementById("studentName");
     const welcomeName = document.getElementById("welcomeStudentName");
+    const studentTag = document.getElementById("studentTag");
+    const headerDept = document.getElementById("studentHeaderDept");
+    const headerYear = document.getElementById("studentHeaderYear");
+    const studentSemesterStat = document.getElementById("studentSemesterStat");
 
-    if (nameElem && user.name) nameElem.innerText = user.name;
-    if (welcomeName && user.name) welcomeName.innerText = user.name.split(" ")[0];
+    const dept = user.department || "Computer Science";
+    const year = user.year || "1st Year";
+    const fullName = user.name || "Student";
+
+    if (nameElem) nameElem.innerText = fullName;
+    if (welcomeName) welcomeName.innerText = fullName.split(" ")[0];
+    if (studentTag) studentTag.innerText = `${dept} • ${year}`;
+    if (headerDept) headerDept.innerText = dept;
+    if (headerYear) headerYear.innerText = year;
+
+    if (studentSemesterStat) {
+      if (year === "1st Year") studentSemesterStat.innerText = "Semester 1";
+      else if (year === "2nd Year") studentSemesterStat.innerText = "Semester 3";
+      else if (year === "3rd Year") studentSemesterStat.innerText = "Semester 5";
+      else if (year === "4th Year") studentSemesterStat.innerText = "Semester 7";
+      else studentSemesterStat.innerText = "Active";
+    }
   } catch (e) {
-    console.warn("Could not parse student profile");
+    console.warn("Could not parse student profile", e);
+  }
+
+  // Logout button handler
+  const logoutBtn = document.getElementById("logoutBtn");
+  if (logoutBtn) {
+    logoutBtn.addEventListener("click", () => {
+      localStorage.removeItem("smart_campus_token");
+      localStorage.removeItem("smart_campus_user");
+    });
   }
 }
 
 function refreshStudentData() {
+  initializeStudentProfile();
   renderStudentAnnouncements();
   loadStudentAcademics();
 }
@@ -106,12 +151,38 @@ function renderStudentAnnouncements() {
   const countBadge = document.getElementById("studentAnnouncementCount");
   const annCountBadge = document.getElementById("annCountBadge");
 
-  if (countBadge) countBadge.innerText = studentAnnouncements.length;
-  if (annCountBadge) annCountBadge.innerText = `${studentAnnouncements.length} Updates`;
+  const userStr = localStorage.getItem("smart_campus_user");
+  let studentDept = "Computer Science";
+  let studentYear = "1st Year";
+
+  if (userStr) {
+    try {
+      const u = JSON.parse(userStr);
+      if (u.department) studentDept = u.department;
+      if (u.year) studentYear = u.year;
+    } catch (e) {}
+  }
+
+  // Filter announcements for this student's department & year or campus-wide
+  const filtered = masterAnnouncements.filter((item) => {
+    const deptMatch =
+      item.department === "All Departments" ||
+      item.department === "Campus Wide" ||
+      item.department.toLowerCase() === studentDept.toLowerCase();
+    const yearMatch =
+      item.year === "All Years" ||
+      item.year.toLowerCase() === studentYear.toLowerCase();
+    return deptMatch && yearMatch;
+  });
+
+  const listToRender = filtered.length > 0 ? filtered : masterAnnouncements;
+
+  if (countBadge) countBadge.innerText = listToRender.length;
+  if (annCountBadge) annCountBadge.innerText = `${listToRender.length} Updates`;
 
   if (!container) return;
 
-  container.innerHTML = studentAnnouncements
+  container.innerHTML = listToRender
     .map((item) => {
       let chipClass = "chip-low";
       if (item.priority === "Urgent") chipClass = "chip-high";
@@ -120,16 +191,16 @@ function renderStudentAnnouncements() {
       return `
         <div class="item-card">
           <div class="item-header">
-            <h4 class="item-title">${item.title}</h4>
-            <span class="meta-chip ${chipClass}">${item.priority}</span>
+            <h4 class="item-title">${escapeHTML(item.title)}</h4>
+            <span class="meta-chip ${chipClass}">${escapeHTML(item.priority)}</span>
           </div>
-          <p class="item-desc">${item.description}</p>
+          <p class="item-desc">${escapeHTML(item.description)}</p>
           <div class="item-meta">
-            <span class="meta-chip chip-primary">🏛️ ${item.department}</span>
-            <span class="meta-chip">📅 ${item.year}</span>
+            <span class="meta-chip chip-primary">🏛️ ${escapeHTML(item.department)}</span>
+            <span class="meta-chip">📅 ${escapeHTML(item.year)}</span>
           </div>
           <div class="item-footer">
-            <span>🕒 ${item.date}</span>
+            <span>🕒 ${escapeHTML(item.date)}</span>
             <span>SmartCampus Feed</span>
           </div>
         </div>
@@ -157,39 +228,69 @@ async function loadStudentAcademics() {
     const records = await response.json();
     const list = Array.isArray(records) ? records : (records.data || []);
 
-    if (countBadge) countBadge.innerText = list.length;
+    // Get current student profile
+    const userStr = localStorage.getItem("smart_campus_user");
+    let userDept = "";
+    let userYear = "";
+    if (userStr) {
+      try {
+        const u = JSON.parse(userStr);
+        userDept = u.department || "";
+        userYear = u.year || "";
+      } catch (e) {}
+    }
 
-    if (list.length === 0) {
+    // Filter relevant subjects for student's department and year
+    let matchingSubjects = list;
+    if (userDept && userYear) {
+      const filtered = list.filter((item) => {
+        const dept = item.academicDepartment || item.department || "";
+        const yr = item.academicYear || item.year || "";
+        const isDeptMatch = !dept || dept === "All Departments" || dept.toLowerCase() === userDept.toLowerCase();
+        const isYearMatch = !yr || yr === "All Years" || yr.toLowerCase() === userYear.toLowerCase();
+        return isDeptMatch && isYearMatch;
+      });
+
+      if (filtered.length > 0) {
+        matchingSubjects = filtered;
+      }
+    }
+
+    if (countBadge) countBadge.innerText = matchingSubjects.length;
+
+    if (matchingSubjects.length === 0) {
       container.innerHTML = `
         <div class="empty-state" style="grid-column: 1 / -1;">
           <div class="empty-state-icon">📚</div>
-          <h4>No Subjects Found</h4>
-          <p>Faculty has not added curriculum subjects yet.</p>
+          <h4>No Subjects Allocated for ${escapeHTML(userYear || "Your Year")} Yet</h4>
+          <p>Faculty will assign curriculum subjects for ${escapeHTML(userDept || "your department")} soon.</p>
         </div>
       `;
       return;
     }
 
-    container.innerHTML = list
+    container.innerHTML = matchingSubjects
       .map((item) => {
         const name = item.subjectName || "Subject";
         const code = item.subjectCode || "N/A";
-        const sem = item.semester || "Semester 5";
+        const sem = item.semester || "Semester 1";
         const dept = item.academicDepartment || item.department || "Computer Science";
+        const yr = item.academicYear || item.year || "1st Year";
         const faculty = item.facultyName || "Faculty Member";
 
         return `
           <div class="item-card">
             <div class="item-header">
-              <h4 class="item-title">${name}</h4>
-              <span class="item-code">${code}</span>
+              <h4 class="item-title">${escapeHTML(name)}</h4>
+              <span class="item-code">${escapeHTML(code)}</span>
             </div>
             <div class="item-meta">
-              <span class="meta-chip chip-primary">${sem}</span>
-              <span class="meta-chip">${dept}</span>
+              <span class="meta-chip chip-primary">${escapeHTML(sem)}</span>
+              <span class="meta-chip">${escapeHTML(dept)}</span>
+              <span class="meta-chip">${escapeHTML(yr)}</span>
             </div>
             <div class="item-footer">
-              <span>👨‍🏫 Instructor: ${faculty}</span>
+              <span>👨‍🏫 Instructor: ${escapeHTML(faculty)}</span>
               <span style="color: var(--success); font-weight: 700;">Enrolled</span>
             </div>
           </div>
@@ -205,4 +306,14 @@ async function loadStudentAcademics() {
       </div>
     `;
   }
+}
+
+function escapeHTML(str) {
+  if (!str) return "";
+  return String(str)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
 }

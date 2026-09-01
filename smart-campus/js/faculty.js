@@ -93,24 +93,39 @@ document.addEventListener("DOMContentLoaded", () => {
 // ==========================================================================
 function initializeFacultyProfile() {
   const facultyNameElement = document.getElementById("facultyName");
-  if (!facultyNameElement) return;
+  const facultyTagElement = document.getElementById("facultyTag");
+  const facultyDeptStat = document.getElementById("facultyDeptStat");
+  const facultyHeaderDept = document.getElementById("facultyHeaderDept");
+  const deptSelect = document.getElementById("department");
+  const acadDeptSelect = document.getElementById("academicDepartment");
 
   const storedUser = localStorage.getItem("smart_campus_user");
   if (storedUser) {
     try {
       const user = JSON.parse(storedUser);
-      if (user.name) {
-        facultyNameElement.innerText = user.name;
+      const name = user.name || "Dr. Sarah Jenkins";
+      const dept = user.department || "Computer Science";
+
+      if (facultyNameElement) facultyNameElement.innerText = name;
+      if (facultyTagElement) facultyTagElement.innerText = `${dept} • Faculty`;
+      if (facultyDeptStat) facultyDeptStat.innerText = dept;
+      if (facultyHeaderDept) facultyHeaderDept.innerText = dept;
+
+      if (deptSelect && deptSelect.querySelector(`option[value="${dept}"]`)) {
+        deptSelect.value = dept;
+      }
+      if (acadDeptSelect && acadDeptSelect.querySelector(`option[value="${dept}"]`)) {
+        acadDeptSelect.value = dept;
       }
     } catch (e) {
-      console.warn("Could not parse stored user profile");
+      console.warn("Could not parse stored user profile", e);
     }
   }
 
   // Logout button handler
   const logoutBtn = document.getElementById("logoutBtn");
   if (logoutBtn) {
-    logoutBtn.addEventListener("click", (e) => {
+    logoutBtn.addEventListener("click", () => {
       localStorage.removeItem("smart_campus_token");
       localStorage.removeItem("smart_campus_user");
     });
