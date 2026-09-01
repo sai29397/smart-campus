@@ -1,35 +1,7 @@
 [
   {
-    "_id": "msg_1",
-    "id": "msg_1",
-    "conversationId": "usr_faculty_1_usr_student_1",
-    "senderId": "usr_faculty_1",
-    "senderRole": "faculty",
-    "senderName": "Dr. Sarah Jenkins",
-    "receiverId": "usr_student_1",
-    "receiverRole": "student",
-    "receiverName": "Alex Johnson",
-    "message": "Hello Alex! Please remember to review the lab syllabus before our practical session tomorrow.",
-    "readStatus": false,
-    "timestamp": "2026-09-01T18:26:21.351Z"
-  },
-  {
-    "_id": "msg_1788290829212",
-    "id": "msg_1788290829212",
-    "conversationId": "usr_1788290798643_usr_faculty_1",
-    "senderId": "usr_1788290798643",
-    "senderRole": "student",
-    "senderName": "Rahul Sharma",
-    "receiverId": "usr_faculty_1",
-    "receiverRole": "faculty",
-    "receiverName": "Dr. Sarah Jenkins",
-    "message": "Hello Dr. Jenkins! I have completed the neural network implementation for assignment 2.",
-    "readStatus": true,
-    "timestamp": "2026-09-01T19:27:09.212Z"
-  },
-  {
-    "_id": "msg_1788290837176",
-    "id": "msg_1788290837176",
+    "_id": "msg_1788291862679_412",
+    "id": "msg_1788291862679_858",
     "conversationId": "usr_1788290798643_usr_faculty_1",
     "senderId": "usr_faculty_1",
     "senderRole": "faculty",
@@ -37,8 +9,8 @@
     "receiverId": "usr_1788290798643",
     "receiverRole": "student",
     "receiverName": "Rahul Sharma",
-    "message": "Great job Rahul! Please push your code repository link before Friday.",
+    "message": "Confidential feedback for Rahul only.",
     "readStatus": true,
-    "timestamp": "2026-09-01T19:27:17.176Z"
+    "timestamp": "2026-09-01T19:44:22.679Z"
   }
 ]

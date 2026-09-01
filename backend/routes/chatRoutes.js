@@ -8,7 +8,6 @@ const { protect } = require("../middleware/authMiddleware");
 const dataDir = path.join(__dirname, "../data");
 const messagesFilePath = path.join(dataDir, "messages.json");
 const usersFilePath = path.join(dataDir, "users.json");
-const subjectsFilePath = path.join(dataDir, "subjects.json");
 
 // Helper to load server messages
 function loadServerMessages() {
@@ -20,24 +19,7 @@ function loadServerMessages() {
     }
   } catch (e) {}
 
-  const initialMessages = [
-    {
-      _id: "msg_1",
-      id: "msg_1",
-      conversationId: "usr_faculty_1_usr_student_1",
-      senderId: "usr_faculty_1",
-      senderRole: "faculty",
-      senderName: "Dr. Sarah Jenkins",
-      receiverId: "usr_student_1",
-      receiverRole: "student",
-      receiverName: "Alex Johnson",
-      message: "Hello Alex! Please remember to review the lab syllabus before our practical session tomorrow.",
-      readStatus: false,
-      timestamp: new Date(Date.now() - 3600000).toISOString(),
-    },
-  ];
-  saveServerMessages(initialMessages);
-  return initialMessages;
+  return [];
 }
 
 function saveServerMessages(list) {
@@ -55,15 +37,6 @@ function loadServerUsers() {
   return [];
 }
 
-function loadServerSubjects() {
-  try {
-    if (fs.existsSync(subjectsFilePath)) {
-      return JSON.parse(fs.readFileSync(subjectsFilePath, "utf8")) || [];
-    }
-  } catch (e) {}
-  return [];
-}
-
 let inMemoryMessages = loadServerMessages();
 
 // ==========================================================================
@@ -71,15 +44,13 @@ let inMemoryMessages = loadServerMessages();
 // ==========================================================================
 router.get("/contacts", protect, (req, res) => {
   try {
-    const currentUserId = String(req.user._id || req.user.id);
     const role = req.user.role;
     const allUsers = loadServerUsers();
-    const allSubjects = loadServerSubjects();
 
     let contacts = [];
 
     if (role === "student") {
-      // Return faculty who teach this student
+      // Students can message faculty members
       contacts = allUsers
         .filter((u) => u.role === "faculty" || u.role === "admin")
         .map((f) => ({
@@ -91,7 +62,7 @@ router.get("/contacts", protect, (req, res) => {
           department: f.department,
         }));
     } else {
-      // Faculty: return students enrolled in faculty's department or subjects
+      // Faculty: return students
       contacts = allUsers
         .filter((u) => u.role === "student")
         .map((st) => ({
@@ -113,19 +84,18 @@ router.get("/contacts", protect, (req, res) => {
 });
 
 // ==========================================================================
-// 2. GET CONVERSATION THREADS (List of chats for authenticated user)
+// 2. GET CONVERSATION THREADS (Strictly for authenticated user only)
 // ==========================================================================
 router.get("/conversations", protect, (req, res) => {
   try {
     const userId = String(req.user._id || req.user.id);
     inMemoryMessages = loadServerMessages();
 
-    // Find all messages involving this user
+    // STRICT: Only messages where user is either the sender OR the receiver
     const userMessages = inMemoryMessages.filter(
       (m) => String(m.senderId) === userId || String(m.receiverId) === userId
     );
 
-    // Group by conversation partner
     const conversationsMap = {};
 
     userMessages.forEach((msg) => {
@@ -163,30 +133,38 @@ router.get("/conversations", protect, (req, res) => {
 });
 
 // ==========================================================================
-// 3. GET MESSAGES FOR A CONVERSATION
+// 3. GET MESSAGES FOR A STRICT 1-ON-1 CONVERSATION
 // ==========================================================================
 router.get("/:conversationId", protect, (req, res) => {
   try {
     const { conversationId } = req.params;
-    const userId = String(req.user._id || req.user.id);
+    const currentUserId = String(req.user._id || req.user.id);
     inMemoryMessages = loadServerMessages();
 
+    // Query messages strictly between this authenticated user and the specific recipient
     const messages = inMemoryMessages.filter((m) => {
-      const matchesConv = m.conversationId === conversationId;
-      const isParticipant =
-        String(m.senderId) === userId ||
-        String(m.receiverId) === userId ||
-        conversationId.includes(userId);
-      return matchesConv || (isParticipant && m.conversationId.includes(conversationId.split("_")[0]));
+      // User must be one of the two participants
+      const isParticipant = String(m.senderId) === currentUserId || String(m.receiverId) === currentUserId;
+      if (!isParticipant) return false;
+
+      // Exact conversation ID match
+      if (m.conversationId === conversationId) return true;
+
+      // Or exact sender/receiver pair match
+      const partnerId = String(m.senderId) === currentUserId ? String(m.receiverId) : String(m.senderId);
+      const expectedConvId = [currentUserId, partnerId].sort().join("_");
+      return expectedConvId === conversationId;
     });
 
-    // Mark messages as read
+    // Mark messages sent to this user as read
+    let updated = false;
     messages.forEach((m) => {
-      if (String(m.receiverId) === userId && !m.readStatus) {
+      if (String(m.receiverId) === currentUserId && !m.readStatus) {
         m.readStatus = true;
+        updated = true;
       }
     });
-    saveServerMessages(inMemoryMessages);
+    if (updated) saveServerMessages(inMemoryMessages);
 
     return res.json(messages.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp)));
   } catch (error) {
@@ -195,7 +173,7 @@ router.get("/:conversationId", protect, (req, res) => {
 });
 
 // ==========================================================================
-// 4. SEND MESSAGE (POST /api/messages)
+// 4. SEND PRIVATE 1-ON-1 MESSAGE (POST /api/messages)
 // ==========================================================================
 router.post("/", protect, async (req, res) => {
   try {
@@ -204,25 +182,26 @@ router.post("/", protect, async (req, res) => {
     if (!receiverId || !message || !message.trim()) {
       return res.status(400).json({
         success: false,
-        message: "Receiver ID and non-empty message text are required.",
+        message: "Receiver ID and message content are required.",
       });
     }
 
     const senderId = String(req.user._id || req.user.id);
     const senderRole = req.user.role;
     const senderName = req.user.name || "User";
+    const cleanReceiverId = String(receiverId);
 
-    // Standard deterministic conversation ID
-    const conversationId = [senderId, String(receiverId)].sort().join("_");
+    // Strict 1-on-1 conversation ID
+    const conversationId = [senderId, cleanReceiverId].sort().join("_");
 
     const newMessage = {
-      _id: "msg_" + Date.now(),
-      id: "msg_" + Date.now(),
+      _id: "msg_" + Date.now() + "_" + Math.floor(Math.random() * 1000),
+      id: "msg_" + Date.now() + "_" + Math.floor(Math.random() * 1000),
       conversationId,
       senderId,
       senderRole,
       senderName,
-      receiverId: String(receiverId),
+      receiverId: cleanReceiverId,
       receiverRole: receiverRole || (senderRole === "student" ? "faculty" : "student"),
       receiverName: receiverName || "Recipient",
       message: message.trim(),
@@ -243,7 +222,7 @@ router.post("/", protect, async (req, res) => {
 
     return res.status(201).json({
       success: true,
-      message: "Message sent successfully!",
+      message: "Message delivered privately to recipient!",
       data: newMessage,
     });
   } catch (error) {

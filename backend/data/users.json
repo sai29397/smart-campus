@@ -70,13 +70,13 @@
     "_id": "usr_1788287068278",
     "name": "vimal",
     "email": "saibudeti1@gmail.com",
-    "password": "1563",
-    "passwordHash": "$2a$10$qouBPGP0iEf3JFA40TqXAOqryPAAYyOMMF2csZP/TvkCTmlIqEPxO",
+    "password": "1596",
+    "passwordHash": "$2a$10$7kyjgjMS29vC4AddWwBMWubHXPYeSELZtGYfDLHC20VL2gFMhaySe",
     "role": "student",
     "department": "Computer Science",
     "year": "1st Year",
     "createdAt": "2026-09-01T18:24:28.278Z",
-    "updatedAt": "2026-09-01T18:26:35.836Z"
+    "updatedAt": "2026-09-01T19:36:58.833Z"
   },
   {
     "_id": "usr_1788290798643",
@@ -126,5 +126,17 @@
     "year": "2nd Year",
     "specialization": "Cyber Security",
     "createdAt": "2026-09-01T19:33:01.025Z"
+  },
+  {
+    "_id": "usr_1788291527038",
+    "name": "bhavya",
+    "email": "vtu29704@veltech.edu.in",
+    "password": "1234",
+    "passwordHash": "$2a$10$q3T9CGHncrIq8pUu0xR1E.puFOk6g216.CeqHB1PMmmtHtxoxFFJa",
+    "role": "faculty",
+    "department": "Computer Science",
+    "year": "1st Year",
+    "specialization": "General CSE",
+    "createdAt": "2026-09-01T19:38:47.038Z"
   }
 ]
