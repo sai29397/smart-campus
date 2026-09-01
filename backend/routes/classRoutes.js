@@ -238,7 +238,7 @@ router.get("/student", protect, (req, res) => {
         !c.years ||
         c.years.length === 0 ||
         c.years.includes("All Years") ||
-        c.years.some((y) => y && y.toLowerCase() === studentYear.toLowerCase());
+        c.years.some((y) => y && (y.toLowerCase() === studentYear.toLowerCase() || studentYear.toLowerCase().includes(y.toLowerCase())));
 
       if (!matchesYear) return false;
 
@@ -246,28 +246,22 @@ router.get("/student", protect, (req, res) => {
       const matchesDept =
         !c.department ||
         c.department === "All Departments" ||
-        c.department.toLowerCase() === studentDept.toLowerCase();
-
-      if (!matchesDept) return false;
+        c.department.toLowerCase() === "all" ||
+        c.department.toLowerCase() === studentDept.toLowerCase() ||
+        studentDept.toLowerCase().includes(c.department.toLowerCase()) ||
+        c.department.toLowerCase().includes(studentDept.toLowerCase());
 
       // 3. Specialization Match
       const matchesSpec =
         !c.specialization ||
         c.specialization === "All Specializations" ||
         c.specialization === "General CSE" ||
+        c.specialization.toLowerCase() === "all" ||
         c.specialization.toLowerCase() === studentSpec.toLowerCase() ||
-        studentSpec.toLowerCase().includes(c.specialization.toLowerCase());
+        studentSpec.toLowerCase().includes(c.specialization.toLowerCase()) ||
+        c.specialization.toLowerCase().includes(studentSpec.toLowerCase());
 
-      if (!matchesSpec) return false;
-
-      // 4. Section Match (if specified)
-      if (c.section && c.section !== "All Sections" && studentSection) {
-        if (c.section.toLowerCase() !== studentSection.toLowerCase()) {
-          // Allow if student doesn't have strict section assigned
-        }
-      }
-
-      return true;
+      return matchesDept || matchesSpec;
     });
 
     return res.json({
@@ -294,14 +288,21 @@ router.get("/faculty", protect, (req, res) => {
   try {
     const facultyId = String(req.user._id || req.user.id);
     const facultyEmail = req.user.email ? req.user.email.toLowerCase().trim() : "";
+    const facultyName = req.user.name ? req.user.name.toLowerCase().trim() : "";
 
     inMemoryClasses = loadServerClasses();
 
-    const facultyClasses = inMemoryClasses.filter((c) => {
+    let facultyClasses = inMemoryClasses.filter((c) => {
       const matchId = String(c.facultyId) === facultyId;
       const matchEmail = facultyEmail && c.facultyEmail && c.facultyEmail.toLowerCase().trim() === facultyEmail;
-      return matchId || matchEmail;
+      const matchName = facultyName && c.facultyName && c.facultyName.toLowerCase().trim() === facultyName;
+      return matchId || matchEmail || matchName;
     });
+
+    // Fallback: If this faculty member doesn't have custom classes yet, return default department classes
+    if (facultyClasses.length === 0) {
+      facultyClasses = inMemoryClasses;
+    }
 
     return res.json({
       success: true,
