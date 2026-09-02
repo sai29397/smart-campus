@@ -2,12 +2,23 @@
 // SMART CAMPUS - UNIFIED SINGLE DASHBOARD CONTROLLER (dashboard.js)
 // ==========================================================================
 
-const API_URL =
-  window.location.hostname === "localhost" && window.location.port !== "3000"
-    ? "http://localhost:3000"
-    : window.location.protocol === "file:"
-    ? "http://localhost:3000"
-    : "";
+function getApiBaseUrl() {
+  if (typeof window === "undefined") return "http://localhost:3000";
+  if (window.location.port === "3000") return "";
+  const host = window.location.hostname;
+  if (
+    host === "localhost" ||
+    host === "127.0.0.1" ||
+    host === "" ||
+    window.location.protocol === "file:" ||
+    window.location.port !== ""
+  ) {
+    return "http://localhost:3000";
+  }
+  return "";
+}
+
+const API_URL = getApiBaseUrl();
 
 let currentUser = null;
 let allFacultySubjects = [];

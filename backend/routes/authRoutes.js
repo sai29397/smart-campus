@@ -4,6 +4,7 @@ const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
 const fs = require("fs");
 const path = require("path");
+const mongoose = require("mongoose");
 const User = require("../models/User");
 
 // Ensure data directory exists on server for permanent storage
@@ -19,7 +20,15 @@ const resetRequestsFilePath = path.join(dataDir, "reset_requests.json");
 // Generate JWT helper
 const generateToken = (user) => {
   return jwt.sign(
-    { id: user._id || user.id, email: user.email, role: user.role, name: user.name },
+    {
+      id: user._id || user.id,
+      email: user.email,
+      role: user.role,
+      name: user.name,
+      department: user.department,
+      year: user.year,
+      specialization: user.specialization,
+    },
     process.env.JWT_SECRET || "smart_campus_super_secure_jwt_secret_key_2026",
     { expiresIn: "30d" }
   );
@@ -105,44 +114,19 @@ function recordLoginEvent(user, req) {
       role: user.role,
       department: user.department,
       year: user.year,
-      ip: req.ip || req.connection.remoteAddress || "127.0.0.1",
+      ip: req.ip || (req.connection && req.connection.remoteAddress) || "127.0.0.1",
       userAgent: req.headers["user-agent"] || "Browser",
       timestamp: new Date().toISOString(),
     };
 
     logs.unshift(logEntry);
-    if (logs.length > 500) logs = logs.slice(0, 500); // Keep latest 500 logs
+    if (logs.length > 500) logs = logs.slice(0, 500);
 
     fs.writeFileSync(loginLogsFilePath, JSON.stringify(logs, null, 2), "utf8");
   } catch (err) {
     console.warn("Could not record login log:", err.message);
   }
 }
-
-// Helper: Record reset request permanently
-function recordResetRequest(email, token) {
-  try {
-    let requests = [];
-    if (fs.existsSync(resetRequestsFilePath)) {
-      const data = fs.readFileSync(resetRequestsFilePath, "utf8");
-      requests = JSON.parse(data) || [];
-    }
-
-    requests.unshift({
-      email: email.toLowerCase(),
-      token: token,
-      requestedAt: new Date().toISOString(),
-      expiresAt: new Date(Date.now() + 15 * 60 * 1000).toISOString(),
-    });
-
-    if (requests.length > 200) requests = requests.slice(0, 200);
-    fs.writeFileSync(resetRequestsFilePath, JSON.stringify(requests, null, 2), "utf8");
-  } catch (err) {
-    console.warn("Could not save reset request log:", err.message);
-  }
-}
-
-let inMemoryUsers = loadServerUsers();
 
 // Password comparison helper supporting both hashed and plaintext
 async function verifyPassword(enteredPassword, storedPassword, storedHash) {
@@ -166,9 +150,6 @@ async function verifyPassword(enteredPassword, storedPassword, storedHash) {
   return false;
 }
 
-// In-memory reset tokens store
-let resetTokens = {};
-
 // ==========================================================================
 // 1. REGISTER USER (Persisted to Server Storage & MongoDB)
 // ==========================================================================
@@ -191,13 +172,17 @@ router.post("/register", async (req, res) => {
     }
 
     const cleanEmail = email.toLowerCase().trim();
+    const cleanRole = role.toLowerCase().trim();
+
+    // Reload from server storage
+    const currentUsers = loadServerUsers();
 
     // Check existing in server storage
-    const existing = inMemoryUsers.find((u) => u.email.toLowerCase() === cleanEmail);
+    const existing = currentUsers.find((u) => u.email.toLowerCase() === cleanEmail);
     if (existing) {
       return res.status(400).json({
         success: false,
-        message: `An account with email "${email}" is already registered. Please log in or use Forgot Password.`,
+        message: `An account with email "${email}" is already registered. Please log in with your password.`,
       });
     }
 
@@ -206,41 +191,50 @@ router.post("/register", async (req, res) => {
 
     const newUser = {
       _id: "usr_" + Date.now(),
+      id: "usr_" + Date.now(),
       name: name.trim(),
       email: cleanEmail,
       password: password,
       passwordHash: passwordHash,
-      role: role.toLowerCase(),
+      role: cleanRole,
       department: department || "Computer Science",
-      year: year || "1st Year",
-      specialization: specialization || "General CSE",
+      year: year || (cleanRole === "faculty" ? "Faculty/Staff" : "1st Year"),
+      specialization: specialization || (cleanRole === "faculty" ? "Faculty" : "General CSE"),
       createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
     };
 
-    // Save to MongoDB if available
-    try {
-      const dbUser = await User.create({
-        name: newUser.name,
-        email: newUser.email,
-        password: newUser.password,
-        role: newUser.role,
-        department: newUser.department,
-        year: newUser.year,
-        specialization: newUser.specialization,
-      });
-      newUser._id = dbUser._id.toString();
-    } catch (dbErr) {}
+    // 1. Save permanently to server storage (synchronous & immediate)
+    currentUsers.push(newUser);
+    saveServerUsers(currentUsers);
 
-    // Save permanently to server storage
-    inMemoryUsers.push(newUser);
-    saveServerUsers(inMemoryUsers);
+    // 2. Save to MongoDB if connected
+    if (mongoose.connection.readyState === 1) {
+      try {
+        const dbUser = await User.create({
+          name: newUser.name,
+          email: newUser.email,
+          password: newUser.password,
+          role: newUser.role,
+          department: newUser.department,
+          year: newUser.year,
+          specialization: newUser.specialization,
+        });
+        if (dbUser && dbUser._id) {
+          newUser._id = dbUser._id.toString();
+          newUser.id = dbUser._id.toString();
+          saveServerUsers(currentUsers);
+        }
+      } catch (dbErr) {}
+    }
 
     return res.status(201).json({
       success: true,
-      message: `Account registered successfully as ${role.toUpperCase()}! Data saved to server.`,
+      message: `Account registered successfully as ${cleanRole.toUpperCase()}! Data permanently saved.`,
       token: generateToken(newUser),
       user: {
         id: newUser._id,
+        _id: newUser._id,
         name: newUser.name,
         email: newUser.email,
         role: newUser.role,
@@ -272,18 +266,19 @@ router.post("/login", async (req, res) => {
     const cleanEmail = email.toLowerCase().trim();
 
     // Reload from server persistent storage
-    inMemoryUsers = loadServerUsers();
+    const currentUsers = loadServerUsers();
 
     // 1. Search for user by email across server database
-    let foundUser = inMemoryUsers.find((u) => u.email.toLowerCase() === cleanEmail);
+    let foundUser = currentUsers.find((u) => u.email.toLowerCase() === cleanEmail);
 
     // 2. Search MongoDB if not in memory
-    if (!foundUser) {
+    if (!foundUser && mongoose.connection.readyState === 1) {
       try {
         const dbUser = await User.findOne({ email: cleanEmail });
         if (dbUser) {
           foundUser = {
             _id: dbUser._id.toString(),
+            id: dbUser._id.toString(),
             name: dbUser.name,
             email: dbUser.email,
             password: dbUser.password,
@@ -291,10 +286,10 @@ router.post("/login", async (req, res) => {
             role: dbUser.role,
             department: dbUser.department,
             year: dbUser.year,
+            specialization: dbUser.specialization || "General CSE",
           };
-          // Sync to server users list
-          inMemoryUsers.push(foundUser);
-          saveServerUsers(inMemoryUsers);
+          currentUsers.push(foundUser);
+          saveServerUsers(currentUsers);
         }
       } catch (dbErr) {}
     }
@@ -317,7 +312,7 @@ router.post("/login", async (req, res) => {
       });
     }
 
-    // 5. Strict Role Enforcement (Faculty can only login to Faculty portal, Student to Student portal)
+    // 5. Strict Role Enforcement
     if (role && foundUser.role.toLowerCase() !== role.toLowerCase()) {
       return res.status(403).json({
         success: false,
@@ -335,7 +330,8 @@ router.post("/login", async (req, res) => {
       message: `Login successful as ${foundUser.role}!`,
       token: generateToken(foundUser),
       user: {
-        id: foundUser._id,
+        id: foundUser._id || foundUser.id,
+        _id: foundUser._id || foundUser.id,
         name: foundUser.name,
         email: foundUser.email,
         role: foundUser.role,
@@ -353,6 +349,8 @@ router.post("/login", async (req, res) => {
 // ==========================================================================
 // 3. FORGOT PASSWORD - SEND 6-DIGIT VERIFICATION CODE
 // ==========================================================================
+let resetTokens = {};
+
 router.post("/forgot-password", async (req, res) => {
   try {
     const { email } = req.body;
@@ -365,9 +363,8 @@ router.post("/forgot-password", async (req, res) => {
     }
 
     const cleanEmail = email.toLowerCase().trim();
-
-    inMemoryUsers = loadServerUsers();
-    const user = inMemoryUsers.find((u) => u.email.toLowerCase() === cleanEmail);
+    const currentUsers = loadServerUsers();
+    const user = currentUsers.find((u) => u.email.toLowerCase() === cleanEmail);
 
     if (!user) {
       return res.status(404).json({
@@ -376,63 +373,50 @@ router.post("/forgot-password", async (req, res) => {
       });
     }
 
-    // Generate secure 6-digit verification code
     const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
 
     resetTokens[cleanEmail] = {
       code: verificationCode,
-      user: user,
-      expiresAt: Date.now() + 15 * 60 * 1000, // 15 minutes
+      expiresAt: Date.now() + 15 * 60 * 1000,
     };
 
-    // Save reset request to server storage
-    recordResetRequest(cleanEmail, verificationCode);
-
-    console.log(`[VERIFICATION EMAIL] Verification code for ${cleanEmail}: ${verificationCode}`);
-
-    return res.status(200).json({
+    return res.json({
       success: true,
-      message: `Verification code sent to ${cleanEmail}. Please enter the 6-digit code to continue.`,
-      email: cleanEmail,
-      verificationCode: verificationCode, // Returned for interactive web display
-      user: {
-        name: user.name,
-        email: cleanEmail,
-        role: user.role,
-        department: user.department,
-      },
+      message: `Verification code generated successfully for ${email}.`,
+      verificationCode: verificationCode,
+      debugCode: verificationCode,
     });
   } catch (error) {
     console.error("Forgot Password Error:", error);
-    res.status(500).json({ success: false, message: "Server error generating verification code." });
+    res.status(500).json({ success: false, message: "Server error generating reset code." });
   }
 });
 
 // ==========================================================================
-// 4. VERIFY OTP CODE
+// 4. VERIFY CODE
 // ==========================================================================
-router.post("/verify-code", async (req, res) => {
+router.post("/verify-code", (req, res) => {
   try {
     const { email, code } = req.body;
 
     if (!email || !code) {
       return res.status(400).json({
         success: false,
-        message: "Email and verification code are required.",
+        message: "Please provide both email and 6-digit verification code.",
       });
     }
 
     const cleanEmail = email.toLowerCase().trim();
-    const stored = resetTokens[cleanEmail];
+    const record = resetTokens[cleanEmail];
 
-    if (!stored) {
+    if (!record) {
       return res.status(400).json({
         success: false,
         message: "No verification request found for this email. Please request a new code.",
       });
     }
 
-    if (Date.now() > stored.expiresAt) {
+    if (Date.now() > record.expiresAt) {
       delete resetTokens[cleanEmail];
       return res.status(400).json({
         success: false,
@@ -440,37 +424,34 @@ router.post("/verify-code", async (req, res) => {
       });
     }
 
-    if (stored.code !== code.trim() && code.trim() !== "BYPASS_DEMO") {
+    if (String(record.code).trim() !== String(code).trim()) {
       return res.status(400).json({
         success: false,
-        message: "Invalid verification code. Please check the 6-digit code and try again.",
+        message: "Invalid verification code. Please check and try again.",
       });
     }
 
-    return res.status(200).json({
+    return res.json({
       success: true,
-      message: "Verification code confirmed! You can now set your new password.",
-      email: cleanEmail,
-      verifiedToken: stored.code,
+      message: "Verification code confirmed successfully.",
     });
   } catch (error) {
+    console.error("Verify Code Error:", error);
     res.status(500).json({ success: false, message: "Server error verifying code." });
   }
 });
 
 // ==========================================================================
-// 5. RESET PASSWORD (Persist New Password to Server & MongoDB)
+// 5. RESET PASSWORD
 // ==========================================================================
 router.post("/reset-password", async (req, res) => {
   try {
-    const { email, code, resetToken, newPassword, confirmPassword } = req.body;
+    const { email, code, newPassword } = req.body;
 
-    const tokenToVerify = code || resetToken;
-
-    if (!email || !newPassword) {
+    if (!email || !code || !newPassword) {
       return res.status(400).json({
         success: false,
-        message: "Email and new password are required.",
+        message: "Please provide email, verification code, and new password.",
       });
     }
 
@@ -481,85 +462,94 @@ router.post("/reset-password", async (req, res) => {
       });
     }
 
-    if (confirmPassword && newPassword !== confirmPassword) {
+    const cleanEmail = email.toLowerCase().trim();
+    const record = resetTokens[cleanEmail];
+
+    if (!record || String(record.code).trim() !== String(code).trim()) {
       return res.status(400).json({
         success: false,
-        message: "Passwords do not match.",
+        message: "Invalid or expired verification session. Please request a new code.",
       });
     }
 
-    const cleanEmail = email.toLowerCase().trim();
-
-    // Verify verification code if active
-    if (tokenToVerify && resetTokens[cleanEmail]) {
-      const stored = resetTokens[cleanEmail];
-      if (stored.code !== tokenToVerify && tokenToVerify !== "BYPASS_DEMO") {
-        return res.status(400).json({
-          success: false,
-          message: "Invalid verification code for this account.",
-        });
-      }
-    }
-
-    const salt = await bcrypt.genSalt(10);
-    const newHash = await bcrypt.hash(newPassword, salt);
-
-    inMemoryUsers = loadServerUsers();
-    const userIndex = inMemoryUsers.findIndex((u) => u.email.toLowerCase() === cleanEmail);
+    const currentUsers = loadServerUsers();
+    const userIndex = currentUsers.findIndex((u) => u.email.toLowerCase() === cleanEmail);
 
     if (userIndex === -1) {
       return res.status(404).json({
         success: false,
-        message: `Account not found for email "${email}".`,
+        message: `Account not found with email "${email}".`,
       });
     }
 
-    // Update server user record permanently
-    inMemoryUsers[userIndex].password = newPassword;
-    inMemoryUsers[userIndex].passwordHash = newHash;
-    inMemoryUsers[userIndex].updatedAt = new Date().toISOString();
-    saveServerUsers(inMemoryUsers);
+    const salt = await bcrypt.genSalt(10);
+    const passwordHash = await bcrypt.hash(newPassword, salt);
 
-    // Update MongoDB
-    try {
-      const dbUser = await User.findOne({ email: cleanEmail });
-      if (dbUser) {
-        dbUser.password = newPassword;
-        await dbUser.save();
-      }
-    } catch (dbErr) {}
+    currentUsers[userIndex].password = newPassword;
+    currentUsers[userIndex].passwordHash = passwordHash;
+    currentUsers[userIndex].updatedAt = new Date().toISOString();
 
-    // Clean verification token
+    saveServerUsers(currentUsers);
+
+    if (mongoose.connection.readyState === 1) {
+      try {
+        await User.findOneAndUpdate({ email: cleanEmail }, { password: newPassword });
+      } catch (e) {}
+    }
+
     delete resetTokens[cleanEmail];
 
-    return res.status(200).json({
+    return res.json({
       success: true,
-      message: "Password reset successfully and saved to server! You can now log in with your new password.",
-      user: {
-        email: cleanEmail,
-        role: inMemoryUsers[userIndex].role,
-      },
+      message: "Password reset successfully! You can now log in with your new password.",
     });
   } catch (error) {
     console.error("Reset Password Error:", error);
-    res.status(500).json({ success: false, message: "Server error while resetting password." });
+    res.status(500).json({ success: false, message: "Server error resetting password." });
   }
 });
 
 // ==========================================================================
-// 6. GET SERVER USERS AUDIT (For Administrator Inspection)
+// 6. GET CURRENT USER PROFILE
 // ==========================================================================
-router.get("/users", (req, res) => {
-  const users = loadServerUsers().map((u) => ({
-    id: u._id,
-    name: u.name,
-    email: u.email,
-    role: u.role,
-    department: u.department,
-    year: u.year,
-    createdAt: u.createdAt,
-  }));
-  return res.json(users);
+router.get("/me", (req, res) => {
+  try {
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      return res.status(401).json({ success: false, message: "No token provided" });
+    }
+
+    const token = authHeader.split(" ")[1];
+    const decoded = jwt.verify(
+      token,
+      process.env.JWT_SECRET || "smart_campus_super_secure_jwt_secret_key_2026"
+    );
+
+    const currentUsers = loadServerUsers();
+    const user = currentUsers.find(
+      (u) => String(u._id) === String(decoded.id) || (u.email && u.email.toLowerCase() === (decoded.email || "").toLowerCase())
+    );
+
+    if (!user) {
+      return res.status(404).json({ success: false, message: "User not found" });
+    }
+
+    return res.json({
+      success: true,
+      user: {
+        id: user._id || user.id,
+        _id: user._id || user.id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        department: user.department,
+        year: user.year,
+        specialization: user.specialization,
+      },
+    });
+  } catch (error) {
+    return res.status(401).json({ success: false, message: "Invalid or expired token" });
+  }
 });
 
 module.exports = router;

@@ -177,5 +177,33 @@
     "year": "1st Year",
     "specialization": "General CSE",
     "createdAt": "2026-09-02T00:43:25.674Z"
+  },
+  {
+    "_id": "usr_1788310189132",
+    "id": "usr_1788310189132",
+    "name": "Vikram Reddy",
+    "email": "student_test_1788310188951@campus.edu",
+    "password": "TestPassword@2026",
+    "passwordHash": "$2a$10$Q27Q1bvJBrqf9S7PjgC1u.pbJODKeT2BTZZALe0Xg2NcNgFt8fYiK",
+    "role": "student",
+    "department": "Computer Science",
+    "year": "2nd Year",
+    "specialization": "Cyber Security",
+    "createdAt": "2026-09-02T00:49:49.132Z",
+    "updatedAt": "2026-09-02T00:49:49.132Z"
+  },
+  {
+    "_id": "usr_1788310229738",
+    "id": "usr_1788310229738",
+    "name": "Prof. Anita Deshmukh",
+    "email": "prof_test_1788310229563@campus.edu",
+    "password": "ProfPassword@2026",
+    "passwordHash": "$2a$10$vW9aX9.ssdBsyFJ.yLLtb.I4O6Yei/bjR5uXgWs1MNOFhvBmvUIv6",
+    "role": "faculty",
+    "department": "Electronics & Communication",
+    "year": "Faculty/Staff",
+    "specialization": "Embedded Systems",
+    "createdAt": "2026-09-02T00:50:29.738Z",
+    "updatedAt": "2026-09-02T00:50:29.738Z"
   }
 ]
