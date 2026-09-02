@@ -88,26 +88,27 @@ function initUnifiedSession() {
     navTag.innerText = `${userDept} • ${role.toUpperCase()}`;
   }
 
+  // Perspective bar & quick switcher visibility based on strict role
+  const perspectiveBar = document.querySelector(".role-perspective-bar");
   const quickSwitch = document.getElementById("quickUserSwitchSelect");
-  if (quickSwitch) {
-    quickSwitch.value = role === "faculty" ? "faculty" : (role === "admin" || role === "administration") ? "admin" : "student";
+
+  if (role === "student") {
+    if (quickSwitch) quickSwitch.style.display = "none";
+    if (perspectiveBar) perspectiveBar.style.display = "none";
+    switchDashboardView("student");
+  } else if (role === "faculty") {
+    if (quickSwitch) quickSwitch.style.display = "none";
+    if (perspectiveBar) perspectiveBar.style.display = "none";
+    switchDashboardView("faculty");
+  } else {
+    // Admin has full overview
+    if (quickSwitch) quickSwitch.value = "admin";
+    switchDashboardView("admin");
   }
 
   // Initialize Chat & Live Sync
   loadChatConversations();
   startChatLiveSync();
-
-  // Switch to the user's initial role view (or 'all' if requested via hash)
-  const hash = window.location.hash.toLowerCase();
-  if (hash === "#admin" || role === "admin" || role === "administration") {
-    switchDashboardView("admin");
-  } else if (hash === "#faculty" || role === "faculty") {
-    switchDashboardView("faculty");
-  } else if (hash === "#all") {
-    switchDashboardView("all");
-  } else {
-    switchDashboardView(role || "student");
-  }
 
   // Logout handler
   const logoutBtn = document.getElementById("logoutBtn");
@@ -117,51 +118,6 @@ function initUnifiedSession() {
       localStorage.removeItem("smart_campus_user");
       window.location.href = "login.html";
     });
-  }
-}
-
-/**
- * 1-Click Fast Identity Switcher
- */
-async function handleQuickUserSwitch(roleKey) {
-  const credentials = {
-    student: { email: "student@campus.edu", password: "student123", role: "student" },
-    faculty: { email: "faculty@campus.edu", password: "faculty123", role: "faculty" },
-    admin: { email: "admin@campus.edu", password: "admin123", role: "admin" },
-  };
-
-  const cred = credentials[roleKey];
-  if (!cred) return;
-
-  try {
-    const res = await fetch(`${API_URL}/api/auth/login`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(cred),
-    });
-    const data = await res.json();
-    if (res.ok && data.success) {
-      localStorage.setItem("smart_campus_token", data.token);
-      localStorage.setItem("smart_campus_user", JSON.stringify(data.user));
-      currentUser = data.user;
-      initUnifiedSession();
-      switchDashboardView(roleKey);
-    }
-  } catch (err) {
-    console.warn("Could not switch identity over network, switching locally:", err);
-    currentUser = {
-      id: "usr_" + roleKey + "_1",
-      _id: "usr_" + roleKey + "_1",
-      name: roleKey === "faculty" ? "Dr. Sarah Jenkins" : roleKey === "admin" ? "Campus Administrator" : "Alex Johnson",
-      email: cred.email,
-      role: roleKey,
-      department: "Computer Science",
-      year: roleKey === "student" ? "1st Year" : "Faculty/Staff",
-      specialization: "General CSE",
-    };
-    localStorage.setItem("smart_campus_user", JSON.stringify(currentUser));
-    initUnifiedSession();
-    switchDashboardView(roleKey);
   }
 }
 
@@ -179,6 +135,15 @@ function switchDashboardView(viewMode) {
   const btnStudent = document.getElementById("roleBtnStudent");
   const btnFaculty = document.getElementById("roleBtnFaculty");
   const btnAdmin = document.getElementById("roleBtnAdmin");
+
+  const userRole = currentUser ? (currentUser.role || "student").toLowerCase() : "student";
+
+  // Strict Role Protection
+  if (userRole === "student" && viewMode !== "student") {
+    viewMode = "student";
+  } else if (userRole === "faculty" && (viewMode === "admin" || viewMode === "all")) {
+    viewMode = "faculty";
+  }
 
   // Reset all active classes
   [btnAll, btnStudent, btnFaculty, btnAdmin].forEach((b) => {
