@@ -23,16 +23,14 @@ const PORT = process.env.PORT || 3000;
 app.use(
   cors({
     origin: "*",
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization", "x-user-id", "x-user-email"],
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
+    allowedHeaders: ["Content-Type", "Authorization", "x-user-id", "x-user-email", "Accept", "Origin", "X-Requested-With"],
   })
 );
 
 // Middleware for parsing JSON and URL-encoded data
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-
-
 
 // Request Logger
 app.use((req, res, next) => {
@@ -62,17 +60,30 @@ app.get("/", (req, res) => {
   });
 });
 
-// API Routes
+// API Routes & Root Aliases
 app.use("/api/auth", authRoutes);
+app.use("/auth", authRoutes);
+
 app.use("/api/subjects", subjectAssignmentRoutes);
 app.use("/subjects", subjectAssignmentRoutes);
 app.use("/api/academic", subjectAssignmentRoutes);
+
 app.use("/api/announcements", announcementRoutes);
+app.use("/announcements", announcementRoutes);
+
 app.use("/api/messages", chatRoutes);
+app.use("/messages", chatRoutes);
 app.use("/api/chat", chatRoutes);
+app.use("/chat", chatRoutes);
+
 app.use("/api/attendance", attendanceRoutes);
+app.use("/attendance", attendanceRoutes);
+
 app.use("/api/papers", paperRoutes);
+app.use("/papers", paperRoutes);
+
 app.use("/api/classes", classRoutes);
+app.use("/classes", classRoutes);
 
 // Global 404 Handler for API routes
 app.use("/api/*", (req, res) => {
