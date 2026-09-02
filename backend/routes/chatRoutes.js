@@ -70,26 +70,82 @@ function getDeterministicConversationId(userAId, userBId) {
 }
 
 // Helper to find user info by id or email
-function findUserDetails(userIdOrEmail) {
+async function findUserDetails(userIdOrEmail) {
   if (!userIdOrEmail) return null;
-  const allUsers = loadServerUsers();
   const search = String(userIdOrEmail).toLowerCase().trim();
-  return allUsers.find(
+
+  // 1. Try MongoDB User
+  if (mongoose.connection.readyState === 1) {
+    try {
+      let dbUser = null;
+      if (mongoose.Types.ObjectId.isValid(userIdOrEmail)) {
+        dbUser = await User.findById(userIdOrEmail).lean();
+      }
+      if (!dbUser) {
+        dbUser = await User.findOne({
+          $or: [
+            { email: { $regex: new RegExp(`^${search}$`, "i") } },
+            { id: userIdOrEmail },
+          ],
+        }).lean();
+      }
+      if (dbUser) {
+        return {
+          id: String(dbUser._id || dbUser.id),
+          _id: String(dbUser._id || dbUser.id),
+          name: dbUser.name,
+          email: dbUser.email,
+          role: dbUser.role,
+          department: dbUser.department || "",
+          year: dbUser.year || "",
+          specialization: dbUser.specialization || "",
+        };
+      }
+    } catch (e) {}
+  }
+
+  // 2. Fallback to users.json
+  const allUsers = loadServerUsers();
+  const user = allUsers.find(
     (u) =>
       String(u._id || u.id || "").toLowerCase().trim() === search ||
       (u.email && u.email.toLowerCase().trim() === search)
   );
+
+  return user || null;
 }
 
 // ==========================================================================
 // 1. GET AUTHORIZED CHAT CONTACTS (Searchable Directory)
 // ==========================================================================
-router.get("/contacts", protect, (req, res) => {
+router.get("/contacts", protect, async (req, res) => {
   try {
     const currentUserId = String(req.user._id || req.user.id);
     const currentUserEmail = (req.user.email || "").toLowerCase();
-    const currentUserRole = (req.user.role || "").toLowerCase();
-    const allUsers = loadServerUsers();
+    let allUsers = [];
+
+    if (mongoose.connection.readyState === 1) {
+      try {
+        const dbUsers = await User.find({}).lean();
+        if (Array.isArray(dbUsers) && dbUsers.length > 0) {
+          allUsers = dbUsers.map((u) => ({
+            id: String(u._id || u.id),
+            _id: String(u._id || u.id),
+            name: u.name,
+            email: u.email,
+            role: u.role,
+            department: u.department || (u.role === "faculty" ? "Faculty" : "Computer Science"),
+            year: u.year || (u.role === "faculty" ? "Faculty" : "1st Year"),
+            specialization: u.specialization || (u.role === "faculty" ? "Faculty" : "General CSE"),
+          }));
+        }
+      } catch (e) {}
+    }
+
+    if (allUsers.length === 0) {
+      allUsers = loadServerUsers();
+    }
+
     const allConversations = loadServerConversations();
 
     // Allow all registered campus users (Students, Faculty, Staff) to message each other
@@ -136,13 +192,35 @@ router.get("/contacts", protect, (req, res) => {
 // ==========================================================================
 // 2. GET CONVERSATION LIST (GET /api/messages/conversations)
 // ==========================================================================
-router.get("/conversations", protect, (req, res) => {
+router.get("/conversations", protect, async (req, res) => {
   try {
     const currentUserId = String(req.user._id || req.user.id);
     const currentUserEmail = (req.user.email || "").toLowerCase();
-    const inMemoryMessages = loadServerMessages();
+    let inMemoryMessages = loadServerMessages();
     let inMemoryConversations = loadServerConversations();
-    const allUsers = loadServerUsers();
+
+    // Merge from MongoDB if available
+    if (mongoose.connection.readyState === 1) {
+      try {
+        const dbMsgs = await Message.find({
+          $or: [
+            { senderId: currentUserId },
+            { receiverId: currentUserId },
+            { senderEmail: currentUserEmail },
+            { receiverEmail: currentUserEmail },
+          ],
+        }).lean();
+
+        if (Array.isArray(dbMsgs) && dbMsgs.length > 0) {
+          const existingIds = new Set(inMemoryMessages.map((m) => String(m._id || m.id)));
+          dbMsgs.forEach((m) => {
+            if (!existingIds.has(String(m._id || m.id))) {
+              inMemoryMessages.push(m);
+            }
+          });
+        }
+      } catch (e) {}
+    }
 
     // Map of conversationId -> conversation
     const convMap = {};
@@ -150,7 +228,7 @@ router.get("/conversations", protect, (req, res) => {
     // 1. Index stored conversations
     inMemoryConversations.forEach((c) => {
       const isParticipant =
-        (Array.isArray(c.participants) && c.participants.includes(currentUserId)) ||
+        (Array.isArray(c.participants) && c.participants.map(String).includes(currentUserId)) ||
         (Array.isArray(c.participantDetails) &&
           c.participantDetails.some(
             (p) =>
@@ -164,7 +242,7 @@ router.get("/conversations", protect, (req, res) => {
     });
 
     // 2. Cross-reference all messages in memory
-    inMemoryMessages.forEach((msg) => {
+    for (const msg of inMemoryMessages) {
       const isSender =
         String(msg.senderId) === currentUserId ||
         (msg.senderEmail && msg.senderEmail.toLowerCase() === currentUserEmail);
@@ -178,9 +256,9 @@ router.get("/conversations", protect, (req, res) => {
 
         if (!convMap[convId]) {
           const partnerUser =
-            findUserDetails(partnerId) ||
-            (msg.receiverEmail && findUserDetails(msg.receiverEmail)) ||
-            (msg.senderEmail && findUserDetails(msg.senderEmail));
+            (await findUserDetails(partnerId)) ||
+            (msg.receiverEmail && (await findUserDetails(msg.receiverEmail))) ||
+            (msg.senderEmail && (await findUserDetails(msg.senderEmail)));
 
           convMap[convId] = {
             conversationId: convId,
@@ -202,7 +280,7 @@ router.get("/conversations", protect, (req, res) => {
                 specialization: partnerUser ? partnerUser.specialization : "",
               },
             ],
-            lastMessage: msg.message,
+            lastMessage: msg.message || msg.content || msg.text || "",
             lastMessageTime: msg.timestamp,
             lastSenderId: String(msg.senderId),
             unreadCount: {},
@@ -212,16 +290,17 @@ router.get("/conversations", protect, (req, res) => {
         } else {
           // Update last message if more recent
           if (new Date(msg.timestamp) > new Date(convMap[convId].lastMessageTime || 0)) {
-            convMap[convId].lastMessage = msg.message;
+            convMap[convId].lastMessage = msg.message || msg.content || msg.text || "";
             convMap[convId].lastMessageTime = msg.timestamp;
             convMap[convId].lastSenderId = String(msg.senderId);
           }
         }
       }
-    });
+    }
 
     // 3. Format output for frontend
-    const conversationList = Object.values(convMap).map((conv) => {
+    const conversationList = [];
+    for (const conv of Object.values(convMap)) {
       const partnerId =
         conv.participants.find((p) => String(p) !== currentUserId) ||
         (Array.isArray(conv.participantDetails)
@@ -229,7 +308,7 @@ router.get("/conversations", protect, (req, res) => {
           : "") ||
         currentUserId;
 
-      const partnerUser = findUserDetails(partnerId);
+      const partnerUser = await findUserDetails(partnerId);
       let pDetails = Array.isArray(conv.participantDetails)
         ? conv.participantDetails.find((p) => String(p.userId) === String(partnerId))
         : null;
@@ -251,7 +330,7 @@ router.get("/conversations", protect, (req, res) => {
           !m.readStatus
       ).length;
 
-      return {
+      conversationList.push({
         conversationId: conv.conversationId,
         contactId: partnerId,
         contactName,
@@ -264,8 +343,8 @@ router.get("/conversations", protect, (req, res) => {
         lastMessageTime: conv.lastMessageTime || conv.updatedAt || conv.createdAt,
         lastSenderId: conv.lastSenderId || "",
         unreadCount: unread,
-      };
-    });
+      });
+    }
 
     // Sort descending by latest message time
     conversationList.sort((a, b) => new Date(b.lastMessageTime || 0) - new Date(a.lastMessageTime || 0));
@@ -282,12 +361,11 @@ router.get("/conversations", protect, (req, res) => {
 //    Supports GET /api/messages/conversation/:conversationId
 //    and GET /api/messages/:conversationId
 // ==========================================================================
-function handleGetConversationMessages(req, res) {
+async function handleGetConversationMessages(req, res) {
   try {
     const { conversationId } = req.params;
     const currentUserId = String(req.user._id || req.user.id);
     const currentUserEmail = (req.user.email || "").toLowerCase();
-    const inMemoryMessages = loadServerMessages();
 
     // Determine partnerId if single ID was passed
     let partnerId = conversationId;
@@ -296,16 +374,37 @@ function handleGetConversationMessages(req, res) {
       partnerId = parts.find((p) => p !== currentUserId) || conversationId;
     }
 
-    // Query messages strictly between this authenticated user and the conversation partner
-    const messages = inMemoryMessages.filter((m) => {
-      // 1. Direct conversationId match
+    let allFoundMessages = [];
+
+    // 1. Check MongoDB
+    if (mongoose.connection.readyState === 1) {
+      try {
+        const dbMsgs = await Message.find({
+          $or: [
+            { conversationId },
+            { senderId: currentUserId, receiverId: partnerId },
+            { senderId: partnerId, receiverId: currentUserId },
+            { senderEmail: currentUserEmail, receiverId: partnerId },
+            { senderId: partnerId, receiverEmail: currentUserEmail },
+          ],
+        }).lean();
+
+        if (Array.isArray(dbMsgs)) {
+          allFoundMessages = dbMsgs;
+        }
+      } catch (e) {}
+    }
+
+    // 2. Merge with disk JSON messages
+    const inMemoryMessages = loadServerMessages();
+    const diskMatches = inMemoryMessages.filter((m) => {
+      // Direct conversationId match
       if (m.conversationId === conversationId) return true;
 
-      // 2. Deterministic conversationId match
+      // Deterministic match
       const mConvId = m.conversationId || getDeterministicConversationId(m.senderId, m.receiverId);
       if (mConvId === conversationId) return true;
 
-      // 3. User & partner matching by ID or Email
       const isSenderMe =
         String(m.senderId) === currentUserId ||
         (m.senderEmail && m.senderEmail.toLowerCase() === currentUserEmail);
@@ -324,7 +423,6 @@ function handleGetConversationMessages(req, res) {
         return true;
       }
 
-      // 4. If conversationId is composite and includes both
       if (conversationId.includes(String(m.senderId)) && conversationId.includes(String(m.receiverId))) {
         return true;
       }
@@ -332,9 +430,15 @@ function handleGetConversationMessages(req, res) {
       return false;
     });
 
+    const msgMap = new Map();
+    allFoundMessages.forEach((m) => msgMap.set(String(m._id || m.id), m));
+    diskMatches.forEach((m) => msgMap.set(String(m._id || m.id), m));
+
+    const finalMessages = Array.from(msgMap.values());
+
     // Mark messages sent to this user as read
     let updated = false;
-    messages.forEach((m) => {
+    finalMessages.forEach((m) => {
       const isReceiverMe =
         String(m.receiverId) === currentUserId ||
         (m.receiverEmail && m.receiverEmail.toLowerCase() === currentUserEmail);
@@ -346,18 +450,28 @@ function handleGetConversationMessages(req, res) {
     });
 
     if (updated) {
+      // Update memory & disk
+      inMemoryMessages.forEach((m) => {
+        if (msgMap.has(String(m._id || m.id))) {
+          m.readStatus = true;
+        }
+      });
       saveServerMessages(inMemoryMessages);
+
       if (mongoose.connection.readyState === 1) {
         try {
-          Message.updateMany(
-            { conversationId, receiverId: currentUserId, readStatus: false },
+          await Message.updateMany(
+            {
+              $or: [{ conversationId }, { receiverId: currentUserId }],
+              readStatus: false,
+            },
             { readStatus: true }
-          ).exec();
+          );
         } catch (e) {}
       }
     }
 
-    const sortedMessages = messages.sort(
+    const sortedMessages = finalMessages.sort(
       (a, b) => new Date(a.timestamp || 0) - new Date(b.timestamp || 0)
     );
 
@@ -376,19 +490,23 @@ router.get("/:conversationId", protect, handleGetConversationMessages);
 // ==========================================================================
 router.post("/", protect, async (req, res) => {
   try {
-    const { receiverId, receiverRole, receiverName, receiverEmail, message } = req.body;
+    const rawMessage = req.body.message || req.body.content || req.body.text || req.body.body || "";
+    const rawReceiverId = req.body.receiverId || req.body.recipientId || req.body.to || req.body.receiver || req.body.userId || "";
+    const rawReceiverRole = req.body.receiverRole || req.body.role;
+    const rawReceiverName = req.body.receiverName || req.body.name;
+    const rawReceiverEmail = req.body.receiverEmail || req.body.email;
 
-    if (!message || !message.trim()) {
+    if (!rawMessage || !rawMessage.trim()) {
       return res.status(400).json({
         success: false,
         message: "Message content cannot be empty.",
       });
     }
 
-    if (!receiverId) {
+    if (!rawReceiverId && !rawReceiverEmail) {
       return res.status(400).json({
         success: false,
-        message: "Receiver ID is required.",
+        message: "Receiver ID or email is required.",
       });
     }
 
@@ -396,10 +514,13 @@ router.post("/", protect, async (req, res) => {
     const senderRole = req.user.role || "student";
     const senderName = req.user.name || "Campus User";
     const senderEmail = req.user.email || "";
-    const cleanReceiverId = String(receiverId).trim();
+    const cleanReceiverId = String(rawReceiverId || "").trim();
 
     // Prevent sending message to oneself
-    if (senderId === cleanReceiverId || (senderEmail && receiverEmail && senderEmail.toLowerCase() === receiverEmail.toLowerCase())) {
+    if (
+      senderId === cleanReceiverId ||
+      (senderEmail && rawReceiverEmail && senderEmail.toLowerCase() === rawReceiverEmail.toLowerCase())
+    ) {
       return res.status(400).json({
         success: false,
         message: "Cannot send message to yourself.",
@@ -407,13 +528,17 @@ router.post("/", protect, async (req, res) => {
     }
 
     // Lookup receiver details
-    const receiverUser = findUserDetails(cleanReceiverId) || (receiverEmail && findUserDetails(receiverEmail));
-    const cleanReceiverName = receiverUser ? receiverUser.name : receiverName || "Recipient";
-    const cleanReceiverRole = receiverUser ? receiverUser.role : receiverRole || (senderRole === "student" ? "faculty" : "student");
-    const cleanReceiverEmail = receiverUser ? receiverUser.email : receiverEmail || "";
+    const receiverUser =
+      (await findUserDetails(cleanReceiverId)) ||
+      (rawReceiverEmail && (await findUserDetails(rawReceiverEmail)));
+
+    const effectiveReceiverId = cleanReceiverId || (receiverUser ? String(receiverUser._id || receiverUser.id) : "usr_partner");
+    const effectiveReceiverName = receiverUser ? receiverUser.name : rawReceiverName || "Recipient";
+    const effectiveReceiverRole = receiverUser ? receiverUser.role : rawReceiverRole || (senderRole === "student" ? "faculty" : "student");
+    const effectiveReceiverEmail = receiverUser ? receiverUser.email : rawReceiverEmail || "";
 
     // Deterministic Conversation ID
-    const conversationId = getDeterministicConversationId(senderId, cleanReceiverId);
+    const conversationId = getDeterministicConversationId(senderId, effectiveReceiverId);
     const nowIso = new Date().toISOString();
 
     const newMessage = {
@@ -424,28 +549,31 @@ router.post("/", protect, async (req, res) => {
       senderRole,
       senderName,
       senderEmail,
-      receiverId: cleanReceiverId,
-      receiverRole: cleanReceiverRole,
-      receiverName: cleanReceiverName,
-      receiverEmail: cleanReceiverEmail,
-      message: message.trim(),
+      receiverId: effectiveReceiverId,
+      receiverRole: effectiveReceiverRole,
+      receiverName: effectiveReceiverName,
+      receiverEmail: effectiveReceiverEmail,
+      message: rawMessage.trim(),
       readStatus: false,
       timestamp: nowIso,
     };
 
-    // 1. Save Message to Database (if MongoDB connected)
+    // 1. Save Message to MongoDB
     if (mongoose.connection.readyState === 1) {
       try {
         const dbMsg = await Message.create(newMessage);
         if (dbMsg && dbMsg._id) newMessage._id = dbMsg._id.toString();
-      } catch (dbErr) {}
+      } catch (dbErr) {
+        console.error("MongoDB message create error:", dbErr);
+      }
     }
 
+    // 2. Save Message to disk
     const inMemoryMessages = loadServerMessages();
     inMemoryMessages.push(newMessage);
     saveServerMessages(inMemoryMessages);
 
-    // 2. Create or Update Conversation
+    // 3. Create or Update Conversation
     let inMemoryConversations = loadServerConversations();
     let existingConvIndex = inMemoryConversations.findIndex(
       (c) => c.conversationId === conversationId
@@ -462,10 +590,10 @@ router.post("/", protect, async (req, res) => {
         specialization: req.user.specialization || "",
       },
       {
-        userId: cleanReceiverId,
-        name: cleanReceiverName,
-        role: cleanReceiverRole,
-        email: cleanReceiverEmail,
+        userId: effectiveReceiverId,
+        name: effectiveReceiverName,
+        role: effectiveReceiverRole,
+        email: effectiveReceiverEmail,
         department: receiverUser ? receiverUser.department : "",
         year: receiverUser ? receiverUser.year : "",
         specialization: receiverUser ? receiverUser.specialization : "",
@@ -475,7 +603,6 @@ router.post("/", protect, async (req, res) => {
     let convObj;
 
     if (existingConvIndex >= 0) {
-      // Update existing conversation
       convObj = inMemoryConversations[existingConvIndex];
       convObj.lastMessage = newMessage.message;
       convObj.lastMessageTime = nowIso;
@@ -484,23 +611,22 @@ router.post("/", protect, async (req, res) => {
       convObj.participantDetails = participantDetails;
 
       if (!convObj.unreadCount) convObj.unreadCount = {};
-      convObj.unreadCount[cleanReceiverId] = (convObj.unreadCount[cleanReceiverId] || 0) + 1;
+      convObj.unreadCount[effectiveReceiverId] = (convObj.unreadCount[effectiveReceiverId] || 0) + 1;
       convObj.unreadCount[senderId] = 0;
 
       inMemoryConversations[existingConvIndex] = convObj;
     } else {
-      // Create new conversation
       convObj = {
         _id: "conv_" + Date.now() + "_" + Math.floor(Math.random() * 1000),
         id: "conv_" + Date.now() + "_" + Math.floor(Math.random() * 1000),
         conversationId,
-        participants: [senderId, cleanReceiverId],
+        participants: [senderId, effectiveReceiverId],
         participantDetails,
         lastMessage: newMessage.message,
         lastMessageTime: nowIso,
         lastSenderId: senderId,
         unreadCount: {
-          [cleanReceiverId]: 1,
+          [effectiveReceiverId]: 1,
           [senderId]: 0,
         },
         createdAt: nowIso,
@@ -518,12 +644,12 @@ router.post("/", protect, async (req, res) => {
           { conversationId },
           {
             conversationId,
-            participants: [senderId, cleanReceiverId],
+            participants: [senderId, effectiveReceiverId],
             participantDetails,
             lastMessage: newMessage.message,
             lastMessageTime: new Date(nowIso),
             lastSenderId: senderId,
-            $inc: { [`unreadCount.${cleanReceiverId}`]: 1 },
+            $inc: { [`unreadCount.${effectiveReceiverId}`]: 1 },
             $set: { [`unreadCount.${senderId}`]: 0 },
           },
           { upsert: true, new: true }
@@ -538,9 +664,9 @@ router.post("/", protect, async (req, res) => {
       messageData: newMessage,
       conversation: {
         conversationId,
-        contactId: cleanReceiverId,
-        contactName: cleanReceiverName,
-        contactRole: cleanReceiverRole,
+        contactId: effectiveReceiverId,
+        contactName: effectiveReceiverName,
+        contactRole: effectiveReceiverRole,
         lastMessage: newMessage.message,
         lastMessageTime: nowIso,
       },
@@ -553,63 +679,43 @@ router.post("/", protect, async (req, res) => {
 
 // ==========================================================================
 // 5. MARK CONVERSATION AS READ
-//    Supports PUT /api/messages/conversation/:conversationId/read
-//    and PUT /api/messages/:conversationId/read
 // ==========================================================================
-function handleMarkConversationRead(req, res) {
+async function handleMarkConversationRead(req, res) {
   try {
     const { conversationId } = req.params;
     const currentUserId = String(req.user._id || req.user.id);
-    const currentUserEmail = (req.user.email || "").toLowerCase();
+
     const inMemoryMessages = loadServerMessages();
-    let inMemoryConversations = loadServerConversations();
+    let updated = false;
 
-    let updatedMessages = false;
     inMemoryMessages.forEach((m) => {
-      const match =
-        m.conversationId === conversationId ||
-        m.senderId === conversationId ||
-        m.receiverId === conversationId ||
-        (m.receiverEmail && m.receiverEmail.toLowerCase() === currentUserEmail);
-
-      const isReceiverMe =
-        String(m.receiverId) === currentUserId ||
-        (m.receiverEmail && m.receiverEmail.toLowerCase() === currentUserEmail);
-
-      if (match && isReceiverMe && !m.readStatus) {
+      const matchConv = m.conversationId === conversationId || m.conversationId === [currentUserId, conversationId].sort().join("_");
+      if (matchConv && String(m.receiverId) === currentUserId && !m.readStatus) {
         m.readStatus = true;
-        updatedMessages = true;
+        updated = true;
       }
     });
 
-    if (updatedMessages) {
+    if (updated) {
       saveServerMessages(inMemoryMessages);
-      if (mongoose.connection.readyState === 1) {
-        try {
-          Message.updateMany(
-            { receiverId: currentUserId, readStatus: false },
-            { readStatus: true }
-          ).exec();
-        } catch (e) {}
-      }
     }
 
-    // Reset unread count in conversations
-    const conv = inMemoryConversations.find(
-      (c) =>
-        c.conversationId === conversationId ||
-        (Array.isArray(c.participants) && c.participants.includes(conversationId))
-    );
-
-    if (conv && conv.unreadCount) {
-      conv.unreadCount[currentUserId] = 0;
-      saveServerConversations(inMemoryConversations);
+    if (mongoose.connection.readyState === 1) {
+      try {
+        await Message.updateMany(
+          { conversationId, receiverId: currentUserId, readStatus: false },
+          { readStatus: true }
+        );
+        await Conversation.findOneAndUpdate(
+          { conversationId },
+          { $set: { [`unreadCount.${currentUserId}`]: 0 } }
+        );
+      } catch (e) {}
     }
 
     return res.json({ success: true, message: "Conversation marked as read." });
   } catch (error) {
-    console.error("Mark Read Error:", error);
-    res.status(500).json({ success: false, message: "Failed to mark conversation as read." });
+    res.status(500).json({ success: false, message: "Failed to mark read." });
   }
 }
 
