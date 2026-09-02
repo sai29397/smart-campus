@@ -26,14 +26,14 @@ function loadServerMessages() {
       const list = JSON.parse(data);
       if (Array.isArray(list)) return list;
     }
-  } catch (e) {}
+  } catch (e) { }
   return [];
 }
 
 function saveServerMessages(list) {
   try {
     fs.writeFileSync(messagesFilePath, JSON.stringify(list, null, 2), "utf8");
-  } catch (e) {}
+  } catch (e) { }
 }
 
 function loadServerConversations() {
@@ -43,14 +43,14 @@ function loadServerConversations() {
       const list = JSON.parse(data);
       if (Array.isArray(list)) return list;
     }
-  } catch (e) {}
+  } catch (e) { }
   return [];
 }
 
 function saveServerConversations(list) {
   try {
     fs.writeFileSync(conversationsFilePath, JSON.stringify(list, null, 2), "utf8");
-  } catch (e) {}
+  } catch (e) { }
 }
 
 function loadServerUsers() {
@@ -58,7 +58,7 @@ function loadServerUsers() {
     if (fs.existsSync(usersFilePath)) {
       return JSON.parse(fs.readFileSync(usersFilePath, "utf8")) || [];
     }
-  } catch (e) {}
+  } catch (e) { }
   return [];
 }
 
@@ -127,7 +127,7 @@ async function findUserDetails(userIdOrEmail) {
           specialization: dbUser.specialization || "",
         };
       }
-    } catch (e) {}
+    } catch (e) { }
   }
 
   // 2. Fallback to users.json
@@ -165,7 +165,7 @@ router.get("/contacts", protect, async (req, res) => {
             specialization: u.specialization || (u.role === "faculty" ? "Faculty" : "General CSE"),
           }));
         }
-      } catch (e) {}
+      } catch (e) { }
     }
 
     if (allUsers.length === 0) {
@@ -246,7 +246,7 @@ router.get("/conversations", protect, async (req, res) => {
             }
           });
         }
-      } catch (e) {}
+      } catch (e) { }
     }
 
     const convMap = {};
@@ -421,7 +421,7 @@ async function handleGetConversationMessages(req, res) {
         if (Array.isArray(dbMsgs)) {
           allFoundMessages = dbMsgs;
         }
-      } catch (e) {}
+      } catch (e) { }
     }
 
     // 2. Query disk JSON messages
@@ -493,7 +493,7 @@ async function handleGetConversationMessages(req, res) {
             },
             { readStatus: true }
           );
-        } catch (e) {}
+        } catch (e) { }
       }
     }
 
@@ -688,7 +688,7 @@ router.post("/", protect, async (req, res) => {
           },
           { upsert: true, new: true }
         );
-      } catch (e) {}
+      } catch (e) { }
     }
 
     // 4. Emit real-time WebSocket event via Socket.IO if available
@@ -698,7 +698,7 @@ router.post("/", protect, async (req, res) => {
         io.to(String(effectiveReceiverId)).emit("receive_direct_message", newMessage);
         io.to(String(senderId)).emit("message_sent_confirm", newMessage);
       }
-    } catch (e) {}
+    } catch (e) { }
 
     return res.status(201).json({
       success: true,
@@ -761,7 +761,7 @@ async function handleMarkConversationRead(req, res) {
           },
           { readStatus: true }
         );
-      } catch (e) {}
+      } catch (e) { }
     }
 
     return res.json({ success: true, message: "Conversation marked as read." });
