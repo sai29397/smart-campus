@@ -434,7 +434,14 @@ function setupForgotPasswordFlow() {
  * Navigate user to their respective dashboard
  */
 function redirectToRoleDashboard(role) {
-  window.location.href = "dashboard.html";
+  const r = (role || "student").toLowerCase();
+  if (r === "faculty") {
+    window.location.href = "dashboard.html#faculty";
+  } else if (r === "admin" || r === "administration") {
+    window.location.href = "dashboard.html#admin";
+  } else {
+    window.location.href = "dashboard.html#student";
+  }
 }
 
 /**
