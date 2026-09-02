@@ -238,5 +238,37 @@
     "message": "Hello Sir",
     "readStatus": true,
     "timestamp": "2026-09-02T02:46:40.435Z"
+  },
+  {
+    "_id": "msg_1788317523505_1445",
+    "id": "msg_1788317523505_4207",
+    "conversationId": "usr_faculty_1--usr_student_1",
+    "senderId": "usr_faculty_1",
+    "senderRole": "faculty",
+    "senderName": "Dr. Sarah Jenkins",
+    "senderEmail": "faculty@campus.edu",
+    "receiverId": "usr_student_1",
+    "receiverRole": "student",
+    "receiverName": "Alex Johnson",
+    "receiverEmail": "student@campus.edu",
+    "message": "Hello Student",
+    "readStatus": true,
+    "timestamp": "2026-09-02T02:52:03.505Z"
+  },
+  {
+    "_id": "msg_1788317523526_9354",
+    "id": "msg_1788317523526_4526",
+    "conversationId": "usr_faculty_1--usr_student_1",
+    "senderId": "usr_student_1",
+    "senderRole": "student",
+    "senderName": "Alex Johnson",
+    "senderEmail": "student@campus.edu",
+    "receiverId": "usr_faculty_1",
+    "receiverRole": "faculty",
+    "receiverName": "Dr. Sarah Jenkins",
+    "receiverEmail": "faculty@campus.edu",
+    "message": "Hello Sir",
+    "readStatus": true,
+    "timestamp": "2026-09-02T02:52:03.526Z"
   }
 ]
