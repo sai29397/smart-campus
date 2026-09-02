@@ -1,5 +1,45 @@
 [
   {
+    "_id": "sub_1788312850887",
+    "id": "sub_1788312850887",
+    "subjectName": "Cloud Systems & DevOps",
+    "subjectCode": "CSCD401",
+    "facultyId": "usr_faculty_1",
+    "facultyName": "Dr. Sarah Jenkins",
+    "department": "Computer Science",
+    "assignmentType": "multiple_years",
+    "studentIds": [],
+    "years": [
+      "1st Year",
+      "4th Year"
+    ],
+    "specializations": [
+      "General CSE"
+    ],
+    "semester": "Semester 1",
+    "createdAt": "2026-09-02T01:34:10.887Z"
+  },
+  {
+    "_id": "sub_1788312790874",
+    "id": "sub_1788312790874",
+    "subjectName": "Cloud Systems & DevOps",
+    "subjectCode": "CSCD401",
+    "facultyId": "usr_faculty_1",
+    "facultyName": "Dr. Sarah Jenkins",
+    "department": "Computer Science",
+    "assignmentType": "multiple_years",
+    "studentIds": [],
+    "years": [
+      "1st Year",
+      "4th Year"
+    ],
+    "specializations": [
+      "General CSE"
+    ],
+    "semester": "Semester 1",
+    "createdAt": "2026-09-02T01:33:10.874Z"
+  },
+  {
     "_id": "sub_1788290829101",
     "id": "sub_1788290829101",
     "subjectName": "Advanced Cloud Arch",

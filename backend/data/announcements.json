@@ -1,5 +1,71 @@
 [
   {
+    "_id": "ann_cls_1788312850938_679",
+    "id": "ann_cls_1788312850938_846",
+    "title": "❌ CLASS CANCELLED: Computer Architecture (CS204)",
+    "description": "Your Computer Architecture class on 2026-09-11 (11:00 AM – 12:00 PM) has been CANCELLED.\nReason: Faculty attending national conference\nFaculty: Dr. Sarah Jenkins.\nStudents do not need to attend this lecture.",
+    "department": "Computer Science",
+    "year": "1st Year",
+    "priority": "Urgent",
+    "author": "Campus Administrator",
+    "createdAt": "2026-09-02T01:34:10.938Z"
+  },
+  {
+    "_id": "ann_cls_1788312850932_620",
+    "id": "ann_cls_1788312850932_503",
+    "title": "🔄 CLASS RESCHEDULED: Computer Architecture (CS204)",
+    "description": "Your Computer Architecture class has been RESCHEDULED.\nPrevious: 2026-09-10 (09:00 AM – 10:00 AM) at B Block – 3rd Floor – Room B-302\nNew Schedule: 2026-09-11 (11:00 AM – 12:00 PM) at C Block – 1st Floor – Room C-105.",
+    "department": "Computer Science",
+    "year": "1st Year",
+    "priority": "Important",
+    "author": "Campus Administrator",
+    "createdAt": "2026-09-02T01:34:10.932Z"
+  },
+  {
+    "_id": "ann_cls_1788312850923_318",
+    "id": "ann_cls_1788312850923_350",
+    "title": "📅 New Class Scheduled: Computer Architecture (CS204)",
+    "description": "Class is scheduled for 1st Year (General CSE) on 2026-09-10 from 09:00 AM to 10:00 AM at B Block – 3rd Floor – Room B-302. Faculty: Dr. Sarah Jenkins.",
+    "department": "Computer Science",
+    "year": "1st Year",
+    "priority": "Normal",
+    "author": "Campus Administration",
+    "createdAt": "2026-09-02T01:34:10.923Z"
+  },
+  {
+    "_id": "ann_cls_1788312790941_250",
+    "id": "ann_cls_1788312790941_852",
+    "title": "❌ CLASS CANCELLED: Computer Architecture (CS204)",
+    "description": "Your Computer Architecture class on 2026-09-11 (11:00 AM – 12:00 PM) has been CANCELLED.\nReason: Faculty attending national conference\nFaculty: Dr. Sarah Jenkins.\nStudents do not need to attend this lecture.",
+    "department": "Computer Science",
+    "year": "1st Year",
+    "priority": "Urgent",
+    "author": "Campus Administrator",
+    "createdAt": "2026-09-02T01:33:10.941Z"
+  },
+  {
+    "_id": "ann_cls_1788312790932_860",
+    "id": "ann_cls_1788312790932_238",
+    "title": "🔄 CLASS RESCHEDULED: Computer Architecture (CS204)",
+    "description": "Your Computer Architecture class has been RESCHEDULED.\nPrevious: 2026-09-10 (09:00 AM – 10:00 AM) at B Block – 3rd Floor – Room B-302\nNew Schedule: 2026-09-11 (11:00 AM – 12:00 PM) at C Block – 1st Floor – Room C-105.",
+    "department": "Computer Science",
+    "year": "1st Year",
+    "priority": "Important",
+    "author": "Campus Administrator",
+    "createdAt": "2026-09-02T01:33:10.932Z"
+  },
+  {
+    "_id": "ann_cls_1788312790921_743",
+    "id": "ann_cls_1788312790921_182",
+    "title": "📅 New Class Scheduled: Computer Architecture (CS204)",
+    "description": "Class is scheduled for 1st Year (General CSE) on 2026-09-10 from 09:00 AM to 10:00 AM at B Block – 3rd Floor – Room B-302. Faculty: Dr. Sarah Jenkins.",
+    "department": "Computer Science",
+    "year": "1st Year",
+    "priority": "Normal",
+    "author": "Campus Administration",
+    "createdAt": "2026-09-02T01:33:10.921Z"
+  },
+  {
     "_id": "ann_cls_1788304997565_932",
     "id": "ann_cls_1788304997565_725",
     "title": "❌ CLASS CANCELLED: Basic Electronics & Digital Circuits (EC101)",

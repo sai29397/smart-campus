@@ -80,7 +80,7 @@
     "receiverRole": "student",
     "receiverName": "Alex Johnson",
     "message": "hi",
-    "readStatus": false,
+    "readStatus": true,
     "timestamp": "2026-09-01T20:08:43.365Z"
   },
   {
@@ -372,7 +372,7 @@
     "receiverName": "Dr. Sarah Jenkins",
     "receiverEmail": "faculty@campus.edu",
     "message": "hii",
-    "readStatus": false,
+    "readStatus": true,
     "timestamp": "2026-09-02T01:07:43.971Z"
   },
   {
@@ -390,5 +390,69 @@
     "message": "hii",
     "readStatus": false,
     "timestamp": "2026-09-02T01:12:14.599Z"
+  },
+  {
+    "_id": "msg_1788312790637_9114",
+    "id": "msg_1788312790637_4187",
+    "conversationId": "usr_faculty_1_usr_student_1",
+    "senderId": "usr_student_1",
+    "senderRole": "student",
+    "senderName": "Alex Johnson",
+    "senderEmail": "student@campus.edu",
+    "receiverId": "usr_faculty_1",
+    "receiverRole": "faculty",
+    "receiverName": "Dr. Sarah Jenkins",
+    "receiverEmail": "faculty@campus.edu",
+    "message": "Hello Dr. Sarah! This is a test message from Student Alex.",
+    "readStatus": false,
+    "timestamp": "2026-09-02T01:33:10.637Z"
+  },
+  {
+    "_id": "msg_1788312790693_52",
+    "id": "msg_1788312790693_5171",
+    "conversationId": "usr_faculty_1_usr_student_1",
+    "senderId": "usr_faculty_1",
+    "senderRole": "faculty",
+    "senderName": "Dr. Sarah Jenkins",
+    "senderEmail": "faculty@campus.edu",
+    "receiverId": "usr_student_1",
+    "receiverRole": "student",
+    "receiverName": "Alex Johnson",
+    "receiverEmail": "student@campus.edu",
+    "message": "Hello Alex! I received your message. See you in class.",
+    "readStatus": true,
+    "timestamp": "2026-09-02T01:33:10.693Z"
+  },
+  {
+    "_id": "msg_1788312850812_1174",
+    "id": "msg_1788312850812_9829",
+    "conversationId": "usr_faculty_1_usr_student_1",
+    "senderId": "usr_student_1",
+    "senderRole": "student",
+    "senderName": "Alex Johnson",
+    "senderEmail": "student@campus.edu",
+    "receiverId": "usr_faculty_1",
+    "receiverRole": "faculty",
+    "receiverName": "Dr. Sarah Jenkins",
+    "receiverEmail": "faculty@campus.edu",
+    "message": "Hello Dr. Sarah! This is a test message from Student Alex.",
+    "readStatus": false,
+    "timestamp": "2026-09-02T01:34:10.812Z"
+  },
+  {
+    "_id": "msg_1788312850876_9063",
+    "id": "msg_1788312850876_7734",
+    "conversationId": "usr_faculty_1_usr_student_1",
+    "senderId": "usr_faculty_1",
+    "senderRole": "faculty",
+    "senderName": "Dr. Sarah Jenkins",
+    "senderEmail": "faculty@campus.edu",
+    "receiverId": "usr_student_1",
+    "receiverRole": "student",
+    "receiverName": "Alex Johnson",
+    "receiverEmail": "student@campus.edu",
+    "message": "Hello Alex! I received your message. See you in class.",
+    "readStatus": true,
+    "timestamp": "2026-09-02T01:34:10.876Z"
   }
 ]

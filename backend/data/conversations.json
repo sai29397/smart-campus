@@ -1,5 +1,42 @@
 [
   {
+    "_id": "conv_1788312790638_488",
+    "id": "conv_1788312790638_141",
+    "conversationId": "usr_faculty_1_usr_student_1",
+    "participants": [
+      "usr_student_1",
+      "usr_faculty_1"
+    ],
+    "participantDetails": [
+      {
+        "userId": "usr_faculty_1",
+        "name": "Dr. Sarah Jenkins",
+        "role": "faculty",
+        "email": "faculty@campus.edu",
+        "department": "Computer Science",
+        "year": "Faculty/Staff",
+        "specialization": "General CSE"
+      },
+      {
+        "userId": "usr_student_1",
+        "name": "Alex Johnson",
+        "role": "student",
+        "email": "student@campus.edu",
+        "department": "Computer Science",
+        "year": "1st Year"
+      }
+    ],
+    "lastMessage": "Hello Alex! I received your message. See you in class.",
+    "lastMessageTime": "2026-09-02T01:34:10.876Z",
+    "lastSenderId": "usr_faculty_1",
+    "unreadCount": {
+      "usr_faculty_1": 0,
+      "usr_student_1": 1
+    },
+    "createdAt": "2026-09-02T01:33:10.637Z",
+    "updatedAt": "2026-09-02T01:34:10.876Z"
+  },
+  {
     "_id": "conv_1788311534601_237",
     "id": "conv_1788311534601_66",
     "conversationId": "usr_1788309805674_usr_1788310305859",

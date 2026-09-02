@@ -1,5 +1,73 @@
 [
   {
+    "_id": "cls_1788312850921",
+    "id": "cls_1788312850921",
+    "subjectId": "sub_1788312850921",
+    "subjectName": "Computer Architecture",
+    "subjectCode": "CS204",
+    "facultyId": "usr_faculty_1",
+    "facultyName": "Dr. Sarah Jenkins",
+    "facultyEmail": "faculty@campus.edu",
+    "years": [
+      "1st Year"
+    ],
+    "specialization": "General CSE",
+    "department": "Computer Science",
+    "section": "Section A",
+    "date": "2026-09-11",
+    "startTime": "11:00 AM",
+    "endTime": "12:00 PM",
+    "block": "C Block",
+    "floor": "1st Floor",
+    "roomNumber": "C-105",
+    "venue": "C Block – 1st Floor – Room C-105",
+    "status": "Cancelled",
+    "cancellationReason": "Faculty attending national conference",
+    "previousSchedule": {
+      "date": "2026-09-10",
+      "startTime": "09:00 AM",
+      "endTime": "10:00 AM",
+      "venue": "B Block – 3rd Floor – Room B-302"
+    },
+    "createdBy": "Campus Administrator",
+    "createdAt": "2026-09-02T01:34:10.921Z",
+    "updatedAt": "2026-09-02T01:34:10.937Z"
+  },
+  {
+    "_id": "cls_1788312790917",
+    "id": "cls_1788312790917",
+    "subjectId": "sub_1788312790917",
+    "subjectName": "Computer Architecture",
+    "subjectCode": "CS204",
+    "facultyId": "usr_faculty_1",
+    "facultyName": "Dr. Sarah Jenkins",
+    "facultyEmail": "faculty@campus.edu",
+    "years": [
+      "1st Year"
+    ],
+    "specialization": "General CSE",
+    "department": "Computer Science",
+    "section": "Section A",
+    "date": "2026-09-11",
+    "startTime": "11:00 AM",
+    "endTime": "12:00 PM",
+    "block": "C Block",
+    "floor": "1st Floor",
+    "roomNumber": "C-105",
+    "venue": "C Block – 1st Floor – Room C-105",
+    "status": "Cancelled",
+    "cancellationReason": "Faculty attending national conference",
+    "previousSchedule": {
+      "date": "2026-09-10",
+      "startTime": "09:00 AM",
+      "endTime": "10:00 AM",
+      "venue": "B Block – 3rd Floor – Room B-302"
+    },
+    "createdBy": "Campus Administrator",
+    "createdAt": "2026-09-02T01:33:10.917Z",
+    "updatedAt": "2026-09-02T01:33:10.940Z"
+  },
+  {
     "_id": "cls_101",
     "id": "cls_101",
     "subjectId": "sub_101",

@@ -1,5 +1,104 @@
 [
   {
+    "userId": "usr_admin_1",
+    "email": "admin@campus.edu",
+    "name": "Campus Administrator",
+    "role": "admin",
+    "department": "Campus Administration",
+    "year": "Staff",
+    "ip": "::1",
+    "userAgent": "Mozilla/5.0 (Windows NT; Windows NT 10.0; en-US) WindowsPowerShell/5.1.26100.9278",
+    "timestamp": "2026-09-02T01:34:10.806Z"
+  },
+  {
+    "userId": "usr_faculty_1",
+    "email": "faculty@campus.edu",
+    "name": "Dr. Sarah Jenkins",
+    "role": "faculty",
+    "department": "Computer Science",
+    "year": "Faculty/Staff",
+    "ip": "::1",
+    "userAgent": "Mozilla/5.0 (Windows NT; Windows NT 10.0; en-US) WindowsPowerShell/5.1.26100.9278",
+    "timestamp": "2026-09-02T01:34:10.746Z"
+  },
+  {
+    "userId": "usr_student_1",
+    "email": "student@campus.edu",
+    "name": "Alex Johnson",
+    "role": "student",
+    "department": "Computer Science",
+    "year": "1st Year",
+    "ip": "::1",
+    "userAgent": "Mozilla/5.0 (Windows NT; Windows NT 10.0; en-US) WindowsPowerShell/5.1.26100.9278",
+    "timestamp": "2026-09-02T01:34:10.664Z"
+  },
+  {
+    "userId": "usr_admin_1",
+    "email": "admin@campus.edu",
+    "name": "Campus Administrator",
+    "role": "admin",
+    "department": "Campus Administration",
+    "year": "Staff",
+    "ip": "::1",
+    "userAgent": "Mozilla/5.0 (Windows NT; Windows NT 10.0; en-US) WindowsPowerShell/5.1.26100.9278",
+    "timestamp": "2026-09-02T01:33:10.631Z"
+  },
+  {
+    "userId": "usr_faculty_1",
+    "email": "faculty@campus.edu",
+    "name": "Dr. Sarah Jenkins",
+    "role": "faculty",
+    "department": "Computer Science",
+    "year": "Faculty/Staff",
+    "ip": "::1",
+    "userAgent": "Mozilla/5.0 (Windows NT; Windows NT 10.0; en-US) WindowsPowerShell/5.1.26100.9278",
+    "timestamp": "2026-09-02T01:33:10.573Z"
+  },
+  {
+    "userId": "usr_student_1",
+    "email": "student@campus.edu",
+    "name": "Alex Johnson",
+    "role": "student",
+    "department": "Computer Science",
+    "year": "1st Year",
+    "ip": "::1",
+    "userAgent": "Mozilla/5.0 (Windows NT; Windows NT 10.0; en-US) WindowsPowerShell/5.1.26100.9278",
+    "timestamp": "2026-09-02T01:33:10.492Z"
+  },
+  {
+    "userId": "usr_faculty_1",
+    "email": "faculty@campus.edu",
+    "name": "Dr. Sarah Jenkins",
+    "role": "faculty",
+    "department": "Computer Science",
+    "year": "Faculty/Staff",
+    "ip": "::1",
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36",
+    "timestamp": "2026-09-02T01:31:24.166Z"
+  },
+  {
+    "userId": "usr_student_1",
+    "email": "student@campus.edu",
+    "name": "Alex Johnson",
+    "role": "student",
+    "department": "Computer Science",
+    "year": "1st Year",
+    "ip": "::1",
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36",
+    "timestamp": "2026-09-02T01:28:47.175Z"
+  },
+  {
+    "userId": "usr_faculty_1",
+    "email": "faculty@campus.edu",
+    "name": "Dr. Sarah Jenkins",
+    "role": "faculty",
+    "department": "Computer Science",
+    "year": "Faculty/Staff",
+    "ip": "::1",
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36",
+    "timestamp": "2026-09-02T01:28:44.183Z"
+  },
+  {
     "userId": "usr_1788310305859",
     "email": "vtu29853@veltech.edu.in",
     "name": "sai ganesh",

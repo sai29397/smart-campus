@@ -535,6 +535,7 @@ router.post("/", protect, async (req, res) => {
       success: true,
       message: "Message delivered and permanently saved.",
       data: newMessage,
+      messageData: newMessage,
       conversation: {
         conversationId,
         contactId: cleanReceiverId,
