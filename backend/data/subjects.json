@@ -1,101 +1,5 @@
 [
   {
-    "_id": "sub_1788312850887",
-    "id": "sub_1788312850887",
-    "subjectName": "Cloud Systems & DevOps",
-    "subjectCode": "CSCD401",
-    "facultyId": "usr_faculty_1",
-    "facultyName": "Dr. Sarah Jenkins",
-    "department": "Computer Science",
-    "assignmentType": "multiple_years",
-    "studentIds": [],
-    "years": [
-      "1st Year",
-      "4th Year"
-    ],
-    "specializations": [
-      "General CSE"
-    ],
-    "semester": "Semester 1",
-    "createdAt": "2026-09-02T01:34:10.887Z"
-  },
-  {
-    "_id": "sub_1788312790874",
-    "id": "sub_1788312790874",
-    "subjectName": "Cloud Systems & DevOps",
-    "subjectCode": "CSCD401",
-    "facultyId": "usr_faculty_1",
-    "facultyName": "Dr. Sarah Jenkins",
-    "department": "Computer Science",
-    "assignmentType": "multiple_years",
-    "studentIds": [],
-    "years": [
-      "1st Year",
-      "4th Year"
-    ],
-    "specializations": [
-      "General CSE"
-    ],
-    "semester": "Semester 1",
-    "createdAt": "2026-09-02T01:33:10.874Z"
-  },
-  {
-    "_id": "sub_1788290829101",
-    "id": "sub_1788290829101",
-    "subjectName": "Advanced Cloud Arch",
-    "subjectCode": "CSCC307",
-    "facultyId": "usr_faculty_1",
-    "facultyName": "Dr. Sarah Jenkins",
-    "department": "Computer Science",
-    "assignmentType": "multiple_years",
-    "studentIds": [],
-    "years": [
-      "3rd Year",
-      "4th Year"
-    ],
-    "specializations": [],
-    "semester": "Semester 6",
-    "createdAt": "2026-09-01T19:27:09.101Z"
-  },
-  {
-    "_id": "sub_1788290829094",
-    "id": "sub_1788290829094",
-    "subjectName": "Big Data Pipelines",
-    "subjectCode": "CSDS305",
-    "facultyId": "usr_faculty_1",
-    "facultyName": "Dr. Sarah Jenkins",
-    "department": "Computer Science",
-    "assignmentType": "specialization",
-    "studentIds": [],
-    "years": [
-      "3rd Year"
-    ],
-    "specializations": [
-      "Data Science"
-    ],
-    "semester": "Semester 5",
-    "createdAt": "2026-09-01T19:27:09.094Z"
-  },
-  {
-    "_id": "sub_1788290829080",
-    "id": "sub_1788290829080",
-    "subjectName": "Deep Neural Nets Lab",
-    "subjectCode": "CSAI309",
-    "facultyId": "usr_faculty_1",
-    "facultyName": "Dr. Sarah Jenkins",
-    "department": "Computer Science",
-    "assignmentType": "specific_student",
-    "studentIds": [
-      "usr_1788290798643"
-    ],
-    "years": [
-      "1st Year"
-    ],
-    "specializations": [],
-    "semester": "Semester 5",
-    "createdAt": "2026-09-01T19:27:09.080Z"
-  },
-  {
     "_id": "sub_101",
     "id": "sub_101",
     "subjectName": "Engineering Mathematics I",
@@ -114,7 +18,7 @@
       "Data Science"
     ],
     "semester": "Semester 1",
-    "createdAt": "2026-09-01T19:26:21.339Z"
+    "createdAt": "2026-09-01T08:00:00.000Z"
   },
   {
     "_id": "sub_102",
@@ -136,7 +40,7 @@
       "Cyber Security"
     ],
     "semester": "Semester 1",
-    "createdAt": "2026-09-01T19:26:21.339Z"
+    "createdAt": "2026-09-01T08:00:00.000Z"
   },
   {
     "_id": "sub_201",
@@ -156,7 +60,7 @@
       "Software Engineering"
     ],
     "semester": "Semester 3",
-    "createdAt": "2026-09-01T19:26:21.339Z"
+    "createdAt": "2026-09-01T08:00:00.000Z"
   },
   {
     "_id": "sub_301",
@@ -175,7 +79,7 @@
       "Artificial Intelligence and Machine Learning"
     ],
     "semester": "Semester 5",
-    "createdAt": "2026-09-01T19:26:21.339Z"
+    "createdAt": "2026-09-01T08:00:00.000Z"
   },
   {
     "_id": "sub_302",
@@ -194,7 +98,7 @@
       "Data Science"
     ],
     "semester": "Semester 5",
-    "createdAt": "2026-09-01T19:26:21.339Z"
+    "createdAt": "2026-09-01T08:00:00.000Z"
   },
   {
     "_id": "sub_303",
@@ -215,7 +119,7 @@
       "Data Science"
     ],
     "semester": "Semester 6",
-    "createdAt": "2026-09-01T19:26:21.339Z"
+    "createdAt": "2026-09-01T08:00:00.000Z"
   },
   {
     "_id": "sub_401",
@@ -234,6 +138,6 @@
       "Cloud Computing"
     ],
     "semester": "Semester 7",
-    "createdAt": "2026-09-01T19:26:21.339Z"
+    "createdAt": "2026-09-01T08:00:00.000Z"
   }
 ]

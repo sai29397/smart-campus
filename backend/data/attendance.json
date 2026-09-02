@@ -1,95 +1,5 @@
 [
   {
-    "_id": "att_1788312790901_937",
-    "id": "att_1788312790901_336",
-    "studentId": "usr_student_1",
-    "studentName": "Alex Johnson",
-    "studentEmail": "student@campus.edu",
-    "subjectId": "sub_101",
-    "subjectName": "Engineering Mathematics I",
-    "facultyId": "usr_faculty_1",
-    "date": "2026-09-02",
-    "status": "Present",
-    "year": "1st Year",
-    "specialization": "General CSE",
-    "markedAt": "2026-09-02T01:34:10.911Z"
-  },
-  {
-    "_id": "att_1788294035310_957",
-    "id": "att_1788294035310_70",
-    "studentId": "usr_1788287068278",
-    "studentName": "vimal",
-    "studentEmail": "saibudeti1@gmail.com",
-    "subjectId": "sub_102",
-    "subjectName": "Programming in C & Data Structures",
-    "facultyId": "usr_faculty_1",
-    "date": "2026-09-02",
-    "status": "Absent",
-    "year": "1st Year",
-    "specialization": "General CSE",
-    "markedAt": "2026-09-01T20:20:35.310Z"
-  },
-  {
-    "_id": "att_1788293866397_916",
-    "id": "att_1788293866397_743",
-    "studentId": "usr_1788290818939",
-    "studentName": "Manoj Kumar",
-    "studentEmail": "manoj_1st@campus.edu",
-    "subjectId": "sub_101",
-    "subjectName": "Engineering Mathematics I (MA101) - 1st Year",
-    "facultyId": "usr_1788291527038",
-    "date": "2026-09-01",
-    "status": "Present",
-    "year": "1st Year",
-    "specialization": "General CSE",
-    "markedAt": "2026-09-01T20:17:46.397Z"
-  },
-  {
-    "_id": "att_1788293866397_60",
-    "id": "att_1788293866397_826",
-    "studentId": "usr_1788287068278",
-    "studentName": "vimal",
-    "studentEmail": "saibudeti1@gmail.com",
-    "subjectId": "sub_101",
-    "subjectName": "Engineering Mathematics I (MA101) - 1st Year",
-    "facultyId": "usr_1788291527038",
-    "date": "2026-09-01",
-    "status": "Present",
-    "year": "1st Year",
-    "specialization": "General CSE",
-    "markedAt": "2026-09-01T20:17:46.397Z"
-  },
-  {
-    "_id": "att_1788293866395_934",
-    "id": "att_1788293866395_780",
-    "studentId": "usr_1788286214638",
-    "studentName": "vimal",
-    "studentEmail": "vtu29397@veltech.edu.in",
-    "subjectId": "sub_101",
-    "subjectName": "Engineering Mathematics I (MA101) - 1st Year",
-    "facultyId": "usr_1788291527038",
-    "date": "2026-09-01",
-    "status": "Present",
-    "year": "1st Year",
-    "specialization": "General CSE",
-    "markedAt": "2026-09-01T20:17:46.395Z"
-  },
-  {
-    "_id": "att_1788290829180_577",
-    "id": "att_1788290829180_933",
-    "studentId": "usr_1788290798643",
-    "studentName": "Rahul Sharma",
-    "studentEmail": "rahul_ai@campus.edu",
-    "subjectId": "sub_1788290829080",
-    "subjectName": "Deep Neural Nets Lab",
-    "facultyId": "usr_faculty_1",
-    "date": "2026-09-02",
-    "status": "Present",
-    "year": "3rd Year",
-    "specialization": "Artificial Intelligence and Machine Learning",
-    "markedAt": "2026-09-01T19:27:09.180Z"
-  },
-  {
     "_id": "att_1",
     "id": "att_1",
     "studentId": "usr_student_1",
@@ -102,7 +12,7 @@
     "status": "Present",
     "year": "1st Year",
     "specialization": "General CSE",
-    "markedAt": "2026-09-01T20:17:46.395Z"
+    "markedAt": "2026-09-01T10:00:00.000Z"
   },
   {
     "_id": "att_2",
@@ -117,6 +27,6 @@
     "status": "Present",
     "year": "1st Year",
     "specialization": "General CSE",
-    "markedAt": "2026-09-01T19:26:21.355Z"
+    "markedAt": "2026-09-01T10:00:00.000Z"
   }
 ]
