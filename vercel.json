@@ -28,6 +28,14 @@
       "dest": "/smart-campus/images/$1"
     },
     {
+      "src": "/dashboard.html",
+      "dest": "/smart-campus/dashboard.html"
+    },
+    {
+      "src": "/dashboard",
+      "dest": "/smart-campus/dashboard.html"
+    },
+    {
       "src": "/faculty-dashboard.html",
       "dest": "/smart-campus/faculty-dashboard.html"
     },
@@ -44,8 +52,24 @@
       "dest": "/smart-campus/login.html"
     },
     {
+      "src": "/login",
+      "dest": "/smart-campus/login.html"
+    },
+    {
       "src": "/register.html",
       "dest": "/smart-campus/register.html"
+    },
+    {
+      "src": "/register",
+      "dest": "/smart-campus/register.html"
+    },
+    {
+      "src": "/forgot-password.html",
+      "dest": "/smart-campus/forgot-password.html"
+    },
+    {
+      "src": "/index.html",
+      "dest": "/smart-campus/index.html"
     },
     {
       "src": "/",

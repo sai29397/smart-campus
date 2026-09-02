@@ -358,5 +358,21 @@
     "message": "hii",
     "readStatus": false,
     "timestamp": "2026-09-02T00:57:24.427Z"
+  },
+  {
+    "_id": "msg_1788311263971_8615",
+    "id": "msg_1788311263971_9954",
+    "conversationId": "usr_1788310305859_usr_faculty_1",
+    "senderId": "usr_1788310305859",
+    "senderRole": "student",
+    "senderName": "sai ganesh",
+    "senderEmail": "vtu29853@veltech.edu.in",
+    "receiverId": "usr_faculty_1",
+    "receiverRole": "faculty",
+    "receiverName": "Dr. Sarah Jenkins",
+    "receiverEmail": "faculty@campus.edu",
+    "message": "hii",
+    "readStatus": false,
+    "timestamp": "2026-09-02T01:07:43.971Z"
   }
 ]

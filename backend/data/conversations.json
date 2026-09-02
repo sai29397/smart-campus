@@ -1,5 +1,42 @@
 [
   {
+    "_id": "conv_1788311263973_150",
+    "id": "conv_1788311263973_116",
+    "conversationId": "usr_1788310305859_usr_faculty_1",
+    "participants": [
+      "usr_1788310305859",
+      "usr_faculty_1"
+    ],
+    "participantDetails": [
+      {
+        "userId": "usr_1788310305859",
+        "name": "sai ganesh",
+        "role": "student",
+        "email": "vtu29853@veltech.edu.in",
+        "department": "Electronics & Communication",
+        "year": "3rd Year",
+        "specialization": "General CSE"
+      },
+      {
+        "userId": "usr_faculty_1",
+        "name": "Dr. Sarah Jenkins",
+        "role": "faculty",
+        "email": "faculty@campus.edu",
+        "department": "Computer Science",
+        "year": "Faculty/Staff"
+      }
+    ],
+    "lastMessage": "hii",
+    "lastMessageTime": "2026-09-02T01:07:43.971Z",
+    "lastSenderId": "usr_1788310305859",
+    "unreadCount": {
+      "usr_faculty_1": 1,
+      "usr_1788310305859": 0
+    },
+    "createdAt": "2026-09-02T01:07:43.971Z",
+    "updatedAt": "2026-09-02T01:07:43.971Z"
+  },
+  {
     "_id": "conv_1788310644428_163",
     "id": "conv_1788310644428_759",
     "conversationId": "usr_1788287068278_usr_1788310305859",
