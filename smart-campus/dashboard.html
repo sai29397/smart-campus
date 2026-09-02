@@ -1069,13 +1069,21 @@
             <div class="section-body">
                 <div class="chat-container">
                     <div class="chat-sidebar">
-                        <div style="padding: 12px; border-bottom: 1px solid var(--border-color);">
+                        <div style="padding: 10px 12px; border-bottom: 1px solid var(--border-color); background: #f8fafc;">
+                            <div style="display: flex; gap: 6px; margin-bottom: 8px;">
+                                <button type="button" id="chatTabConversations" onclick="switchChatTab('conversations')" class="btn btn-sm btn-primary" style="flex: 1; font-size: 0.78rem; padding: 4px 8px;">
+                                    💬 Chats
+                                </button>
+                                <button type="button" id="chatTabDirectory" onclick="switchChatTab('directory')" class="btn btn-sm btn-outline" style="flex: 1; font-size: 0.78rem; padding: 4px 8px;">
+                                    👥 Directory
+                                </button>
+                            </div>
                             <input 
                                 type="text" 
-                                placeholder="Search contacts..." 
+                                placeholder="Search conversations / contacts..." 
                                 id="chatContactSearch" 
                                 oninput="filterChatContacts(this.value)"
-                                style="font-size: 0.85rem; padding: 6px 10px;"
+                                style="font-size: 0.82rem; padding: 6px 10px; width: 100%; border-radius: 6px;"
                             >
                         </div>
                         <div id="chatContactList" style="flex: 1; overflow-y: auto;"></div>

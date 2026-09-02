@@ -82,7 +82,7 @@ function initUnifiedSession() {
 
     renderAdminStats();
     loadAdminClasses();
-    loadChatContacts();
+    loadChatConversations();
     initAdminDateDefaults();
   } else if (role === "faculty") {
     // Faculty View
@@ -110,7 +110,7 @@ function initUnifiedSession() {
     loadFacultySubjects();
     loadStudentDirectory();
     loadFacultyPapers();
-    loadChatContacts();
+    loadChatConversations();
     initAttendanceDefaults();
   } else {
     // Student View
@@ -135,7 +135,7 @@ function initUnifiedSession() {
     loadStudentSubjects();
     loadStudentAttendance();
     loadStudentPapers();
-    loadChatContacts();
+    loadChatConversations();
   }
 
   // Logout handler
@@ -2130,6 +2130,116 @@ async function loadStudentAttendance() {
 // ==========================================================================
 // UNIFIED MESSAGING & CHAT CONTROLLER
 // ==========================================================================
+let currentChatTab = "conversations"; // 'conversations' or 'directory'
+let cachedConversations = [];
+let cachedContacts = [];
+
+function switchChatTab(tab) {
+  currentChatTab = tab;
+  const tabConvBtn = document.getElementById("chatTabConversations");
+  const tabDirBtn = document.getElementById("chatTabDirectory");
+
+  if (tabConvBtn && tabDirBtn) {
+    if (tab === "conversations") {
+      tabConvBtn.className = "btn btn-sm btn-primary";
+      tabDirBtn.className = "btn btn-sm btn-outline";
+    } else {
+      tabConvBtn.className = "btn btn-sm btn-outline";
+      tabDirBtn.className = "btn btn-sm btn-primary";
+    }
+  }
+
+  if (tab === "conversations") {
+    loadChatConversations();
+  } else {
+    loadChatContacts();
+  }
+}
+
+function formatChatTimestamp(iso) {
+  if (!iso) return "";
+  try {
+    const d = new Date(iso);
+    if (isNaN(d.getTime())) return "";
+    const now = new Date();
+    const isToday = d.toDateString() === now.toDateString();
+    if (isToday) {
+      return d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+    }
+    return d.toLocaleDateString([], { month: "short", day: "numeric" });
+  } catch (e) {
+    return "";
+  }
+}
+
+async function loadChatConversations() {
+  const contactListEl = document.getElementById("chatContactList");
+  if (!contactListEl) return;
+
+  try {
+    const res = await fetch(`${API_URL}/api/messages/conversations`, {
+      headers: getAuthHeaders(),
+    });
+    const convs = await res.json();
+    cachedConversations = Array.isArray(convs) ? convs : [];
+
+    if (cachedConversations.length === 0) {
+      contactListEl.innerHTML = `
+        <div style="padding: 24px 16px; font-size: 0.85rem; color: var(--text-muted); text-align: center;">
+          <div style="font-size: 1.8rem; margin-bottom: 8px;">📭</div>
+          <div style="font-weight: 700; color: var(--dark); margin-bottom: 4px;">No Conversations Yet</div>
+          <p style="font-size: 0.78rem; margin-bottom: 12px;">Start a new direct chat with any faculty or student.</p>
+          <button onclick="switchChatTab('directory')" class="btn btn-primary btn-sm" style="font-size: 0.75rem; width: 100%;">
+            👥 Open Campus Directory
+          </button>
+        </div>`;
+      return;
+    }
+
+    contactListEl.innerHTML = cachedConversations
+      .map((c) => {
+        const isSelected = activeChatPartner && String(activeChatPartner.id) === String(c.contactId);
+        const roleIcon = c.contactRole === "faculty" ? "👨‍🏫" : c.contactRole === "admin" ? "🏛️" : "👨‍🎓";
+        const roleLabel = c.contactRole === "faculty" ? "Faculty" : c.contactRole === "admin" ? "Admin" : c.contactYear || "Student";
+        const timeStr = formatChatTimestamp(c.lastMessageTime);
+
+        return `
+        <div class="chat-contact-item ${isSelected ? "active" : ""}" data-contact-id="${c.contactId}" onclick="quickMessageUser('${c.contactId}', '${escapeHtml(c.contactName)}', '${escapeHtml(c.contactYear || "")}', '${escapeHtml(c.contactSpecialization || "")}', '${c.contactRole || "user"}', '${escapeHtml(c.contactEmail || "")}')">
+          <div style="display: flex; gap: 10px; align-items: center; width: 100%; min-width: 0;">
+            <div style="font-size: 1.4rem; background: #e0f2fe; width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+              ${roleIcon}
+            </div>
+            <div style="flex: 1; min-width: 0;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2px;">
+                <span style="font-weight: 700; font-size: 0.88rem; color: var(--dark); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${escapeHtml(c.contactName)}</span>
+                <span style="font-size: 0.68rem; color: var(--text-muted); flex-shrink: 0; margin-left: 4px;">${timeStr}</span>
+              </div>
+              <div style="display: flex; justify-content: space-between; align-items: center;">
+                <span style="font-size: 0.78rem; color: var(--text-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 140px;">
+                  ${escapeHtml(c.lastMessage || "Click to open chat")}
+                </span>
+                ${
+                  c.unreadCount > 0
+                    ? `<span style="background: #ef4444; color: #fff; font-size: 0.68rem; font-weight: 800; border-radius: 10px; padding: 1px 6px; min-width: 18px; text-align: center;">${c.unreadCount}</span>`
+                    : `<span style="font-size: 0.65rem; color: #0284c7; background: #f0f9ff; padding: 1px 5px; border-radius: 4px; font-weight: 600;">${roleLabel}</span>`
+                }
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+      })
+      .join("");
+
+    if (!activeChatPartner && cachedConversations.length > 0) {
+      const first = cachedConversations[0];
+      quickMessageUser(first.contactId, first.contactName, first.contactYear || "", first.contactSpecialization || "", first.contactRole || "user", first.contactEmail || "");
+    }
+  } catch (err) {
+    console.error("Error loading chat conversations:", err);
+  }
+}
+
 async function loadChatContacts() {
   const contactListEl = document.getElementById("chatContactList");
   if (!contactListEl) return;
@@ -2139,28 +2249,34 @@ async function loadChatContacts() {
       headers: getAuthHeaders(),
     });
     const contacts = await res.json();
-    const list = Array.isArray(contacts) ? contacts : [];
+    cachedContacts = Array.isArray(contacts) ? contacts : [];
 
-    if (list.length === 0) {
+    if (cachedContacts.length === 0) {
       contactListEl.innerHTML = `<div style="padding: 20px; font-size: 0.85rem; color: var(--text-muted); text-align: center;">No campus contacts found.</div>`;
       return;
     }
 
-    contactListEl.innerHTML = list
+    contactListEl.innerHTML = cachedContacts
       .map((c) => {
         const cid = String(c.id || c._id);
         const isSelected = activeChatPartner && String(activeChatPartner.id) === cid;
-        const roleBadge = c.role === "faculty" ? "👨‍🏫 Faculty" : c.role === "admin" ? "🏛️ Admin" : `👨‍🎓 ${c.year || "Student"}`;
-        
+        const roleIcon = c.role === "faculty" ? "👨‍🏫" : c.role === "admin" ? "🏛️" : "👨‍🎓";
+        const roleBadge = c.role === "faculty" ? "Faculty" : c.role === "admin" ? "Admin" : `${c.year || "Student"} • ${c.specialization || "CSE"}`;
+
         return `
         <div class="chat-contact-item ${isSelected ? "active" : ""}" data-contact-id="${cid}" onclick="quickMessageUser('${cid}', '${escapeHtml(c.name)}', '${escapeHtml(c.year || "")}', '${escapeHtml(c.specialization || "")}', '${c.role || "user"}', '${escapeHtml(c.email || "")}')">
-          <div style="flex: 1; min-width: 0;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2px;">
-              <span style="font-weight: 700; font-size: 0.88rem; color: var(--dark); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${escapeHtml(c.name)}</span>
-              <span style="font-size: 0.68rem; background: #e0f2fe; color: #0284c7; padding: 1px 6px; border-radius: 10px; font-weight: 700;">${roleBadge}</span>
+          <div style="display: flex; gap: 10px; align-items: center; width: 100%; min-width: 0;">
+            <div style="font-size: 1.4rem; background: #e0f2fe; width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+              ${roleIcon}
             </div>
-            <div style="font-size: 0.75rem; color: var(--text-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
-              ${c.role === "faculty" ? c.department || "Faculty" : `${c.department || "CSE"} • ${c.specialization || "CSE"}`}
+            <div style="flex: 1; min-width: 0;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2px;">
+                <span style="font-weight: 700; font-size: 0.88rem; color: var(--dark); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${escapeHtml(c.name)}</span>
+                <span style="font-size: 0.68rem; background: #e0f2fe; color: #0284c7; padding: 1px 6px; border-radius: 10px; font-weight: 700;">${c.role === "faculty" ? "Faculty" : c.role === "admin" ? "Admin" : "Student"}</span>
+              </div>
+              <div style="font-size: 0.75rem; color: var(--text-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                ${escapeHtml(roleBadge)}
+              </div>
             </div>
           </div>
         </div>
@@ -2168,8 +2284,8 @@ async function loadChatContacts() {
       })
       .join("");
 
-    if (!activeChatPartner && list.length > 0) {
-      const first = list[0];
+    if (!activeChatPartner && cachedContacts.length > 0) {
+      const first = cachedContacts[0];
       quickMessageUser(first.id || first._id, first.name, first.year || "", first.specialization || "", first.role || "user", first.email || "");
     }
   } catch (err) {
@@ -2178,11 +2294,15 @@ async function loadChatContacts() {
 }
 
 function quickMessageUser(partnerId, partnerName, partnerYear, partnerSpec, partnerRole, partnerEmail) {
+  const currentUserId = currentUser ? String(currentUser.id || currentUser._id) : "usr_user_1";
+  const deterministicConvId = [currentUserId, String(partnerId)].sort().join("_");
+
   activeChatPartner = {
     id: String(partnerId),
     name: partnerName,
     email: partnerEmail || "",
     role: partnerRole || "user",
+    conversationId: deterministicConvId,
     info: partnerRole === "faculty" ? (partnerYear || "Faculty / Staff") : `${partnerYear || "Student"} • ${partnerSpec || "CSE"}`,
   };
 
@@ -2218,33 +2338,40 @@ async function refreshActiveChat() {
   if (!messagesArea) return;
 
   const currentUserId = currentUser ? String(currentUser.id || currentUser._id) : "usr_user_1";
-  const conversationId = [currentUserId, activeChatPartner.id].sort().join("_");
+  const conversationId = activeChatPartner.conversationId || [currentUserId, activeChatPartner.id].sort().join("_");
 
   try {
-    const res = await fetch(`${API_URL}/api/messages/${conversationId}`, {
+    const res = await fetch(`${API_URL}/api/messages/conversation/${conversationId}`, {
       headers: getAuthHeaders(),
     });
     const messages = await res.json();
-    const msgList = Array.isArray(messages) ? messages : [];
+    const msgList = Array.isArray(messages) ? messages : (messages.messages || []);
 
     if (msgList.length === 0) {
       messagesArea.innerHTML = `
         <div style="text-align: center; color: var(--text-muted); margin: auto; padding: 24px; font-size: 0.9rem;">
-          <div style="font-size: 2rem; margin-bottom: 8px;">💬</div>
-          <strong>No previous messages with ${escapeHtml(activeChatPartner.name)}.</strong><br>
-          <span style="font-size: 0.8rem;">Send a private message below to start the conversation!</span>
+          <div style="font-size: 2.2rem; margin-bottom: 8px;">💬</div>
+          <strong style="color: var(--dark);">No previous messages with ${escapeHtml(activeChatPartner.name)}.</strong><br>
+          <span style="font-size: 0.8rem;">Send your private message below to start this conversation!</span>
         </div>`;
       return;
     }
 
     const html = msgList
       .map((m) => {
-        const isMe = String(m.senderId) === currentUserId || (currentUser && m.senderEmail && m.senderEmail.toLowerCase() === (currentUser.email || "").toLowerCase());
+        const isMe =
+          String(m.senderId) === currentUserId ||
+          (currentUser && m.senderEmail && m.senderEmail.toLowerCase() === (currentUser.email || "").toLowerCase());
+
         return `
         <div class="message-bubble ${isMe ? "msg-sent" : "msg-received"}">
-          <div style="font-size: 0.72rem; font-weight: 700; margin-bottom: 3px; opacity: 0.9;">${isMe ? "You" : escapeHtml(m.senderName)}</div>
+          <div style="font-size: 0.72rem; font-weight: 700; margin-bottom: 3px; opacity: 0.9;">
+            ${isMe ? "You" : escapeHtml(m.senderName || activeChatPartner.name)}
+          </div>
           <div style="font-size: 0.9rem;">${escapeHtml(m.message)}</div>
-          <div class="msg-timestamp">${new Date(m.timestamp || Date.now()).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</div>
+          <div class="msg-timestamp">
+            ${new Date(m.timestamp || Date.now()).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+          </div>
         </div>
       `;
       })
@@ -2260,7 +2387,7 @@ async function refreshActiveChat() {
 async function sendChatMessage(e) {
   if (e && e.preventDefault) e.preventDefault();
   if (!activeChatPartner) {
-    alert("⚠️ Please select a contact from the left contacts list first.");
+    alert("⚠️ Please select a contact from the left list first.");
     return;
   }
 
@@ -2305,7 +2432,13 @@ async function sendChatMessage(e) {
       alert("❌ Message delivery error: " + (resData.message || "Failed to deliver message"));
     }
 
+    // Refresh active chat thread
     await refreshActiveChat();
+
+    // Refresh conversations list so new contact immediately appears in sidebar
+    if (currentChatTab === "conversations") {
+      loadChatConversations();
+    }
   } catch (err) {
     console.error("Failed to send message:", err);
   }
@@ -2313,7 +2446,7 @@ async function sendChatMessage(e) {
 
 function filterChatContacts(query) {
   const items = document.querySelectorAll(".chat-contact-item");
-  const q = query.toLowerCase();
+  const q = (query || "").toLowerCase().trim();
   items.forEach((item) => {
     item.style.display = item.innerText.toLowerCase().includes(q) ? "flex" : "none";
   });
@@ -2323,3 +2456,4 @@ function escapeHtml(str) {
   if (!str) return "";
   return String(str).replace(/[&<>"']/g, (m) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[m]));
 }
+

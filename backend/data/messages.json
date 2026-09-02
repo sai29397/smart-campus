@@ -52,7 +52,7 @@
     "receiverRole": "faculty",
     "receiverName": "Dr. Sarah Jenkins",
     "message": "Hi Professor, can I get feedback on my AI project?",
-    "readStatus": false,
+    "readStatus": true,
     "timestamp": "2026-09-01T20:08:13.918Z"
   },
   {
@@ -152,5 +152,61 @@
     "message": "Hello Vimal, Chapters 1 through 4 will be covered. Make sure to review the PYQs in the exam portal!",
     "readStatus": true,
     "timestamp": "2026-09-02T00:14:31.792Z"
+  },
+  {
+    "_id": "msg_1788309203477_6918",
+    "id": "msg_1788309203477_6082",
+    "conversationId": "usr_1788290798643_usr_faculty_1",
+    "senderId": "usr_1788290798643",
+    "senderRole": "student",
+    "senderName": "Rahul Sharma",
+    "receiverId": "usr_faculty_1",
+    "receiverRole": "faculty",
+    "receiverName": "Dr. Sarah Jenkins",
+    "message": "Hello Dr. Jenkins, could you please clarify the project submission deadline?",
+    "readStatus": true,
+    "timestamp": "2026-09-02T00:33:23.477Z"
+  },
+  {
+    "_id": "msg_1788309213599_6076",
+    "id": "msg_1788309213599_6637",
+    "conversationId": "usr_1788290798643_usr_faculty_1",
+    "senderId": "usr_faculty_1",
+    "senderRole": "faculty",
+    "senderName": "Dr. Sarah Jenkins",
+    "receiverId": "usr_1788290798643",
+    "receiverRole": "student",
+    "receiverName": "Rahul Sharma",
+    "message": "Hello Rahul, the submission deadline is Friday at 5:00 PM.",
+    "readStatus": true,
+    "timestamp": "2026-09-02T00:33:33.599Z"
+  },
+  {
+    "_id": "msg_1788309299147_5416",
+    "id": "msg_1788309299147_9462",
+    "conversationId": "usr_1788290798643_usr_faculty_1",
+    "senderId": "usr_1788290798643",
+    "senderRole": "student",
+    "senderName": "Rahul Sharma",
+    "receiverId": "usr_faculty_1",
+    "receiverRole": "faculty",
+    "receiverName": "Dr. Sarah Jenkins",
+    "message": "Hello Dr. Jenkins, could you please clarify the project submission deadline?",
+    "readStatus": true,
+    "timestamp": "2026-09-02T00:34:59.147Z"
+  },
+  {
+    "_id": "msg_1788309299295_8675",
+    "id": "msg_1788309299295_7401",
+    "conversationId": "usr_1788290798643_usr_faculty_1",
+    "senderId": "usr_faculty_1",
+    "senderRole": "faculty",
+    "senderName": "Dr. Sarah Jenkins",
+    "receiverId": "usr_1788290798643",
+    "receiverRole": "student",
+    "receiverName": "Rahul Sharma",
+    "message": "Hello Rahul, the submission deadline is Friday at 5:00 PM.",
+    "readStatus": true,
+    "timestamp": "2026-09-02T00:34:59.295Z"
   }
 ]

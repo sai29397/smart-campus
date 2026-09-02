@@ -1,5 +1,71 @@
 [
   {
+    "userId": "usr_faculty_1",
+    "email": "faculty@campus.edu",
+    "name": "Dr. Sarah Jenkins",
+    "role": "faculty",
+    "department": "Computer Science",
+    "year": "Faculty/Staff",
+    "ip": "::1",
+    "userAgent": "Mozilla/5.0 (Windows NT; Windows NT 10.0; en-US) WindowsPowerShell/5.1.26100.9278",
+    "timestamp": "2026-09-02T00:34:59.124Z"
+  },
+  {
+    "userId": "usr_1788290798643",
+    "email": "rahul_ai@campus.edu",
+    "name": "Rahul Sharma",
+    "role": "student",
+    "department": "Computer Science",
+    "year": "3rd Year",
+    "ip": "::1",
+    "userAgent": "Mozilla/5.0 (Windows NT; Windows NT 10.0; en-US) WindowsPowerShell/5.1.26100.9278",
+    "timestamp": "2026-09-02T00:34:58.989Z"
+  },
+  {
+    "userId": "usr_faculty_1",
+    "email": "faculty@campus.edu",
+    "name": "Dr. Sarah Jenkins",
+    "role": "faculty",
+    "department": "Computer Science",
+    "year": "Faculty/Staff",
+    "ip": "::1",
+    "userAgent": "Mozilla/5.0 (Windows NT; Windows NT 10.0; en-US) WindowsPowerShell/5.1.26100.9278",
+    "timestamp": "2026-09-02T00:34:29.276Z"
+  },
+  {
+    "userId": "usr_1788290798643",
+    "email": "rahul_ai@campus.edu",
+    "name": "Rahul Sharma",
+    "role": "student",
+    "department": "Computer Science",
+    "year": "3rd Year",
+    "ip": "::1",
+    "userAgent": "Mozilla/5.0 (Windows NT; Windows NT 10.0; en-US) WindowsPowerShell/5.1.26100.9278",
+    "timestamp": "2026-09-02T00:34:29.185Z"
+  },
+  {
+    "userId": "usr_faculty_1",
+    "email": "faculty@campus.edu",
+    "name": "Dr. Sarah Jenkins",
+    "role": "faculty",
+    "department": "Computer Science",
+    "year": "Faculty/Staff",
+    "ip": "::1",
+    "userAgent": "Mozilla/5.0 (Windows NT; Windows NT 10.0; en-US) WindowsPowerShell/5.1.26100.9278",
+    "timestamp": "2026-09-02T00:33:23.466Z"
+  },
+  {
+    "userId": "usr_1788290798643",
+    "email": "rahul_ai@campus.edu",
+    "name": "Rahul Sharma",
+    "role": "student",
+    "department": "Computer Science",
+    "year": "3rd Year",
+    "ip": "::1",
+    "userAgent": "Mozilla/5.0 (Windows NT; Windows NT 10.0; en-US) WindowsPowerShell/5.1.26100.9278",
+    "timestamp": "2026-09-02T00:33:23.379Z"
+  },
+  {
     "userId": "usr_1788291527038",
     "email": "vtu29704@veltech.edu.in",
     "name": "bhavya",

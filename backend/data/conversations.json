@@ -1,0 +1,40 @@
+[
+  {
+    "_id": "conv_1788309203486_188",
+    "id": "conv_1788309203486_264",
+    "conversationId": "usr_1788290798643_usr_faculty_1",
+    "participants": [
+      "usr_1788290798643",
+      "usr_faculty_1"
+    ],
+    "participantDetails": [
+      {
+        "userId": "usr_faculty_1",
+        "name": "Dr. Sarah Jenkins",
+        "role": "faculty",
+        "email": "faculty@campus.edu",
+        "department": "Computer Science",
+        "year": "Faculty/Staff",
+        "specialization": "General CSE"
+      },
+      {
+        "userId": "usr_1788290798643",
+        "name": "Rahul Sharma",
+        "role": "student",
+        "email": "rahul_ai@campus.edu",
+        "department": "Computer Science",
+        "year": "3rd Year",
+        "specialization": "Artificial Intelligence and Machine Learning"
+      }
+    ],
+    "lastMessage": "Hello Rahul, the submission deadline is Friday at 5:00 PM.",
+    "lastMessageTime": "2026-09-02T00:34:59.295Z",
+    "lastSenderId": "usr_faculty_1",
+    "unreadCount": {
+      "usr_faculty_1": 0,
+      "usr_1788290798643": 1
+    },
+    "createdAt": "2026-09-02T00:33:23.477Z",
+    "updatedAt": "2026-09-02T00:34:59.295Z"
+  }
+]
