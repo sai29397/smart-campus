@@ -727,6 +727,29 @@ textarea {
   align-items: center;
 }
 
+.chat-filter-chip {
+  background: #f1f5f9;
+  border: 1px solid #cbd5e1;
+  color: #475569;
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.chat-filter-chip:hover {
+  background: #e2e8f0;
+  color: #0f172a;
+}
+
+.chat-filter-chip.active {
+  background: var(--primary);
+  color: #ffffff;
+  border-color: var(--primary-hover);
+}
+
 /* ==========================================================================
    ROLE PERSPECTIVE SWITCHER (1 UNIFIED DASHBOARD)
    ========================================================================== */

@@ -2291,9 +2291,10 @@ async function loadStudentAttendance() {
 }
 
 // ==========================================================================
-// UNIFIED MESSAGING & CHAT CONTROLLER
+// UNIFIED MESSAGING & CHAT CONTROLLER (Students/Friends, Faculty & Admin)
 // ==========================================================================
 let currentChatTab = "conversations"; // 'conversations' or 'directory'
+let currentRoleFilter = "all"; // 'all', 'student', 'faculty', 'admin'
 let cachedConversations = [];
 let cachedContacts = [];
 let lastChatMessagesJson = "";
@@ -2311,6 +2312,31 @@ function startChatLiveSync() {
       await refreshActiveChat();
     }
   }, 2000);
+}
+
+function filterChatByRole(role) {
+  currentRoleFilter = role;
+  ["chipFilterAll", "chipFilterStudents", "chipFilterFaculty", "chipFilterAdmin"].forEach((id) => {
+    const el = document.getElementById(id);
+    if (el) el.classList.remove("active");
+  });
+
+  if (role === "student") {
+    const el = document.getElementById("chipFilterStudents");
+    if (el) el.classList.add("active");
+  } else if (role === "faculty") {
+    const el = document.getElementById("chipFilterFaculty");
+    if (el) el.classList.add("active");
+  } else if (role === "admin") {
+    const el = document.getElementById("chipFilterAdmin");
+    if (el) el.classList.add("active");
+  } else {
+    const el = document.getElementById("chipFilterAll");
+    if (el) el.classList.add("active");
+  }
+
+  // Switch to directory to view eligible friends/teachers/admins
+  switchChatTab("directory");
 }
 
 function switchChatTab(tab) {
@@ -2362,23 +2388,32 @@ async function loadChatConversations() {
     const convs = await res.json();
     cachedConversations = Array.isArray(convs) ? convs : [];
 
-    if (cachedConversations.length === 0) {
+    let filteredList = cachedConversations;
+    if (currentRoleFilter !== "all") {
+      filteredList = cachedConversations.filter((c) => {
+        const r = (c.contactRole || "").toLowerCase();
+        if (currentRoleFilter === "admin") return r === "admin" || r === "administration";
+        return r === currentRoleFilter;
+      });
+    }
+
+    if (filteredList.length === 0) {
       contactListEl.innerHTML = `
         <div style="padding: 24px 16px; font-size: 0.85rem; color: var(--text-muted); text-align: center;">
           <div style="font-size: 1.8rem; margin-bottom: 8px;">📭</div>
-          <div style="font-weight: 700; color: var(--dark); margin-bottom: 4px;">No Conversations Yet</div>
-          <p style="font-size: 0.78rem; margin-bottom: 12px;">Start a new direct chat with any faculty or student.</p>
+          <div style="font-weight: 700; color: var(--dark); margin-bottom: 4px;">No Active Conversations</div>
+          <p style="font-size: 0.78rem; margin-bottom: 12px;">Click below to browse friends, teachers, or administrators to message.</p>
           <button onclick="switchChatTab('directory')" class="btn btn-primary btn-sm" style="font-size: 0.75rem; width: 100%;">
-            👥 Open Campus Directory
+            👥 Open Campus Contacts
           </button>
         </div>`;
       return;
     }
 
-    renderConversationsList(contactListEl, cachedConversations);
+    renderConversationsList(contactListEl, filteredList);
 
-    if (!activeChatPartner && cachedConversations.length > 0) {
-      const first = cachedConversations[0];
+    if (!activeChatPartner && filteredList.length > 0) {
+      const first = filteredList[0];
       quickMessageUser(first.contactId, first.contactName, first.contactYear || "", first.contactSpecialization || "", first.contactRole || "user", first.contactEmail || "");
     }
   } catch (err) {
@@ -2401,8 +2436,18 @@ async function silentRefreshConversations() {
     if (jsonStr !== lastChatConversationsJson) {
       lastChatConversationsJson = jsonStr;
       cachedConversations = list;
-      if (list.length > 0) {
-        renderConversationsList(contactListEl, cachedConversations);
+
+      let filteredList = list;
+      if (currentRoleFilter !== "all") {
+        filteredList = list.filter((c) => {
+          const r = (c.contactRole || "").toLowerCase();
+          if (currentRoleFilter === "admin") return r === "admin" || r === "administration";
+          return r === currentRoleFilter;
+        });
+      }
+
+      if (filteredList.length > 0) {
+        renderConversationsList(contactListEl, filteredList);
       }
     }
   } catch (e) {}
@@ -2412,8 +2457,8 @@ function renderConversationsList(contactListEl, list) {
   contactListEl.innerHTML = list
     .map((c) => {
       const isSelected = activeChatPartner && String(activeChatPartner.id) === String(c.contactId);
-      const roleIcon = c.contactRole === "faculty" ? "👨‍🏫" : c.contactRole === "admin" ? "🏛️" : "👨‍🎓";
-      const roleLabel = c.contactRole === "faculty" ? "Faculty" : c.contactRole === "admin" ? "Admin" : c.contactYear || "Student";
+      const roleIcon = c.contactRole === "faculty" ? "👨‍🏫" : (c.contactRole === "admin" || c.contactRole === "administration") ? "🏛️" : "👨‍🎓";
+      const roleLabel = c.contactRole === "faculty" ? "Teacher" : (c.contactRole === "admin" || c.contactRole === "administration") ? "Admin" : (c.contactYear ? `${c.contactYear} Friend` : "Student");
       const timeStr = formatChatTimestamp(c.lastMessageTime);
 
       return `
@@ -2429,7 +2474,7 @@ function renderConversationsList(contactListEl, list) {
               </div>
               <div style="display: flex; justify-content: space-between; align-items: center;">
                 <span style="font-size: 0.78rem; color: var(--text-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 140px;">
-                  ${escapeHtml(c.lastMessage || "Click to open chat")}
+                  ${escapeHtml(c.lastMessage || "Click to chat")}
                 </span>
                 ${
                   c.unreadCount > 0
@@ -2441,8 +2486,8 @@ function renderConversationsList(contactListEl, list) {
           </div>
         </div>
       `;
-      })
-      .join("");
+    })
+    .join("");
 }
 
 async function loadChatContacts() {
@@ -2456,28 +2501,47 @@ async function loadChatContacts() {
     const contacts = await res.json();
     cachedContacts = Array.isArray(contacts) ? contacts : [];
 
-    if (cachedContacts.length === 0) {
-      contactListEl.innerHTML = `<div style="padding: 20px; font-size: 0.85rem; color: var(--text-muted); text-align: center;">No campus contacts found.</div>`;
+    // Filter contacts based on currentRoleFilter
+    let filteredContacts = cachedContacts;
+    if (currentRoleFilter !== "all") {
+      filteredContacts = cachedContacts.filter((c) => {
+        const r = (c.role || "").toLowerCase();
+        if (currentRoleFilter === "admin") return r === "admin" || r === "administration";
+        return r === currentRoleFilter;
+      });
+    }
+
+    if (filteredContacts.length === 0) {
+      const categoryName = currentRoleFilter === "student" ? "friends / students" : currentRoleFilter === "faculty" ? "teachers" : currentRoleFilter === "admin" ? "administrators" : "contacts";
+      contactListEl.innerHTML = `
+        <div style="padding: 20px; font-size: 0.85rem; color: var(--text-muted); text-align: center;">
+          <div style="font-size: 1.6rem; margin-bottom: 6px;">👥</div>
+          <div>No ${categoryName} found.</div>
+          <button onclick="filterChatByRole('all')" class="btn btn-outline btn-sm" style="margin-top: 8px; font-size: 0.75rem;">Show All Contacts</button>
+        </div>`;
       return;
     }
 
-    contactListEl.innerHTML = cachedContacts
+    contactListEl.innerHTML = filteredContacts
       .map((c) => {
         const cid = String(c.id || c._id);
         const isSelected = activeChatPartner && String(activeChatPartner.id) === cid;
-        const roleIcon = c.role === "faculty" ? "👨‍🏫" : c.role === "admin" ? "🏛️" : "👨‍🎓";
-        const roleBadge = c.role === "faculty" ? "Faculty" : c.role === "admin" ? "Admin" : `${c.year || "Student"} • ${c.specialization || "CSE"}`;
+        const roleIcon = c.role === "faculty" ? "👨‍🏫" : (c.role === "admin" || c.role === "administration") ? "🏛️" : "👨‍🎓";
+        const roleBadge = c.role === "faculty" ? "Faculty / Teacher" : (c.role === "admin" || c.role === "administration") ? "Campus Administration" : `${c.year || "Student"} • ${c.specialization || "General CSE"}`;
+        const roleTag = c.role === "faculty" ? "Teacher" : (c.role === "admin" || c.role === "administration") ? "Admin" : "Friend / Student";
+        const tagColor = c.role === "faculty" ? "#0284c7" : (c.role === "admin" || c.role === "administration") ? "#7c3aed" : "#16a34a";
+        const tagBg = c.role === "faculty" ? "#e0f2fe" : (c.role === "admin" || c.role === "administration") ? "#f3e8ff" : "#dcfce7";
 
         return `
         <div class="chat-contact-item ${isSelected ? "active" : ""}" data-contact-id="${cid}" onclick="quickMessageUser('${cid}', '${escapeHtml(c.name)}', '${escapeHtml(c.year || "")}', '${escapeHtml(c.specialization || "")}', '${c.role || "user"}', '${escapeHtml(c.email || "")}')">
           <div style="display: flex; gap: 10px; align-items: center; width: 100%; min-width: 0;">
-            <div style="font-size: 1.4rem; background: #e0f2fe; width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+            <div style="font-size: 1.4rem; background: ${tagBg}; width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
               ${roleIcon}
             </div>
             <div style="flex: 1; min-width: 0;">
               <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2px;">
                 <span style="font-weight: 700; font-size: 0.88rem; color: var(--dark); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${escapeHtml(c.name)}</span>
-                <span style="font-size: 0.68rem; background: #e0f2fe; color: #0284c7; padding: 1px 6px; border-radius: 10px; font-weight: 700;">${c.role === "faculty" ? "Faculty" : c.role === "admin" ? "Admin" : "Student"}</span>
+                <span style="font-size: 0.65rem; background: ${tagBg}; color: ${tagColor}; padding: 1px 6px; border-radius: 10px; font-weight: 700;">${roleTag}</span>
               </div>
               <div style="font-size: 0.75rem; color: var(--text-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
                 ${escapeHtml(roleBadge)}
@@ -2489,8 +2553,8 @@ async function loadChatContacts() {
       })
       .join("");
 
-    if (!activeChatPartner && cachedContacts.length > 0) {
-      const first = cachedContacts[0];
+    if (!activeChatPartner && filteredContacts.length > 0) {
+      const first = filteredContacts[0];
       quickMessageUser(first.id || first._id, first.name, first.year || "", first.specialization || "", first.role || "user", first.email || "");
     }
   } catch (err) {

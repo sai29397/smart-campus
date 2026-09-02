@@ -1,1 +1,79 @@
-[]
+[
+  {
+    "userId": "usr_faculty_1",
+    "email": "faculty@campus.edu",
+    "name": "Dr. Sarah Jenkins",
+    "role": "faculty",
+    "department": "Computer Science",
+    "year": "Faculty/Staff",
+    "ip": "::1",
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36",
+    "timestamp": "2026-09-02T01:40:39.553Z"
+  },
+  {
+    "userId": "usr_student_1",
+    "email": "student@campus.edu",
+    "name": "Alex Johnson",
+    "role": "student",
+    "department": "Computer Science",
+    "year": "1st Year",
+    "ip": "::1",
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36",
+    "timestamp": "2026-09-02T01:40:17.520Z"
+  },
+  {
+    "userId": "usr_faculty_1",
+    "email": "faculty@campus.edu",
+    "name": "Dr. Sarah Jenkins",
+    "role": "faculty",
+    "department": "Computer Science",
+    "year": "Faculty/Staff",
+    "ip": "::1",
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36",
+    "timestamp": "2026-09-02T01:40:15.037Z"
+  },
+  {
+    "userId": "usr_student_1",
+    "email": "student@campus.edu",
+    "name": "Alex Johnson",
+    "role": "student",
+    "department": "Computer Science",
+    "year": "1st Year",
+    "ip": "::1",
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36",
+    "timestamp": "2026-09-02T01:40:10.703Z"
+  },
+  {
+    "userId": "usr_faculty_1",
+    "email": "faculty@campus.edu",
+    "name": "Dr. Sarah Jenkins",
+    "role": "faculty",
+    "department": "Computer Science",
+    "year": "Faculty/Staff",
+    "ip": "::1",
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36",
+    "timestamp": "2026-09-02T01:39:56.242Z"
+  },
+  {
+    "userId": "usr_student_1",
+    "email": "student@campus.edu",
+    "name": "Alex Johnson",
+    "role": "student",
+    "department": "Computer Science",
+    "year": "1st Year",
+    "ip": "::1",
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36",
+    "timestamp": "2026-09-02T01:39:40.659Z"
+  },
+  {
+    "userId": "usr_faculty_1",
+    "email": "faculty@campus.edu",
+    "name": "Dr. Sarah Jenkins",
+    "role": "faculty",
+    "department": "Computer Science",
+    "year": "Faculty/Staff",
+    "ip": "::1",
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36",
+    "timestamp": "2026-09-02T01:39:33.899Z"
+  }
+]

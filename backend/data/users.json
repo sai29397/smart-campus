@@ -177,5 +177,19 @@
     "year": "3rd Year",
     "specialization": "Artificial Intelligence and Machine Learning",
     "createdAt": "2026-09-01T20:12:17.349Z"
+  },
+  {
+    "_id": "usr_1788313158903",
+    "id": "usr_1788313158903",
+    "name": "vimal",
+    "email": "vtu29877@veltech.edu.in",
+    "password": "1234",
+    "passwordHash": "$2a$10$Vl0lXYUuhyWtk/mtsSAdA.KQAgPDhV7WqW0cwv6RxdLx2eZaplQUW",
+    "role": "student",
+    "department": "Computer Science",
+    "year": "1st Year",
+    "specialization": "General CSE",
+    "createdAt": "2026-09-02T01:39:18.903Z",
+    "updatedAt": "2026-09-02T01:39:18.903Z"
   }
 ]

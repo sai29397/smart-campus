@@ -1,5 +1,43 @@
 [
   {
+    "_id": "conv_1788313170274_529",
+    "id": "conv_1788313170274_506",
+    "conversationId": "usr_1788313158903_usr_faculty_1",
+    "participants": [
+      "usr_1788313158903",
+      "usr_faculty_1"
+    ],
+    "participantDetails": [
+      {
+        "userId": "usr_faculty_1",
+        "name": "Dr. Sarah Jenkins",
+        "role": "faculty",
+        "email": "faculty@campus.edu",
+        "department": "Computer Science",
+        "year": "Faculty/Staff",
+        "specialization": "General CSE"
+      },
+      {
+        "userId": "usr_1788313158903",
+        "name": "vimal",
+        "role": "student",
+        "email": "vtu29877@veltech.edu.in",
+        "department": "Computer Science",
+        "year": "1st Year",
+        "specialization": "General CSE"
+      }
+    ],
+    "lastMessage": "hii",
+    "lastMessageTime": "2026-09-02T01:40:01.451Z",
+    "lastSenderId": "usr_faculty_1",
+    "unreadCount": {
+      "usr_faculty_1": 0,
+      "usr_1788313158903": 1
+    },
+    "createdAt": "2026-09-02T01:39:30.273Z",
+    "updatedAt": "2026-09-02T01:40:01.451Z"
+  },
+  {
     "_id": "conv_seed_1",
     "id": "conv_seed_1",
     "conversationId": "usr_faculty_1_usr_student_1",
@@ -23,18 +61,17 @@
         "role": "faculty",
         "email": "faculty@campus.edu",
         "department": "Computer Science",
-        "year": "Faculty",
-        "specialization": "Faculty"
+        "year": "Faculty/Staff"
       }
     ],
-    "lastMessage": "Thank you Dr. Sarah. I have reviewed the syllabus.",
-    "lastMessageTime": "2026-09-01T10:15:00.000Z",
+    "lastMessage": "hloo",
+    "lastMessageTime": "2026-09-02T01:40:36.011Z",
     "lastSenderId": "usr_student_1",
     "unreadCount": {
-      "usr_faculty_1": 0,
+      "usr_faculty_1": 1,
       "usr_student_1": 0
     },
     "createdAt": "2026-09-01T10:00:00.000Z",
-    "updatedAt": "2026-09-01T10:15:00.000Z"
+    "updatedAt": "2026-09-02T01:40:36.011Z"
   }
 ]

@@ -1099,16 +1099,25 @@
                     <div class="chat-sidebar">
                         <div style="padding: 10px 12px; border-bottom: 1px solid var(--border-color); background: #f8fafc;">
                             <div style="display: flex; gap: 6px; margin-bottom: 8px;">
-                                <button type="button" id="chatTabConversations" onclick="switchChatTab('conversations')" class="btn btn-sm btn-primary" style="flex: 1; font-size: 0.78rem; padding: 4px 8px;">
-                                    💬 Chats
+                                <button type="button" id="chatTabConversations" onclick="switchChatTab('conversations')" class="btn btn-sm btn-primary" style="flex: 1; font-size: 0.78rem; padding: 5px 8px;">
+                                    💬 My Chats
                                 </button>
-                                <button type="button" id="chatTabDirectory" onclick="switchChatTab('directory')" class="btn btn-sm btn-outline" style="flex: 1; font-size: 0.78rem; padding: 4px 8px;">
-                                    👥 Directory
+                                <button type="button" id="chatTabDirectory" onclick="switchChatTab('directory')" class="btn btn-sm btn-outline" style="flex: 1; font-size: 0.78rem; padding: 5px 8px;">
+                                    👥 All Contacts
                                 </button>
                             </div>
+
+                            <!-- Role Category Chips: Friends/Students, Teachers, Admin -->
+                            <div style="display: flex; gap: 4px; margin-bottom: 8px; flex-wrap: wrap;">
+                                <button type="button" class="chat-filter-chip active" id="chipFilterAll" onclick="filterChatByRole('all')">All</button>
+                                <button type="button" class="chat-filter-chip" id="chipFilterStudents" onclick="filterChatByRole('student')">👨‍🎓 Friends / Students</button>
+                                <button type="button" class="chat-filter-chip" id="chipFilterFaculty" onclick="filterChatByRole('faculty')">👨‍🏫 Teachers</button>
+                                <button type="button" class="chat-filter-chip" id="chipFilterAdmin" onclick="filterChatByRole('admin')">🏛️ Admin</button>
+                            </div>
+
                             <input 
                                 type="text" 
-                                placeholder="Search conversations / contacts..." 
+                                placeholder="🔍 Search friend, teacher, admin by name or email..." 
                                 id="chatContactSearch" 
                                 oninput="filterChatContacts(this.value)"
                                 style="font-size: 0.82rem; padding: 6px 10px; width: 100%; border-radius: 6px;"
