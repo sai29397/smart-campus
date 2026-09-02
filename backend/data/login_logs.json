@@ -1,5 +1,16 @@
 [
   {
+    "userId": "usr_student_1",
+    "email": "student@campus.edu",
+    "name": "Alex Johnson",
+    "role": "student",
+    "department": "Computer Science",
+    "year": "1st Year",
+    "ip": "::1",
+    "userAgent": "Mozilla/5.0 (Windows NT; Windows NT 10.0; en-US) WindowsPowerShell/5.1.26100.9278",
+    "timestamp": "2026-09-02T01:04:27.574Z"
+  },
+  {
     "userId": "usr_1788310594164",
     "email": "studenta_1788310593946@campus.edu",
     "name": "Aarav Gupta",

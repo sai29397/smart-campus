@@ -32,13 +32,7 @@ app.use(
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Asynchronous background DB check (non-blocking)
-app.use((req, res, next) => {
-  if (mongoose.connection.readyState !== 1) {
-    connectDB().catch(() => {});
-  }
-  next();
-});
+
 
 // Request Logger
 app.use((req, res, next) => {
