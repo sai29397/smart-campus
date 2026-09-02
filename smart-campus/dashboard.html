@@ -272,12 +272,19 @@
     <nav class="navbar">
         <a href="index.html" class="nav-brand">
             <div class="brand-icon">🎓</div>
-            <span>SmartCampus</span>
+            <span>SmartCampus <small style="font-size: 0.65rem; font-weight: 800; background: var(--primary-light); padding: 2px 6px; border-radius: 4px; border: 1px solid var(--primary);">All-in-One</small></span>
         </a>
 
         <div class="nav-links">
             <a href="index.html">Home</a>
             <a href="dashboard.html" class="active">Dashboard</a>
+
+            <!-- 1-Click Quick Identity Switcher -->
+            <select id="quickUserSwitchSelect" onchange="handleQuickUserSwitch(this.value)" style="padding: 6px 12px; font-size: 0.8rem; font-weight: 700; border-radius: var(--radius-full); border: 1.5px solid var(--primary); background: #ffffff; color: var(--dark); cursor: pointer; outline: none; box-shadow: var(--shadow-sm);">
+                <option value="student">👨‍🎓 Active: Student (Alex Johnson)</option>
+                <option value="faculty">👨‍🏫 Active: Faculty (Dr. Sarah Jenkins)</option>
+                <option value="admin">🏛️ Active: Administrator</option>
+            </select>
             
             <div class="user-profile-badge">
                 <div class="user-avatar" id="navbarUserAvatar">🎓</div>
@@ -287,7 +294,7 @@
                 </div>
             </div>
 
-            <a href="login.html" class="btn btn-outline btn-sm" id="logoutBtn">Logout</a>
+            <a href="login.html" class="btn btn-outline btn-sm" id="logoutBtn">Sign In / Out</a>
         </div>
     </nav>
 

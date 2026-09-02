@@ -97,6 +97,11 @@ function initUnifiedSession() {
     navTag.innerText = `${userDept} • ${role.toUpperCase()}`;
   }
 
+  const quickSwitch = document.getElementById("quickUserSwitchSelect");
+  if (quickSwitch) {
+    quickSwitch.value = role === "faculty" ? "faculty" : (role === "admin" || role === "administration") ? "admin" : "student";
+  }
+
   // Initialize Chat & Live Sync
   loadChatConversations();
   startChatLiveSync();
@@ -121,6 +126,51 @@ function initUnifiedSession() {
       localStorage.removeItem("smart_campus_user");
       window.location.href = "login.html";
     });
+  }
+}
+
+/**
+ * 1-Click Fast Identity Switcher
+ */
+async function handleQuickUserSwitch(roleKey) {
+  const credentials = {
+    student: { email: "student@campus.edu", password: "student123", role: "student" },
+    faculty: { email: "faculty@campus.edu", password: "faculty123", role: "faculty" },
+    admin: { email: "admin@campus.edu", password: "admin123", role: "admin" },
+  };
+
+  const cred = credentials[roleKey];
+  if (!cred) return;
+
+  try {
+    const res = await fetch(`${API_URL}/api/auth/login`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(cred),
+    });
+    const data = await res.json();
+    if (res.ok && data.success) {
+      localStorage.setItem("smart_campus_token", data.token);
+      localStorage.setItem("smart_campus_user", JSON.stringify(data.user));
+      currentUser = data.user;
+      initUnifiedSession();
+      switchDashboardView(roleKey);
+    }
+  } catch (err) {
+    console.warn("Could not switch identity over network, switching locally:", err);
+    currentUser = {
+      id: "usr_" + roleKey + "_1",
+      _id: "usr_" + roleKey + "_1",
+      name: roleKey === "faculty" ? "Dr. Sarah Jenkins" : roleKey === "admin" ? "Campus Administrator" : "Alex Johnson",
+      email: cred.email,
+      role: roleKey,
+      department: "Computer Science",
+      year: roleKey === "student" ? "1st Year" : "Faculty/Staff",
+      specialization: "General CSE",
+    };
+    localStorage.setItem("smart_campus_user", JSON.stringify(currentUser));
+    initUnifiedSession();
+    switchDashboardView(roleKey);
   }
 }
 
