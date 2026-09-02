@@ -2147,7 +2147,6 @@ async function loadStudentAttendance() {
 let currentChatTab = "conversations"; // 'conversations' or 'directory'
 let cachedConversations = [];
 let cachedContacts = [];
-let chatPollInterval = null;
 let lastChatMessagesJson = "";
 let lastChatConversationsJson = "";
 
