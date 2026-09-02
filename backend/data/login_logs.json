@@ -1,5 +1,60 @@
 [
   {
+    "userId": "usr_1788291527038",
+    "email": "vtu29704@veltech.edu.in",
+    "name": "bhavya",
+    "role": "faculty",
+    "department": "Computer Science",
+    "year": "1st Year",
+    "ip": "::1",
+    "userAgent": "Mozilla/5.0 (Windows NT; Windows NT 10.0; en-US) WindowsPowerShell/5.1.26100.9278",
+    "timestamp": "2026-09-02T00:47:30.516Z"
+  },
+  {
+    "userId": "usr_1788309805674",
+    "email": "vtu20704@veltech.edu.in",
+    "name": "SAI",
+    "role": "student",
+    "department": "Computer Science",
+    "year": "1st Year",
+    "ip": "::1",
+    "userAgent": "Mozilla/5.0 (Windows NT; Windows NT 10.0; en-US) WindowsPowerShell/5.1.26100.9278",
+    "timestamp": "2026-09-02T00:47:30.434Z"
+  },
+  {
+    "userId": "usr_1788287068278",
+    "email": "saibudeti1@gmail.com",
+    "name": "vimal",
+    "role": "student",
+    "department": "Computer Science",
+    "year": "1st Year",
+    "ip": "::1",
+    "userAgent": "Mozilla/5.0 (Windows NT; Windows NT 10.0; en-US) WindowsPowerShell/5.1.26100.9278",
+    "timestamp": "2026-09-02T00:47:20.284Z"
+  },
+  {
+    "userId": "usr_1788309521616",
+    "email": "vtu29854@veltech.edu.in",
+    "name": "siddardha",
+    "role": "student",
+    "department": "Computer Science",
+    "year": "3rd Year",
+    "ip": "::1",
+    "userAgent": "Mozilla/5.0 (Windows NT; Windows NT 10.0; en-US) WindowsPowerShell/5.1.26100.9278",
+    "timestamp": "2026-09-02T00:47:12.582Z"
+  },
+  {
+    "userId": "usr_1788309805674",
+    "email": "vtu20704@veltech.edu.in",
+    "name": "SAI",
+    "role": "student",
+    "department": "Computer Science",
+    "year": "1st Year",
+    "ip": "::1",
+    "userAgent": "Mozilla/5.0 (Windows NT; Windows NT 10.0; en-US) WindowsPowerShell/5.1.26100.9278",
+    "timestamp": "2026-09-02T00:47:07.200Z"
+  },
+  {
     "userId": "usr_faculty_1",
     "email": "faculty@campus.edu",
     "name": "Dr. Sarah Jenkins",

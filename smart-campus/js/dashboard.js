@@ -83,6 +83,7 @@ function initUnifiedSession() {
     renderAdminStats();
     loadAdminClasses();
     loadChatConversations();
+    startChatLiveSync();
     initAdminDateDefaults();
   } else if (role === "faculty") {
     // Faculty View
@@ -111,6 +112,7 @@ function initUnifiedSession() {
     loadStudentDirectory();
     loadFacultyPapers();
     loadChatConversations();
+    startChatLiveSync();
     initAttendanceDefaults();
   } else {
     // Student View
@@ -136,6 +138,7 @@ function initUnifiedSession() {
     loadStudentAttendance();
     loadStudentPapers();
     loadChatConversations();
+    startChatLiveSync();
   }
 
   // Logout handler
@@ -2133,6 +2136,23 @@ async function loadStudentAttendance() {
 let currentChatTab = "conversations"; // 'conversations' or 'directory'
 let cachedConversations = [];
 let cachedContacts = [];
+let chatPollInterval = null;
+let lastChatMessagesJson = "";
+let lastChatConversationsJson = "";
+
+function startChatLiveSync() {
+  if (chatPollInterval) clearInterval(chatPollInterval);
+  chatPollInterval = setInterval(async () => {
+    // 1. Live sync conversations list in sidebar
+    if (currentChatTab === "conversations") {
+      await silentRefreshConversations();
+    }
+    // 2. Live sync active message thread
+    if (activeChatPartner) {
+      await refreshActiveChat();
+    }
+  }, 2000);
+}
 
 function switchChatTab(tab) {
   currentChatTab = tab;
@@ -2196,14 +2216,48 @@ async function loadChatConversations() {
       return;
     }
 
-    contactListEl.innerHTML = cachedConversations
-      .map((c) => {
-        const isSelected = activeChatPartner && String(activeChatPartner.id) === String(c.contactId);
-        const roleIcon = c.contactRole === "faculty" ? "👨‍🏫" : c.contactRole === "admin" ? "🏛️" : "👨‍🎓";
-        const roleLabel = c.contactRole === "faculty" ? "Faculty" : c.contactRole === "admin" ? "Admin" : c.contactYear || "Student";
-        const timeStr = formatChatTimestamp(c.lastMessageTime);
+    renderConversationsList(contactListEl, cachedConversations);
 
-        return `
+    if (!activeChatPartner && cachedConversations.length > 0) {
+      const first = cachedConversations[0];
+      quickMessageUser(first.contactId, first.contactName, first.contactYear || "", first.contactSpecialization || "", first.contactRole || "user", first.contactEmail || "");
+    }
+  } catch (err) {
+    console.error("Error loading chat conversations:", err);
+  }
+}
+
+async function silentRefreshConversations() {
+  const contactListEl = document.getElementById("chatContactList");
+  if (!contactListEl || currentChatTab !== "conversations") return;
+
+  try {
+    const res = await fetch(`${API_URL}/api/messages/conversations`, {
+      headers: getAuthHeaders(),
+    });
+    const convs = await res.json();
+    const list = Array.isArray(convs) ? convs : [];
+    const jsonStr = JSON.stringify(list);
+
+    if (jsonStr !== lastChatConversationsJson) {
+      lastChatConversationsJson = jsonStr;
+      cachedConversations = list;
+      if (list.length > 0) {
+        renderConversationsList(contactListEl, cachedConversations);
+      }
+    }
+  } catch (e) {}
+}
+
+function renderConversationsList(contactListEl, list) {
+  contactListEl.innerHTML = list
+    .map((c) => {
+      const isSelected = activeChatPartner && String(activeChatPartner.id) === String(c.contactId);
+      const roleIcon = c.contactRole === "faculty" ? "👨‍🏫" : c.contactRole === "admin" ? "🏛️" : "👨‍🎓";
+      const roleLabel = c.contactRole === "faculty" ? "Faculty" : c.contactRole === "admin" ? "Admin" : c.contactYear || "Student";
+      const timeStr = formatChatTimestamp(c.lastMessageTime);
+
+      return `
         <div class="chat-contact-item ${isSelected ? "active" : ""}" data-contact-id="${c.contactId}" onclick="quickMessageUser('${c.contactId}', '${escapeHtml(c.contactName)}', '${escapeHtml(c.contactYear || "")}', '${escapeHtml(c.contactSpecialization || "")}', '${c.contactRole || "user"}', '${escapeHtml(c.contactEmail || "")}')">
           <div style="display: flex; gap: 10px; align-items: center; width: 100%; min-width: 0;">
             <div style="font-size: 1.4rem; background: #e0f2fe; width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
@@ -2230,14 +2284,6 @@ async function loadChatConversations() {
       `;
       })
       .join("");
-
-    if (!activeChatPartner && cachedConversations.length > 0) {
-      const first = cachedConversations[0];
-      quickMessageUser(first.contactId, first.contactName, first.contactYear || "", first.contactSpecialization || "", first.contactRole || "user", first.contactEmail || "");
-    }
-  } catch (err) {
-    console.error("Error loading chat conversations:", err);
-  }
 }
 
 async function loadChatContacts() {
@@ -2322,13 +2368,13 @@ function quickMessageUser(partnerId, partnerName, partnerYear, partnerSpec, part
     }
   });
 
+  lastChatMessagesJson = "";
   refreshActiveChat();
 
   const chatInput = document.getElementById("chatMessageInput");
   if (chatInput) chatInput.focus();
 
-  if (chatPollInterval) clearInterval(chatPollInterval);
-  chatPollInterval = setInterval(refreshActiveChat, 2500);
+  startChatLiveSync();
 }
 
 async function refreshActiveChat() {
@@ -2338,6 +2384,7 @@ async function refreshActiveChat() {
   if (!messagesArea) return;
 
   const currentUserId = currentUser ? String(currentUser.id || currentUser._id) : "usr_user_1";
+  const currentUserEmail = currentUser ? (currentUser.email || "").toLowerCase() : "";
   const conversationId = activeChatPartner.conversationId || [currentUserId, activeChatPartner.id].sort().join("_");
 
   try {
@@ -2346,6 +2393,12 @@ async function refreshActiveChat() {
     });
     const messages = await res.json();
     const msgList = Array.isArray(messages) ? messages : (messages.messages || []);
+    const jsonStr = JSON.stringify(msgList);
+
+    if (jsonStr === lastChatMessagesJson) {
+      return; // No change in messages, prevent scroll jumping
+    }
+    lastChatMessagesJson = jsonStr;
 
     if (msgList.length === 0) {
       messagesArea.innerHTML = `
@@ -2361,7 +2414,7 @@ async function refreshActiveChat() {
       .map((m) => {
         const isMe =
           String(m.senderId) === currentUserId ||
-          (currentUser && m.senderEmail && m.senderEmail.toLowerCase() === (currentUser.email || "").toLowerCase());
+          (currentUserEmail && m.senderEmail && m.senderEmail.toLowerCase() === currentUserEmail);
 
         return `
         <div class="message-bubble ${isMe ? "msg-sent" : "msg-received"}">
@@ -2456,4 +2509,3 @@ function escapeHtml(str) {
   if (!str) return "";
   return String(str).replace(/[&<>"']/g, (m) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[m]));
 }
-

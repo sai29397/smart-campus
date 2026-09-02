@@ -71,8 +71,9 @@ function getDeterministicConversationId(userAId, userBId) {
 
 // Helper to find user info by id or email
 function findUserDetails(userIdOrEmail) {
+  if (!userIdOrEmail) return null;
   const allUsers = loadServerUsers();
-  const search = String(userIdOrEmail || "").toLowerCase().trim();
+  const search = String(userIdOrEmail).toLowerCase().trim();
   return allUsers.find(
     (u) =>
       String(u._id || u.id || "").toLowerCase().trim() === search ||
@@ -86,6 +87,7 @@ function findUserDetails(userIdOrEmail) {
 router.get("/contacts", protect, (req, res) => {
   try {
     const currentUserId = String(req.user._id || req.user.id);
+    const currentUserEmail = (req.user.email || "").toLowerCase();
     const currentUserRole = (req.user.role || "").toLowerCase();
     const allUsers = loadServerUsers();
     const allConversations = loadServerConversations();
@@ -97,17 +99,22 @@ router.get("/contacts", protect, (req, res) => {
       eligibleUsers = allUsers.filter(
         (u) =>
           String(u._id || u.id) !== currentUserId &&
+          (u.email || "").toLowerCase() !== currentUserEmail &&
           (u.role === "faculty" || u.role === "admin" || u.role === "administration")
       );
     } else if (currentUserRole === "faculty") {
       // Faculty can message students, fellow faculty, and administration
       eligibleUsers = allUsers.filter(
-        (u) => String(u._id || u.id) !== currentUserId
+        (u) =>
+          String(u._id || u.id) !== currentUserId &&
+          (u.email || "").toLowerCase() !== currentUserEmail
       );
     } else {
       // Administration can message everyone
       eligibleUsers = allUsers.filter(
-        (u) => String(u._id || u.id) !== currentUserId
+        (u) =>
+          String(u._id || u.id) !== currentUserId &&
+          (u.email || "").toLowerCase() !== currentUserEmail
       );
     }
 
@@ -115,7 +122,11 @@ router.get("/contacts", protect, (req, res) => {
       const contactId = String(u._id || u.id);
       const convId = getDeterministicConversationId(currentUserId, contactId);
       const existingConv = allConversations.find(
-        (c) => c.conversationId === convId || (Array.isArray(c.participants) && c.participants.includes(contactId) && c.participants.includes(currentUserId))
+        (c) =>
+          c.conversationId === convId ||
+          (Array.isArray(c.participants) &&
+            c.participants.includes(contactId) &&
+            c.participants.includes(currentUserId))
       );
 
       return {
@@ -147,6 +158,7 @@ router.get("/contacts", protect, (req, res) => {
 router.get("/conversations", protect, (req, res) => {
   try {
     const currentUserId = String(req.user._id || req.user.id);
+    const currentUserEmail = (req.user.email || "").toLowerCase();
     const inMemoryMessages = loadServerMessages();
     let inMemoryConversations = loadServerConversations();
     const allUsers = loadServerUsers();
@@ -154,24 +166,41 @@ router.get("/conversations", protect, (req, res) => {
     // Map of conversationId -> conversation
     const convMap = {};
 
-    // 1. First index stored conversations
+    // 1. Index stored conversations
     inMemoryConversations.forEach((c) => {
-      if (Array.isArray(c.participants) && c.participants.includes(currentUserId)) {
+      const isParticipant =
+        (Array.isArray(c.participants) && c.participants.includes(currentUserId)) ||
+        (Array.isArray(c.participantDetails) &&
+          c.participantDetails.some(
+            (p) =>
+              String(p.userId) === currentUserId ||
+              (p.email && p.email.toLowerCase() === currentUserEmail)
+          ));
+
+      if (isParticipant) {
         convMap[c.conversationId] = c;
       }
     });
 
-    // 2. Cross-reference all messages to ensure no conversation is missed
+    // 2. Cross-reference all messages in memory
     inMemoryMessages.forEach((msg) => {
-      const isSender = String(msg.senderId) === currentUserId;
-      const isReceiver = String(msg.receiverId) === currentUserId;
+      const isSender =
+        String(msg.senderId) === currentUserId ||
+        (msg.senderEmail && msg.senderEmail.toLowerCase() === currentUserEmail);
+      const isReceiver =
+        String(msg.receiverId) === currentUserId ||
+        (msg.receiverEmail && msg.receiverEmail.toLowerCase() === currentUserEmail);
 
       if (isSender || isReceiver) {
         const partnerId = isSender ? String(msg.receiverId) : String(msg.senderId);
         const convId = msg.conversationId || getDeterministicConversationId(currentUserId, partnerId);
 
         if (!convMap[convId]) {
-          const partnerUser = findUserDetails(partnerId);
+          const partnerUser =
+            findUserDetails(partnerId) ||
+            (msg.receiverEmail && findUserDetails(msg.receiverEmail)) ||
+            (msg.senderEmail && findUserDetails(msg.senderEmail));
+
           convMap[convId] = {
             conversationId: convId,
             participants: [currentUserId, partnerId],
@@ -186,7 +215,7 @@ router.get("/conversations", protect, (req, res) => {
                 userId: partnerId,
                 name: partnerUser ? partnerUser.name : isSender ? msg.receiverName : msg.senderName,
                 role: partnerUser ? partnerUser.role : isSender ? msg.receiverRole : msg.senderRole,
-                email: partnerUser ? partnerUser.email : "",
+                email: partnerUser ? partnerUser.email : isSender ? msg.receiverEmail : msg.senderEmail,
                 department: partnerUser ? partnerUser.department : "",
                 year: partnerUser ? partnerUser.year : "",
                 specialization: partnerUser ? partnerUser.specialization : "",
@@ -212,9 +241,14 @@ router.get("/conversations", protect, (req, res) => {
 
     // 3. Format output for frontend
     const conversationList = Object.values(convMap).map((conv) => {
-      const partnerId = conv.participants.find((p) => String(p) !== currentUserId) || currentUserId;
-      const partnerUser = findUserDetails(partnerId);
+      const partnerId =
+        conv.participants.find((p) => String(p) !== currentUserId) ||
+        (Array.isArray(conv.participantDetails)
+          ? (conv.participantDetails.find((p) => String(p.userId) !== currentUserId) || {}).userId
+          : "") ||
+        currentUserId;
 
+      const partnerUser = findUserDetails(partnerId);
       let pDetails = Array.isArray(conv.participantDetails)
         ? conv.participantDetails.find((p) => String(p.userId) === String(partnerId))
         : null;
@@ -229,8 +263,10 @@ router.get("/conversations", protect, (req, res) => {
       // Count unread messages sent TO this user
       const unread = inMemoryMessages.filter(
         (m) =>
-          String(m.receiverId) === currentUserId &&
-          String(m.senderId) === String(partnerId) &&
+          (String(m.receiverId) === currentUserId ||
+            (m.receiverEmail && m.receiverEmail.toLowerCase() === currentUserEmail)) &&
+          (String(m.senderId) === String(partnerId) ||
+            (m.senderEmail && m.senderEmail.toLowerCase() === String(contactEmail).toLowerCase())) &&
           !m.readStatus
       ).length;
 
@@ -269,35 +305,60 @@ function handleGetConversationMessages(req, res) {
   try {
     const { conversationId } = req.params;
     const currentUserId = String(req.user._id || req.user.id);
+    const currentUserEmail = (req.user.email || "").toLowerCase();
     const inMemoryMessages = loadServerMessages();
+
+    // Determine partnerId if single ID was passed
+    let partnerId = conversationId;
+    if (conversationId.includes("_")) {
+      const parts = conversationId.split("_");
+      partnerId = parts.find((p) => p !== currentUserId) || conversationId;
+    }
 
     // Query messages strictly between this authenticated user and the conversation partner
     const messages = inMemoryMessages.filter((m) => {
-      const isParticipant =
-        String(m.senderId) === currentUserId || String(m.receiverId) === currentUserId;
-      if (!isParticipant) return false;
-
       // 1. Direct conversationId match
       if (m.conversationId === conversationId) return true;
 
-      // 2. Direct partner ID match
-      if (
-        (String(m.senderId) === currentUserId && String(m.receiverId) === conversationId) ||
-        (String(m.receiverId) === currentUserId && String(m.senderId) === conversationId)
-      ) {
+      // 2. Deterministic conversationId match
+      const mConvId = m.conversationId || getDeterministicConversationId(m.senderId, m.receiverId);
+      if (mConvId === conversationId) return true;
+
+      // 3. User & partner matching by ID or Email
+      const isSenderMe =
+        String(m.senderId) === currentUserId ||
+        (m.senderEmail && m.senderEmail.toLowerCase() === currentUserEmail);
+      const isReceiverMe =
+        String(m.receiverId) === currentUserId ||
+        (m.receiverEmail && m.receiverEmail.toLowerCase() === currentUserEmail);
+
+      const isSenderPartner =
+        String(m.senderId) === String(partnerId) ||
+        (m.senderEmail && m.senderEmail.toLowerCase() === String(partnerId).toLowerCase());
+      const isReceiverPartner =
+        String(m.receiverId) === String(partnerId) ||
+        (m.receiverEmail && m.receiverEmail.toLowerCase() === String(partnerId).toLowerCase());
+
+      if ((isSenderMe && isReceiverPartner) || (isReceiverMe && isSenderPartner)) {
         return true;
       }
 
-      // 3. Normalized pair match
-      const partnerId = String(m.senderId) === currentUserId ? String(m.receiverId) : String(m.senderId);
-      const expectedConvId = getDeterministicConversationId(currentUserId, partnerId);
-      return expectedConvId === conversationId;
+      // 4. If conversationId is composite and includes both
+      if (conversationId.includes(String(m.senderId)) && conversationId.includes(String(m.receiverId))) {
+        return true;
+      }
+
+      return false;
     });
 
     // Mark messages sent to this user as read
     let updated = false;
     messages.forEach((m) => {
-      if (String(m.receiverId) === currentUserId && !m.readStatus) {
+      const isReceiverMe =
+        String(m.receiverId) === currentUserId ||
+        (m.receiverEmail && m.receiverEmail.toLowerCase() === currentUserEmail);
+
+      if (isReceiverMe && !m.readStatus) {
         m.readStatus = true;
         updated = true;
       }
@@ -334,7 +395,7 @@ router.get("/:conversationId", protect, handleGetConversationMessages);
 // ==========================================================================
 router.post("/", protect, async (req, res) => {
   try {
-    const { receiverId, receiverRole, receiverName, message } = req.body;
+    const { receiverId, receiverRole, receiverName, receiverEmail, message } = req.body;
 
     if (!message || !message.trim()) {
       return res.status(400).json({
@@ -353,10 +414,11 @@ router.post("/", protect, async (req, res) => {
     const senderId = String(req.user._id || req.user.id);
     const senderRole = req.user.role || "student";
     const senderName = req.user.name || "Campus User";
+    const senderEmail = req.user.email || "";
     const cleanReceiverId = String(receiverId).trim();
 
     // Prevent sending message to oneself
-    if (senderId === cleanReceiverId) {
+    if (senderId === cleanReceiverId || (senderEmail && receiverEmail && senderEmail.toLowerCase() === receiverEmail.toLowerCase())) {
       return res.status(400).json({
         success: false,
         message: "Cannot send message to yourself.",
@@ -364,10 +426,10 @@ router.post("/", protect, async (req, res) => {
     }
 
     // Lookup receiver details
-    const receiverUser = findUserDetails(cleanReceiverId);
+    const receiverUser = findUserDetails(cleanReceiverId) || (receiverEmail && findUserDetails(receiverEmail));
     const cleanReceiverName = receiverUser ? receiverUser.name : receiverName || "Recipient";
     const cleanReceiverRole = receiverUser ? receiverUser.role : receiverRole || (senderRole === "student" ? "faculty" : "student");
-    const cleanReceiverEmail = receiverUser ? receiverUser.email : "";
+    const cleanReceiverEmail = receiverUser ? receiverUser.email : receiverEmail || "";
 
     // Deterministic Conversation ID
     const conversationId = getDeterministicConversationId(senderId, cleanReceiverId);
@@ -380,9 +442,11 @@ router.post("/", protect, async (req, res) => {
       senderId,
       senderRole,
       senderName,
+      senderEmail,
       receiverId: cleanReceiverId,
       receiverRole: cleanReceiverRole,
       receiverName: cleanReceiverName,
+      receiverEmail: cleanReceiverEmail,
       message: message.trim(),
       readStatus: false,
       timestamp: nowIso,
@@ -411,7 +475,7 @@ router.post("/", protect, async (req, res) => {
         userId: senderId,
         name: senderName,
         role: senderRole,
-        email: req.user.email || "",
+        email: senderEmail,
         department: req.user.department || "",
         year: req.user.year || "",
         specialization: req.user.specialization || "",
@@ -514,18 +578,23 @@ function handleMarkConversationRead(req, res) {
   try {
     const { conversationId } = req.params;
     const currentUserId = String(req.user._id || req.user.id);
+    const currentUserEmail = (req.user.email || "").toLowerCase();
     const inMemoryMessages = loadServerMessages();
     let inMemoryConversations = loadServerConversations();
 
     let updatedMessages = false;
     inMemoryMessages.forEach((m) => {
       const match =
-        (m.conversationId === conversationId ||
-          m.senderId === conversationId ||
-          m.receiverId === conversationId) &&
-        String(m.receiverId) === currentUserId;
+        m.conversationId === conversationId ||
+        m.senderId === conversationId ||
+        m.receiverId === conversationId ||
+        (m.receiverEmail && m.receiverEmail.toLowerCase() === currentUserEmail);
 
-      if (match && !m.readStatus) {
+      const isReceiverMe =
+        String(m.receiverId) === currentUserId ||
+        (m.receiverEmail && m.receiverEmail.toLowerCase() === currentUserEmail);
+
+      if (match && isReceiverMe && !m.readStatus) {
         m.readStatus = true;
         updatedMessages = true;
       }

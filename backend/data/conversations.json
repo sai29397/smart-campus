@@ -1,5 +1,156 @@
 [
   {
+    "_id": "conv_1788309816983_3",
+    "id": "conv_1788309816983_264",
+    "conversationId": "usr_1788291527038_usr_1788309805674",
+    "participants": [
+      "usr_1788291527038",
+      "usr_1788309805674"
+    ],
+    "participantDetails": [
+      {
+        "userId": "usr_1788309805674",
+        "name": "SAI",
+        "role": "student",
+        "email": "vtu20704@veltech.edu.in",
+        "department": "Computer Science",
+        "year": "1st Year",
+        "specialization": "General CSE"
+      },
+      {
+        "userId": "usr_1788291527038",
+        "name": "bhavya",
+        "role": "faculty",
+        "email": "vtu29704@veltech.edu.in",
+        "department": "Computer Science",
+        "year": "1st Year",
+        "specialization": "General CSE"
+      }
+    ],
+    "lastMessage": "Hello Professor Bhavya, I received your message! Thank you.",
+    "lastMessageTime": "2026-09-02T00:47:30.526Z",
+    "lastSenderId": "usr_1788309805674",
+    "unreadCount": {
+      "usr_1788309805674": 0,
+      "usr_1788291527038": 1
+    },
+    "createdAt": "2026-09-02T00:43:36.980Z",
+    "updatedAt": "2026-09-02T00:47:30.526Z"
+  },
+  {
+    "_id": "conv_1788309531291_670",
+    "id": "conv_1788309531291_316",
+    "conversationId": "usr_1788291527038_usr_1788309521616",
+    "participants": [
+      "usr_1788291527038",
+      "usr_1788309521616"
+    ],
+    "participantDetails": [
+      {
+        "userId": "usr_1788291527038",
+        "name": "bhavya",
+        "role": "faculty",
+        "email": "vtu29704@veltech.edu.in",
+        "department": "Computer Science",
+        "year": "1st Year",
+        "specialization": "General CSE"
+      },
+      {
+        "userId": "usr_1788309521616",
+        "name": "siddardha",
+        "role": "student",
+        "email": "vtu29854@veltech.edu.in",
+        "department": "Computer Science",
+        "year": "3rd Year",
+        "specialization": "Artificial Intelligence and Machine Learning"
+      }
+    ],
+    "lastMessage": "hii",
+    "lastMessageTime": "2026-09-02T00:41:06.005Z",
+    "lastSenderId": "usr_1788291527038",
+    "unreadCount": {
+      "usr_1788309521616": 2,
+      "usr_1788291527038": 0
+    },
+    "createdAt": "2026-09-02T00:38:51.290Z",
+    "updatedAt": "2026-09-02T00:41:06.005Z"
+  },
+  {
+    "_id": "conv_1788309436973_396",
+    "id": "conv_1788309436973_880",
+    "conversationId": "usr_1788290808817_usr_1788291527038",
+    "participants": [
+      "usr_1788291527038",
+      "usr_1788290808817"
+    ],
+    "participantDetails": [
+      {
+        "userId": "usr_1788291527038",
+        "name": "bhavya",
+        "role": "faculty",
+        "email": "vtu29704@veltech.edu.in",
+        "department": "Computer Science",
+        "year": "1st Year",
+        "specialization": "General CSE"
+      },
+      {
+        "userId": "usr_1788290808817",
+        "name": "Sneha Reddy",
+        "role": "student",
+        "email": "sneha_ds@campus.edu",
+        "department": "Computer Science",
+        "year": "3rd Year",
+        "specialization": "Data Science"
+      }
+    ],
+    "lastMessage": "hii",
+    "lastMessageTime": "2026-09-02T00:37:16.972Z",
+    "lastSenderId": "usr_1788291527038",
+    "unreadCount": {
+      "usr_1788290808817": 1,
+      "usr_1788291527038": 0
+    },
+    "createdAt": "2026-09-02T00:37:16.972Z",
+    "updatedAt": "2026-09-02T00:37:16.972Z"
+  },
+  {
+    "_id": "conv_1788309351701_351",
+    "id": "conv_1788309351701_636",
+    "conversationId": "usr_1788287068278_usr_1788291527038",
+    "participants": [
+      "usr_1788291527038",
+      "usr_1788287068278"
+    ],
+    "participantDetails": [
+      {
+        "userId": "usr_1788291527038",
+        "name": "bhavya",
+        "role": "faculty",
+        "email": "vtu29704@veltech.edu.in",
+        "department": "Computer Science",
+        "year": "1st Year",
+        "specialization": "General CSE"
+      },
+      {
+        "userId": "usr_1788287068278",
+        "name": "vimal",
+        "role": "student",
+        "email": "saibudeti1@gmail.com",
+        "department": "Computer Science",
+        "year": "1st Year"
+      }
+    ],
+    "lastMessage": "hii",
+    "lastMessageTime": "2026-09-02T00:35:51.700Z",
+    "lastSenderId": "usr_1788291527038",
+    "unreadCount": {
+      "usr_1788287068278": 1,
+      "usr_1788291527038": 0
+    },
+    "createdAt": "2026-09-02T00:35:51.700Z",
+    "updatedAt": "2026-09-02T00:35:51.700Z"
+  },
+  {
     "_id": "conv_1788309203486_188",
     "id": "conv_1788309203486_264",
     "conversationId": "usr_1788290798643_usr_faculty_1",

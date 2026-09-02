@@ -151,5 +151,31 @@
     "year": "3rd Year",
     "specialization": "Artificial Intelligence and Machine Learning",
     "createdAt": "2026-09-01T20:12:17.349Z"
+  },
+  {
+    "_id": "usr_1788309521616",
+    "id": "usr_1788309521616",
+    "name": "siddardha",
+    "email": "vtu29854@veltech.edu.in",
+    "password": "student123",
+    "passwordHash": "$2a$10$lMgj/mH2rMiE1dV04TyOCel/5h/sqGvdpK43NZc.qVSx/C6J3gFxO",
+    "role": "student",
+    "department": "Computer Science",
+    "year": "3rd Year",
+    "specialization": "Artificial Intelligence and Machine Learning",
+    "createdAt": "2026-09-02T00:38:41.616Z"
+  },
+  {
+    "_id": "usr_1788309805674",
+    "id": "usr_1788309805674",
+    "name": "SAI",
+    "email": "vtu20704@veltech.edu.in",
+    "password": "student123",
+    "passwordHash": "$2a$10$TcvHESOgAsNO9Uz91iVoaOKqi7vM8pcqBK6kz5xBJitnkqVVMWQki",
+    "role": "student",
+    "department": "Computer Science",
+    "year": "1st Year",
+    "specialization": "General CSE",
+    "createdAt": "2026-09-02T00:43:25.674Z"
   }
 ]
