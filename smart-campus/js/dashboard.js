@@ -2270,6 +2270,19 @@ function startChatLiveSync() {
   }, 2000);
 }
 
+// Ensure instant sync when switching back to tab or unlocking mobile device
+window.addEventListener("focus", () => {
+  if (currentChatTab === "conversations") silentRefreshConversations();
+  if (activeChatPartner) refreshActiveChat();
+});
+
+document.addEventListener("visibilitychange", () => {
+  if (!document.hidden) {
+    if (currentChatTab === "conversations") silentRefreshConversations();
+    if (activeChatPartner) refreshActiveChat();
+  }
+});
+
 function filterChatByRole(role) {
   currentRoleFilter = role;
   ["chipFilterAll", "chipFilterStudents", "chipFilterFaculty", "chipFilterAdmin"].forEach((id) => {
@@ -2404,6 +2417,11 @@ async function silentRefreshConversations() {
 
       if (filteredList.length > 0) {
         renderConversationsList(contactListEl, filteredList);
+        // If receiver had no active conversation open, auto-open the latest incoming thread
+        if (!activeChatPartner) {
+          const latest = filteredList[0];
+          quickMessageUser(latest.contactId, latest.contactName, latest.contactYear || "", latest.contactSpecialization || "", latest.contactRole || "user", latest.contactEmail || "");
+        }
       }
     }
   } catch (e) {}
