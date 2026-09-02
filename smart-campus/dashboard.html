@@ -303,6 +303,27 @@
             <div id="headerQuickActions" style="display: flex; gap: 8px; flex-wrap: wrap;"></div>
         </div>
 
+        <!-- ================= 1 UNIFIED DASHBOARD PERSPECTIVE SWITCHER ================= -->
+        <div class="role-perspective-bar">
+            <div class="role-perspective-label">
+                <span>🔄 <strong>Active Portal View:</strong></span>
+            </div>
+            <div class="role-perspective-buttons">
+                <button type="button" id="roleBtnAll" class="role-perspective-btn" onclick="switchDashboardView('all')">
+                    🌐 All Modules (Unified Overview)
+                </button>
+                <button type="button" id="roleBtnStudent" class="role-perspective-btn" onclick="switchDashboardView('student')">
+                    👨‍🎓 Student Portal
+                </button>
+                <button type="button" id="roleBtnFaculty" class="role-perspective-btn" onclick="switchDashboardView('faculty')">
+                    👨‍🏫 Faculty Portal
+                </button>
+                <button type="button" id="roleBtnAdmin" class="role-perspective-btn" onclick="switchDashboardView('admin')">
+                    🏛️ Administration Portal
+                </button>
+            </div>
+        </div>
+
         <!-- ================= DYNAMIC SUMMARY STATS ================= -->
         <div class="stats-grid" id="dashboardStatsGrid"></div>
 

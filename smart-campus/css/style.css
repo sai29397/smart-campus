@@ -728,6 +728,79 @@ textarea {
 }
 
 /* ==========================================================================
+   ROLE PERSPECTIVE SWITCHER (1 UNIFIED DASHBOARD)
+   ========================================================================== */
+.role-perspective-bar {
+  background: #ffffff;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 12px 16px;
+  margin-bottom: 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  box-shadow: var(--shadow-sm);
+}
+
+.role-perspective-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: var(--dark);
+}
+
+.role-perspective-buttons {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.role-perspective-btn {
+  background: #f1f5f9;
+  border: 1.5px solid var(--border-color);
+  color: var(--text-muted);
+  font-weight: 700;
+  font-size: 0.85rem;
+  padding: 8px 16px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: var(--transition);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.role-perspective-btn:hover {
+  background: #e2e8f0;
+  color: var(--dark);
+  border-color: #cbd5e1;
+}
+
+.role-perspective-btn.active {
+  background: var(--primary);
+  color: #ffffff;
+  border-color: var(--primary-hover);
+  box-shadow: 0 4px 10px rgba(37, 99, 235, 0.25);
+}
+
+.all-modules-banner {
+  background: linear-gradient(135deg, #1e293b, #0f172a);
+  color: #ffffff;
+  border-radius: var(--radius-md);
+  padding: 16px 20px;
+  margin-bottom: 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+/* ==========================================================================
    RESPONSIVE DESIGN
    ========================================================================== */
 @media (max-width: 768px) {
@@ -747,6 +820,15 @@ textarea {
     flex-direction: column;
     align-items: flex-start;
     gap: 1rem;
+  }
+
+  .role-perspective-bar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .role-perspective-buttons {
+    flex-direction: column;
   }
 
   .form-row {

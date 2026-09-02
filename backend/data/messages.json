@@ -374,5 +374,21 @@
     "message": "hii",
     "readStatus": false,
     "timestamp": "2026-09-02T01:07:43.971Z"
+  },
+  {
+    "_id": "msg_1788311534599_7353",
+    "id": "msg_1788311534599_7145",
+    "conversationId": "usr_1788309805674_usr_1788310305859",
+    "senderId": "usr_1788310305859",
+    "senderRole": "student",
+    "senderName": "sai ganesh",
+    "senderEmail": "vtu29853@veltech.edu.in",
+    "receiverId": "usr_1788309805674",
+    "receiverRole": "student",
+    "receiverName": "SAI",
+    "receiverEmail": "vtu20704@veltech.edu.in",
+    "message": "hii",
+    "readStatus": false,
+    "timestamp": "2026-09-02T01:12:14.599Z"
   }
 ]

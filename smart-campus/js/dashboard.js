@@ -46,16 +46,34 @@ function initUnifiedSession() {
   const userJson = localStorage.getItem("smart_campus_user");
 
   if (!token || !userJson) {
-    alert("⚠️ Please sign in to access your dashboard.");
-    window.location.href = "login.html";
-    return;
-  }
-
-  try {
-    currentUser = JSON.parse(userJson);
-  } catch (e) {
-    window.location.href = "login.html";
-    return;
+    // Default guest campus user so anyone can view all 3 portals immediately
+    currentUser = {
+      id: "usr_student_1",
+      _id: "usr_student_1",
+      name: "Campus User",
+      email: "student@campus.edu",
+      role: "student",
+      department: "Computer Science",
+      year: "1st Year",
+      specialization: "General CSE",
+    };
+    localStorage.setItem("smart_campus_token", "default_guest_token");
+    localStorage.setItem("smart_campus_user", JSON.stringify(currentUser));
+  } else {
+    try {
+      currentUser = JSON.parse(userJson);
+    } catch (e) {
+      currentUser = {
+        id: "usr_student_1",
+        _id: "usr_student_1",
+        name: "Campus User",
+        email: "student@campus.edu",
+        role: "student",
+        department: "Computer Science",
+        year: "1st Year",
+        specialization: "General CSE",
+      };
+    }
   }
 
   const role = (currentUser.role || "student").toLowerCase();
@@ -69,87 +87,30 @@ function initUnifiedSession() {
   const navName = document.getElementById("navbarUserName");
   const navTag = document.getElementById("navbarUserTag");
   const headerName = document.getElementById("headerUserName");
-  const headerSubText = document.getElementById("headerSubText");
-  const headerQuickActions = document.getElementById("headerQuickActions");
 
   if (navName) navName.innerText = userName;
   if (headerName) headerName.innerText = userName;
+  if (navAvatar) {
+    navAvatar.innerText = role === "faculty" ? "👨‍🏫" : role === "admin" ? "🏛️" : "👨‍🎓";
+  }
+  if (navTag) {
+    navTag.innerText = `${userDept} • ${role.toUpperCase()}`;
+  }
 
-  if (role === "admin" || role === "administration") {
-    // Admin View
-    if (navAvatar) navAvatar.innerText = "🏛️";
-    if (navTag) navTag.innerText = `Administration • Super Admin`;
-    if (headerSubText) headerSubText.innerText = `Campus Administration • Manage class schedules, classroom locations, venues, cancellations, and notifications across departments.`;
-    if (headerQuickActions) {
-      headerQuickActions.innerHTML = `
-        <button onclick="toggleAdminCreateClassForm()" class="btn btn-primary btn-sm">📅 + Schedule Class</button>
-        <button onclick="loadAdminClasses()" class="btn btn-outline btn-sm">🔄 Refresh Schedules</button>
-      `;
-    }
+  // Initialize Chat & Live Sync
+  loadChatConversations();
+  startChatLiveSync();
 
-    document.getElementById("adminDashboardView").style.display = "block";
-    document.getElementById("facultyDashboardView").style.display = "none";
-    document.getElementById("studentDashboardView").style.display = "none";
-
-    renderAdminStats();
-    loadAdminClasses();
-    loadChatConversations();
-    startChatLiveSync();
-    initAdminDateDefaults();
-  } else if (role === "faculty") {
-    // Faculty View
-    if (navAvatar) navAvatar.innerText = "👨‍🏫";
-    if (navTag) navTag.innerText = `${userDept} • Faculty`;
-    if (headerSubText) headerSubText.innerText = `Faculty Portal • Manage students, view class schedule, assign subjects, take attendance, and publish materials for ${userDept}.`;
-    if (headerQuickActions) {
-      headerQuickActions.innerHTML = `
-        <a href="#facultyScheduleSection" class="btn btn-primary btn-sm">🏫 My Classes</a>
-        <button onclick="toggleAddStudentForm()" class="btn btn-outline btn-sm">👨‍🎓 + Add Student</button>
-        <a href="#academicSection" class="btn btn-outline btn-sm">📚 Assign Subject</a>
-        <a href="#attendanceSection" class="btn btn-outline btn-sm">📋 Mark Attendance</a>
-      `;
-    }
-
-    document.getElementById("adminDashboardView").style.display = "none";
-    document.getElementById("facultyDashboardView").style.display = "block";
-    document.getElementById("studentDashboardView").style.display = "none";
-
-    renderFacultyStats();
-    loadFacultyClasses();
-    setupAnnouncementForm();
-    setupAcademicAssignmentForm();
-    loadFacultyAnnouncements();
-    loadFacultySubjects();
-    loadStudentDirectory();
-    loadFacultyPapers();
-    loadChatConversations();
-    startChatLiveSync();
-    initAttendanceDefaults();
+  // Switch to the user's initial role view (or 'all' if requested via hash)
+  const hash = window.location.hash.toLowerCase();
+  if (hash === "#admin" || role === "admin" || role === "administration") {
+    switchDashboardView("admin");
+  } else if (hash === "#faculty" || role === "faculty") {
+    switchDashboardView("faculty");
+  } else if (hash === "#all") {
+    switchDashboardView("all");
   } else {
-    // Student View
-    if (navAvatar) navAvatar.innerText = "👨‍🎓";
-    if (navTag) navTag.innerText = `${userDept} • ${userYear}`;
-    if (headerSubText) headerSubText.innerText = `Student Portal • Academic curriculum, live class venues, attendance tracking, exam papers, and faculty chat for ${userDept} (${userYear}) • ${userSpec}.`;
-    if (headerQuickActions) {
-      headerQuickActions.innerHTML = `
-        <a href="#studentScheduleSection" class="btn btn-primary btn-sm">🏫 Class Schedule</a>
-        <a href="#studentPyqSection" class="btn btn-outline btn-sm">📄 Past Exam Papers</a>
-        <button onclick="refreshStudentData()" class="btn btn-outline btn-sm">🔄 Refresh</button>
-      `;
-    }
-
-    document.getElementById("adminDashboardView").style.display = "none";
-    document.getElementById("facultyDashboardView").style.display = "none";
-    document.getElementById("studentDashboardView").style.display = "block";
-
-    renderStudentStats();
-    loadStudentClasses();
-    loadStudentAnnouncements();
-    loadStudentSubjects();
-    loadStudentAttendance();
-    loadStudentPapers();
-    loadChatConversations();
-    startChatLiveSync();
+    switchDashboardView(role || "student");
   }
 
   // Logout handler
@@ -160,6 +121,144 @@ function initUnifiedSession() {
       localStorage.removeItem("smart_campus_user");
       window.location.href = "login.html";
     });
+  }
+}
+
+/**
+ * 1 Unified Dashboard Perspective Switcher (Student / Faculty / Admin / All-in-One)
+ */
+function switchDashboardView(viewMode) {
+  const adminView = document.getElementById("adminDashboardView");
+  const facultyView = document.getElementById("facultyDashboardView");
+  const studentView = document.getElementById("studentDashboardView");
+  const headerSubText = document.getElementById("headerSubText");
+  const headerQuickActions = document.getElementById("headerQuickActions");
+
+  const btnAll = document.getElementById("roleBtnAll");
+  const btnStudent = document.getElementById("roleBtnStudent");
+  const btnFaculty = document.getElementById("roleBtnFaculty");
+  const btnAdmin = document.getElementById("roleBtnAdmin");
+
+  // Reset all active classes
+  [btnAll, btnStudent, btnFaculty, btnAdmin].forEach((b) => {
+    if (b) b.classList.remove("active");
+  });
+
+  const userName = currentUser ? currentUser.name : "User";
+  const userDept = currentUser ? currentUser.department : "Computer Science";
+  const userYear = currentUser ? currentUser.year : "1st Year";
+  const userSpec = currentUser ? currentUser.specialization : "General CSE";
+
+  if (viewMode === "admin") {
+    if (btnAdmin) btnAdmin.classList.add("active");
+    if (adminView) adminView.style.display = "block";
+    if (facultyView) facultyView.style.display = "none";
+    if (studentView) studentView.style.display = "none";
+
+    if (headerSubText) {
+      headerSubText.innerText = `🏛️ Administration Portal • Manage class schedules, classroom locations, venues, cancellations, and notifications across departments.`;
+    }
+    if (headerQuickActions) {
+      headerQuickActions.innerHTML = `
+        <button onclick="toggleAdminCreateClassForm()" class="btn btn-primary btn-sm">📅 + Schedule Class</button>
+        <button onclick="loadAdminClasses()" class="btn btn-outline btn-sm">🔄 Refresh Schedules</button>
+        <a href="#chatSection" class="btn btn-outline btn-sm">💬 Messages</a>
+      `;
+    }
+
+    renderAdminStats();
+    loadAdminClasses();
+    initAdminDateDefaults();
+  } else if (viewMode === "faculty") {
+    if (btnFaculty) btnFaculty.classList.add("active");
+    if (adminView) adminView.style.display = "none";
+    if (facultyView) facultyView.style.display = "block";
+    if (studentView) studentView.style.display = "none";
+
+    if (headerSubText) {
+      headerSubText.innerText = `👨‍🏫 Faculty Portal • Manage students, view class schedule, assign subjects, take attendance, and publish materials for ${userDept}.`;
+    }
+    if (headerQuickActions) {
+      headerQuickActions.innerHTML = `
+        <a href="#facultyScheduleSection" class="btn btn-primary btn-sm">🏫 My Classes</a>
+        <button onclick="toggleAddStudentForm()" class="btn btn-outline btn-sm">👨‍🎓 + Add Student</button>
+        <a href="#academicSection" class="btn btn-outline btn-sm">📚 Assign Subject</a>
+        <a href="#attendanceSection" class="btn btn-outline btn-sm">📋 Mark Attendance</a>
+      `;
+    }
+
+    renderFacultyStats();
+    loadFacultyClasses();
+    setupAnnouncementForm();
+    setupAcademicAssignmentForm();
+    loadFacultyAnnouncements();
+    loadFacultySubjects();
+    loadStudentDirectory();
+    loadFacultyPapers();
+    initAttendanceDefaults();
+  } else if (viewMode === "all") {
+    if (btnAll) btnAll.classList.add("active");
+    // Show ALL three portals simultaneously
+    if (adminView) adminView.style.display = "block";
+    if (facultyView) facultyView.style.display = "block";
+    if (studentView) studentView.style.display = "block";
+
+    if (headerSubText) {
+      headerSubText.innerText = `🌐 All-in-One Unified Dashboard • Complete campus overview containing Administration, Faculty, and Student modules.`;
+    }
+    if (headerQuickActions) {
+      headerQuickActions.innerHTML = `
+        <a href="#adminClassSection" class="btn btn-primary btn-sm">🏛️ Admin Classes</a>
+        <a href="#facultyScheduleSection" class="btn btn-outline btn-sm">👨‍🏫 Faculty Classes</a>
+        <a href="#studentScheduleSection" class="btn btn-outline btn-sm">👨‍🎓 Student Timetable</a>
+        <a href="#chatSection" class="btn btn-outline btn-sm">💬 Messages</a>
+      `;
+    }
+
+    // Render all stats and modules
+    renderAdminStats();
+    loadAdminClasses();
+    initAdminDateDefaults();
+
+    loadFacultyClasses();
+    setupAnnouncementForm();
+    setupAcademicAssignmentForm();
+    loadFacultyAnnouncements();
+    loadFacultySubjects();
+    loadStudentDirectory();
+    loadFacultyPapers();
+    initAttendanceDefaults();
+
+    loadStudentClasses();
+    loadStudentAnnouncements();
+    loadStudentSubjects();
+    loadStudentAttendance();
+    loadStudentPapers();
+  } else {
+    // Default to Student View
+    if (btnStudent) btnStudent.classList.add("active");
+    if (adminView) adminView.style.display = "none";
+    if (facultyView) facultyView.style.display = "none";
+    if (studentView) studentView.style.display = "block";
+
+    if (headerSubText) {
+      headerSubText.innerText = `👨‍🎓 Student Portal • Academic curriculum, live class venues, attendance tracking, exam papers, and faculty chat for ${userDept} (${userYear}) • ${userSpec}.`;
+    }
+    if (headerQuickActions) {
+      headerQuickActions.innerHTML = `
+        <a href="#studentScheduleSection" class="btn btn-primary btn-sm">🏫 Class Schedule</a>
+        <a href="#studentPyqSection" class="btn btn-outline btn-sm">📄 Past Exam Papers</a>
+        <a href="#chatSection" class="btn btn-outline btn-sm">💬 Messages</a>
+        <button onclick="refreshStudentData()" class="btn btn-outline btn-sm">🔄 Refresh</button>
+      `;
+    }
+
+    renderStudentStats();
+    loadStudentClasses();
+    loadStudentAnnouncements();
+    loadStudentSubjects();
+    loadStudentAttendance();
+    loadStudentPapers();
   }
 }
 
