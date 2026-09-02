@@ -294,5 +294,53 @@
     "message": "Hello Professor Bhavya, I received your message! Thank you.",
     "readStatus": true,
     "timestamp": "2026-09-02T00:47:30.526Z"
+  },
+  {
+    "_id": "msg_1788310546345_4703",
+    "id": "msg_1788310546345_1283",
+    "conversationId": "usr_1788310526108_usr_1788310531206",
+    "senderId": "usr_1788310526108",
+    "senderRole": "student",
+    "senderName": "Aarav Gupta",
+    "senderEmail": "studenta_1788310520924@campus.edu",
+    "receiverId": "usr_1788310531206",
+    "receiverRole": "student",
+    "receiverName": "Bhavna Patel",
+    "receiverEmail": "studentb_1788310520924@campus.edu",
+    "message": "Hello, are you attending the seminar tomorrow?",
+    "readStatus": false,
+    "timestamp": "2026-09-02T00:55:46.345Z"
+  },
+  {
+    "_id": "msg_1788310594369_5863",
+    "id": "msg_1788310594369_2417",
+    "conversationId": "usr_1788310594164_usr_1788310594275",
+    "senderId": "usr_1788310594164",
+    "senderRole": "student",
+    "senderName": "Aarav Gupta",
+    "senderEmail": "studenta_1788310593946@campus.edu",
+    "receiverId": "usr_1788310594275",
+    "receiverRole": "student",
+    "receiverName": "Bhavna Patel",
+    "receiverEmail": "studentb_1788310593946@campus.edu",
+    "message": "Hello, are you attending the seminar tomorrow?",
+    "readStatus": true,
+    "timestamp": "2026-09-02T00:56:34.369Z"
+  },
+  {
+    "_id": "msg_1788310594476_7545",
+    "id": "msg_1788310594476_7893",
+    "conversationId": "usr_1788310594164_usr_1788310594275",
+    "senderId": "usr_1788310594275",
+    "senderRole": "student",
+    "senderName": "Bhavna Patel",
+    "senderEmail": "studentb_1788310593946@campus.edu",
+    "receiverId": "usr_1788310594164",
+    "receiverRole": "student",
+    "receiverName": "Aarav Gupta",
+    "receiverEmail": "studenta_1788310593946@campus.edu",
+    "message": "Yes, I will be attending.",
+    "readStatus": true,
+    "timestamp": "2026-09-02T00:56:34.475Z"
   }
 ]

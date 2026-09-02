@@ -1,5 +1,81 @@
 [
   {
+    "_id": "conv_1788310594370_25",
+    "id": "conv_1788310594370_753",
+    "conversationId": "usr_1788310594164_usr_1788310594275",
+    "participants": [
+      "usr_1788310594164",
+      "usr_1788310594275"
+    ],
+    "participantDetails": [
+      {
+        "userId": "usr_1788310594275",
+        "name": "Bhavna Patel",
+        "role": "student",
+        "email": "studentb_1788310593946@campus.edu",
+        "department": "Computer Science",
+        "year": "3rd Year",
+        "specialization": "Cyber Security"
+      },
+      {
+        "userId": "usr_1788310594164",
+        "name": "Aarav Gupta",
+        "role": "student",
+        "email": "studenta_1788310593946@campus.edu",
+        "department": "Computer Science",
+        "year": "3rd Year",
+        "specialization": "Artificial Intelligence and Machine Learning"
+      }
+    ],
+    "lastMessage": "Yes, I will be attending.",
+    "lastMessageTime": "2026-09-02T00:56:34.475Z",
+    "lastSenderId": "usr_1788310594275",
+    "unreadCount": {
+      "usr_1788310594275": 0,
+      "usr_1788310594164": 1
+    },
+    "createdAt": "2026-09-02T00:56:34.369Z",
+    "updatedAt": "2026-09-02T00:56:34.475Z"
+  },
+  {
+    "_id": "conv_1788310546345_351",
+    "id": "conv_1788310546345_419",
+    "conversationId": "usr_1788310526108_usr_1788310531206",
+    "participants": [
+      "usr_1788310526108",
+      "usr_1788310531206"
+    ],
+    "participantDetails": [
+      {
+        "userId": "usr_1788310526108",
+        "name": "Aarav Gupta",
+        "role": "student",
+        "email": "studenta_1788310520924@campus.edu",
+        "department": "Computer Science",
+        "year": "3rd Year",
+        "specialization": "Artificial Intelligence and Machine Learning"
+      },
+      {
+        "userId": "usr_1788310531206",
+        "name": "Bhavna Patel",
+        "role": "student",
+        "email": "studentb_1788310520924@campus.edu",
+        "department": "Computer Science",
+        "year": "3rd Year",
+        "specialization": "Cyber Security"
+      }
+    ],
+    "lastMessage": "Hello, are you attending the seminar tomorrow?",
+    "lastMessageTime": "2026-09-02T00:55:46.345Z",
+    "lastSenderId": "usr_1788310526108",
+    "unreadCount": {
+      "usr_1788310531206": 1,
+      "usr_1788310526108": 0
+    },
+    "createdAt": "2026-09-02T00:55:46.345Z",
+    "updatedAt": "2026-09-02T00:55:46.345Z"
+  },
+  {
     "_id": "conv_1788309816983_3",
     "id": "conv_1788309816983_264",
     "conversationId": "usr_1788291527038_usr_1788309805674",

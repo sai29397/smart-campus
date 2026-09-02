@@ -92,31 +92,12 @@ router.get("/contacts", protect, (req, res) => {
     const allUsers = loadServerUsers();
     const allConversations = loadServerConversations();
 
-    let eligibleUsers = [];
-
-    if (currentUserRole === "student") {
-      // Students can message faculty and administration
-      eligibleUsers = allUsers.filter(
-        (u) =>
-          String(u._id || u.id) !== currentUserId &&
-          (u.email || "").toLowerCase() !== currentUserEmail &&
-          (u.role === "faculty" || u.role === "admin" || u.role === "administration")
-      );
-    } else if (currentUserRole === "faculty") {
-      // Faculty can message students, fellow faculty, and administration
-      eligibleUsers = allUsers.filter(
-        (u) =>
-          String(u._id || u.id) !== currentUserId &&
-          (u.email || "").toLowerCase() !== currentUserEmail
-      );
-    } else {
-      // Administration can message everyone
-      eligibleUsers = allUsers.filter(
-        (u) =>
-          String(u._id || u.id) !== currentUserId &&
-          (u.email || "").toLowerCase() !== currentUserEmail
-      );
-    }
+    // Allow all registered campus users (Students, Faculty, Staff) to message each other
+    const eligibleUsers = allUsers.filter(
+      (u) =>
+        String(u._id || u.id) !== currentUserId &&
+        (u.email || "").toLowerCase() !== currentUserEmail
+    );
 
     const contacts = eligibleUsers.map((u) => {
       const contactId = String(u._id || u.id);

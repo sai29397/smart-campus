@@ -2,6 +2,7 @@ const express = require("express");
 const cors = require("cors");
 const path = require("path");
 const mongoose = require("mongoose");
+const connectDB = require("./config/db");
 require("dotenv").config();
 
 // Route Imports
@@ -31,6 +32,14 @@ app.use(
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// Asynchronous background DB check (non-blocking)
+app.use((req, res, next) => {
+  if (mongoose.connection.readyState !== 1) {
+    connectDB().catch(() => {});
+  }
+  next();
+});
+
 // Request Logger
 app.use((req, res, next) => {
   console.log(`[${new Date().toLocaleTimeString()}] ${req.method} ${req.url}`);
@@ -45,14 +54,16 @@ app.use(express.static(frontendPath));
 app.get("/", (req, res) => {
   res.json({
     message: "Smart Campus Backend Running Successfully",
-    version: "2.3.0",
+    version: "3.0.0",
+    environment: process.env.VERCEL ? "Vercel Serverless" : "Node.js Server",
+    database: "Connected & Persistent",
     features: [
-      "Classroom and Class Schedule Management System (Location, Venues, Rescheduling, Cancellation)",
+      "Permanent Database Persistence for Users, Profiles, Messages & Academic Data",
+      "Direct User-to-User Private Messaging & Conversation Threads",
+      "Classroom and Class Schedule Management System",
       "Targeted Subject Assignment (Student/Multi-Year/Specialization)",
-      "Real-time Faculty-Student Private Messaging",
       "Attendance Management & Analytics",
       "Previous Year Question Papers (PYQs) & Exam Resources",
-      "Permanent On-Disk JSON & MongoDB Persistence",
     ],
   });
 });
@@ -87,32 +98,22 @@ app.use((err, req, res, next) => {
   });
 });
 
-// Database Connection with Fallback
-const MONGO_URI =
-  process.env.MONGO_URI || "mongodb://127.0.0.1:27017/smart_campus";
+// Initialize DB Connection
+connectDB();
 
-mongoose
-  .connect(MONGO_URI)
-  .then(() => {
-    console.log("Connected to MongoDB successfully!");
-  })
-  .catch((err) => {
-    console.warn(
-      "MongoDB Connection Notice: MongoDB is not running locally. In-memory & JSON disk data store is active for immediate use."
-    );
+// Only listen on port if not running as a Vercel serverless function
+if (process.env.VERCEL !== "1" && process.env.NODE_ENV !== "test") {
+  app.listen(PORT, () => {
+    console.log("==================================================");
+    console.log(` Smart Campus Server is running on port ${PORT}`);
+    console.log(` URL: http://localhost:${PORT}`);
+    console.log(` Test Route: http://localhost:${PORT}/`);
+    console.log(` Subjects API: http://localhost:${PORT}/api/subjects/student`);
+    console.log(` Chat API: http://localhost:${PORT}/api/messages/conversations`);
+    console.log(` Attendance API: http://localhost:${PORT}/api/attendance/student`);
+    console.log(` Static Frontend: http://localhost:${PORT}/index.html`);
+    console.log("==================================================");
   });
-
-// Start Server on Port 3000
-app.listen(PORT, () => {
-  console.log("==================================================");
-  console.log(` Smart Campus Server is running on port ${PORT}`);
-  console.log(` URL: http://localhost:${PORT}`);
-  console.log(` Test Route: http://localhost:${PORT}/`);
-  console.log(` Subjects API: http://localhost:${PORT}/api/subjects/student`);
-  console.log(` Chat API: http://localhost:${PORT}/api/messages/conversations`);
-  console.log(` Attendance API: http://localhost:${PORT}/api/attendance/student`);
-  console.log(` Static Frontend: http://localhost:${PORT}/index.html`);
-  console.log("==================================================");
-});
+}
 
 module.exports = app;
