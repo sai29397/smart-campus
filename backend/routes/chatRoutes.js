@@ -26,14 +26,14 @@ function loadServerMessages() {
       const list = JSON.parse(data);
       if (Array.isArray(list)) return list;
     }
-  } catch (e) { }
+  } catch (e) {}
   return [];
 }
 
 function saveServerMessages(list) {
   try {
     fs.writeFileSync(messagesFilePath, JSON.stringify(list, null, 2), "utf8");
-  } catch (e) { }
+  } catch (e) {}
 }
 
 function loadServerConversations() {
@@ -43,14 +43,14 @@ function loadServerConversations() {
       const list = JSON.parse(data);
       if (Array.isArray(list)) return list;
     }
-  } catch (e) { }
+  } catch (e) {}
   return [];
 }
 
 function saveServerConversations(list) {
   try {
     fs.writeFileSync(conversationsFilePath, JSON.stringify(list, null, 2), "utf8");
-  } catch (e) { }
+  } catch (e) {}
 }
 
 function loadServerUsers() {
@@ -58,7 +58,7 @@ function loadServerUsers() {
     if (fs.existsSync(usersFilePath)) {
       return JSON.parse(fs.readFileSync(usersFilePath, "utf8")) || [];
     }
-  } catch (e) { }
+  } catch (e) {}
   return [];
 }
 
@@ -66,7 +66,33 @@ function loadServerUsers() {
 function getDeterministicConversationId(userAId, userBId) {
   const idA = String(userAId || "").trim();
   const idB = String(userBId || "").trim();
-  return [idA, idB].sort().join("_");
+  return [idA, idB].sort().join("--");
+}
+
+// Safely extract the other participant's ID from a conversationId without breaking user IDs
+function extractPartnerId(conversationId, currentUserId) {
+  if (!conversationId) return "";
+  const curId = String(currentUserId || "").toLowerCase().trim();
+
+  if (conversationId.includes("--")) {
+    const parts = conversationId.split("--");
+    const found = parts.find((p) => String(p).toLowerCase().trim() !== curId);
+    if (found) return found;
+  }
+  if (conversationId.includes("__")) {
+    const parts = conversationId.split("__");
+    const found = parts.find((p) => String(p).toLowerCase().trim() !== curId);
+    if (found) return found;
+  }
+  if (conversationId.startsWith("usr_")) {
+    const secondIndex = conversationId.indexOf("usr_", 4);
+    if (secondIndex > 0) {
+      const partA = conversationId.substring(0, secondIndex - 1);
+      const partB = conversationId.substring(secondIndex);
+      return String(partA).toLowerCase().trim() === curId ? partB : partA;
+    }
+  }
+  return conversationId;
 }
 
 // Helper to find user info by id or email
@@ -101,7 +127,7 @@ async function findUserDetails(userIdOrEmail) {
           specialization: dbUser.specialization || "",
         };
       }
-    } catch (e) { }
+    } catch (e) {}
   }
 
   // 2. Fallback to users.json
@@ -139,7 +165,7 @@ router.get("/contacts", protect, async (req, res) => {
             specialization: u.specialization || (u.role === "faculty" ? "Faculty" : "General CSE"),
           }));
         }
-      } catch (e) { }
+      } catch (e) {}
     }
 
     if (allUsers.length === 0) {
@@ -161,9 +187,10 @@ router.get("/contacts", protect, async (req, res) => {
       const existingConv = allConversations.find(
         (c) =>
           c.conversationId === convId ||
+          c.conversationId === [currentUserId, contactId].sort().join("_") ||
           (Array.isArray(c.participants) &&
-            c.participants.includes(contactId) &&
-            c.participants.includes(currentUserId))
+            c.participants.map(String).includes(contactId) &&
+            c.participants.map(String).includes(currentUserId))
       );
 
       return {
@@ -219,10 +246,9 @@ router.get("/conversations", protect, async (req, res) => {
             }
           });
         }
-      } catch (e) { }
+      } catch (e) {}
     }
 
-    // Map of conversationId -> conversation
     const convMap = {};
 
     // 1. Index stored conversations
@@ -288,7 +314,6 @@ router.get("/conversations", protect, async (req, res) => {
             updatedAt: msg.timestamp,
           };
         } else {
-          // Update last message if more recent
           if (new Date(msg.timestamp) > new Date(convMap[convId].lastMessageTime || 0)) {
             convMap[convId].lastMessage = msg.message || msg.content || msg.text || "";
             convMap[convId].lastMessageTime = msg.timestamp;
@@ -346,7 +371,6 @@ router.get("/conversations", protect, async (req, res) => {
       });
     }
 
-    // Sort descending by latest message time
     conversationList.sort((a, b) => new Date(b.lastMessageTime || 0) - new Date(a.lastMessageTime || 0));
 
     return res.json(conversationList);
@@ -366,13 +390,12 @@ async function handleGetConversationMessages(req, res) {
     const { conversationId } = req.params;
     const currentUserId = String(req.user._id || req.user.id);
     const currentUserEmail = (req.user.email || "").toLowerCase();
+    const partnerId = extractPartnerId(conversationId, currentUserId);
+    const partnerUser = await findUserDetails(partnerId);
+    const partnerEmail = partnerUser ? (partnerUser.email || "").toLowerCase() : "";
 
-    // Determine partnerId if single ID was passed
-    let partnerId = conversationId;
-    if (conversationId.includes("_")) {
-      const parts = conversationId.split("_");
-      partnerId = parts.find((p) => p !== currentUserId) || conversationId;
-    }
+    const convIdStandard = getDeterministicConversationId(currentUserId, partnerId);
+    const convIdLegacy = [currentUserId, partnerId].sort().join("_");
 
     let allFoundMessages = [];
 
@@ -381,49 +404,49 @@ async function handleGetConversationMessages(req, res) {
       try {
         const dbMsgs = await Message.find({
           $or: [
-            { conversationId },
+            { conversationId: conversationId },
+            { conversationId: convIdStandard },
+            { conversationId: convIdLegacy },
             { senderId: currentUserId, receiverId: partnerId },
             { senderId: partnerId, receiverId: currentUserId },
+            { senderEmail: currentUserEmail, receiverEmail: partnerEmail },
+            { senderEmail: partnerEmail, receiverEmail: currentUserEmail },
             { senderEmail: currentUserEmail, receiverId: partnerId },
             { senderId: partnerId, receiverEmail: currentUserEmail },
+            { senderId: currentUserId, receiverEmail: partnerEmail },
+            { senderEmail: partnerEmail, receiverId: currentUserId },
           ],
         }).lean();
 
         if (Array.isArray(dbMsgs)) {
           allFoundMessages = dbMsgs;
         }
-      } catch (e) { }
+      } catch (e) {}
     }
 
-    // 2. Merge with disk JSON messages
+    // 2. Query disk JSON messages
     const inMemoryMessages = loadServerMessages();
     const diskMatches = inMemoryMessages.filter((m) => {
-      // Direct conversationId match
-      if (m.conversationId === conversationId) return true;
-
-      // Deterministic match
-      const mConvId = m.conversationId || getDeterministicConversationId(m.senderId, m.receiverId);
-      if (mConvId === conversationId) return true;
-
-      const isSenderMe =
-        String(m.senderId) === currentUserId ||
-        (m.senderEmail && m.senderEmail.toLowerCase() === currentUserEmail);
-      const isReceiverMe =
-        String(m.receiverId) === currentUserId ||
-        (m.receiverEmail && m.receiverEmail.toLowerCase() === currentUserEmail);
-
-      const isSenderPartner =
-        String(m.senderId) === String(partnerId) ||
-        (m.senderEmail && m.senderEmail.toLowerCase() === String(partnerId).toLowerCase());
-      const isReceiverPartner =
-        String(m.receiverId) === String(partnerId) ||
-        (m.receiverEmail && m.receiverEmail.toLowerCase() === String(partnerId).toLowerCase());
-
-      if ((isSenderMe && isReceiverPartner) || (isReceiverMe && isSenderPartner)) {
+      if (
+        m.conversationId === conversationId ||
+        m.conversationId === convIdStandard ||
+        m.conversationId === convIdLegacy
+      ) {
         return true;
       }
 
-      if (conversationId.includes(String(m.senderId)) && conversationId.includes(String(m.receiverId))) {
+      const mSenderId = String(m.senderId || "");
+      const mReceiverId = String(m.receiverId || "");
+      const mSenderEmail = (m.senderEmail || "").toLowerCase();
+      const mReceiverEmail = (m.receiverEmail || "").toLowerCase();
+
+      const isSenderMe = mSenderId === currentUserId || (currentUserEmail && mSenderEmail === currentUserEmail);
+      const isReceiverMe = mReceiverId === currentUserId || (currentUserEmail && mReceiverEmail === currentUserEmail);
+
+      const isSenderPartner = mSenderId === partnerId || (partnerEmail && mSenderEmail === partnerEmail);
+      const isReceiverPartner = mReceiverId === partnerId || (partnerEmail && mReceiverEmail === partnerEmail);
+
+      if ((isSenderMe && isReceiverPartner) || (isReceiverMe && isSenderPartner)) {
         return true;
       }
 
@@ -450,7 +473,6 @@ async function handleGetConversationMessages(req, res) {
     });
 
     if (updated) {
-      // Update memory & disk
       inMemoryMessages.forEach((m) => {
         if (msgMap.has(String(m._id || m.id))) {
           m.readStatus = true;
@@ -462,12 +484,16 @@ async function handleGetConversationMessages(req, res) {
         try {
           await Message.updateMany(
             {
-              $or: [{ conversationId }, { receiverId: currentUserId }],
+              $or: [
+                { conversationId },
+                { conversationId: convIdStandard },
+                { receiverId: currentUserId },
+              ],
               readStatus: false,
             },
             { readStatus: true }
           );
-        } catch (e) { }
+        } catch (e) {}
       }
     }
 
@@ -576,7 +602,9 @@ router.post("/", protect, async (req, res) => {
     // 3. Create or Update Conversation
     let inMemoryConversations = loadServerConversations();
     let existingConvIndex = inMemoryConversations.findIndex(
-      (c) => c.conversationId === conversationId
+      (c) =>
+        c.conversationId === conversationId ||
+        c.conversationId === [senderId, effectiveReceiverId].sort().join("_")
     );
 
     const participantDetails = [
@@ -604,6 +632,7 @@ router.post("/", protect, async (req, res) => {
 
     if (existingConvIndex >= 0) {
       convObj = inMemoryConversations[existingConvIndex];
+      convObj.conversationId = conversationId;
       convObj.lastMessage = newMessage.message;
       convObj.lastMessageTime = nowIso;
       convObj.lastSenderId = senderId;
@@ -641,7 +670,12 @@ router.post("/", protect, async (req, res) => {
     if (mongoose.connection.readyState === 1) {
       try {
         await Conversation.findOneAndUpdate(
-          { conversationId },
+          {
+            $or: [
+              { conversationId },
+              { conversationId: [senderId, effectiveReceiverId].sort().join("_") },
+            ],
+          },
           {
             conversationId,
             participants: [senderId, effectiveReceiverId],
@@ -654,8 +688,17 @@ router.post("/", protect, async (req, res) => {
           },
           { upsert: true, new: true }
         );
-      } catch (e) { }
+      } catch (e) {}
     }
+
+    // 4. Emit real-time WebSocket event via Socket.IO if available
+    try {
+      const io = req.app.get("io");
+      if (io) {
+        io.to(String(effectiveReceiverId)).emit("receive_direct_message", newMessage);
+        io.to(String(senderId)).emit("message_sent_confirm", newMessage);
+      }
+    } catch (e) {}
 
     return res.status(201).json({
       success: true,
@@ -684,12 +727,17 @@ async function handleMarkConversationRead(req, res) {
   try {
     const { conversationId } = req.params;
     const currentUserId = String(req.user._id || req.user.id);
+    const partnerId = extractPartnerId(conversationId, currentUserId);
 
     const inMemoryMessages = loadServerMessages();
     let updated = false;
 
     inMemoryMessages.forEach((m) => {
-      const matchConv = m.conversationId === conversationId || m.conversationId === [currentUserId, conversationId].sort().join("_");
+      const matchConv =
+        m.conversationId === conversationId ||
+        m.conversationId === getDeterministicConversationId(currentUserId, partnerId) ||
+        (String(m.senderId) === partnerId && String(m.receiverId) === currentUserId);
+
       if (matchConv && String(m.receiverId) === currentUserId && !m.readStatus) {
         m.readStatus = true;
         updated = true;
@@ -703,14 +751,17 @@ async function handleMarkConversationRead(req, res) {
     if (mongoose.connection.readyState === 1) {
       try {
         await Message.updateMany(
-          { conversationId, receiverId: currentUserId, readStatus: false },
+          {
+            $or: [
+              { conversationId },
+              { conversationId: getDeterministicConversationId(currentUserId, partnerId) },
+              { senderId: partnerId, receiverId: currentUserId },
+            ],
+            readStatus: false,
+          },
           { readStatus: true }
         );
-        await Conversation.findOneAndUpdate(
-          { conversationId },
-          { $set: { [`unreadCount.${currentUserId}`]: 0 } }
-        );
-      } catch (e) { }
+      } catch (e) {}
     }
 
     return res.json({ success: true, message: "Conversation marked as read." });

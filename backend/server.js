@@ -1,4 +1,5 @@
 const express = require("express");
+const http = require("http");
 const cors = require("cors");
 const path = require("path");
 const mongoose = require("mongoose");
@@ -15,8 +16,9 @@ const attendanceRoutes = require("./routes/attendanceRoutes");
 const paperRoutes = require("./routes/paperRoutes");
 const classRoutes = require("./routes/classRoutes");
 
-// Initialize Express App
+// Initialize Express App & HTTP Server
 const app = express();
+const server = http.createServer(app);
 const PORT = process.env.PORT || 3000;
 
 // Enable CORS for all external origins
@@ -31,6 +33,39 @@ app.use(
 // Middleware for parsing JSON and URL-encoded data
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// Setup Socket.IO for real-time WebSocket messaging
+let io = null;
+try {
+  const { Server } = require("socket.io");
+  io = new Server(server, {
+    cors: {
+      origin: "*",
+      methods: ["GET", "POST"],
+    },
+  });
+
+  io.on("connection", (socket) => {
+    // User joins their personal private room for real-time messages
+    socket.on("join_user_room", (userId) => {
+      if (userId) {
+        socket.join(String(userId));
+      }
+    });
+
+    socket.on("join_room", (userId) => {
+      if (userId) {
+        socket.join(String(userId));
+      }
+    });
+
+    socket.on("disconnect", () => {});
+  });
+
+  app.set("io", io);
+} catch (e) {
+  console.warn("Socket.io initialization notice:", e.message);
+}
 
 // Request Logger
 app.use((req, res, next) => {
@@ -52,6 +87,7 @@ app.get("/", (req, res) => {
     features: [
       "Permanent Database Persistence for Users, Profiles, Messages & Academic Data",
       "Direct User-to-User Private Messaging & Conversation Threads",
+      "Real-time WebSocket & Live Background Synchronization",
       "Classroom and Class Schedule Management System",
       "Targeted Subject Assignment (Student/Multi-Year/Specialization)",
       "Attendance Management & Analytics",
@@ -108,14 +144,12 @@ connectDB();
 
 // Only listen on port if not running as a Vercel serverless function
 if (process.env.VERCEL !== "1" && process.env.NODE_ENV !== "test") {
-  app.listen(PORT, () => {
+  server.listen(PORT, () => {
     console.log("==================================================");
     console.log(` Smart Campus Server is running on port ${PORT}`);
     console.log(` URL: http://localhost:${PORT}`);
     console.log(` Test Route: http://localhost:${PORT}/`);
-    console.log(` Subjects API: http://localhost:${PORT}/api/subjects/student`);
     console.log(` Chat API: http://localhost:${PORT}/api/messages/conversations`);
-    console.log(` Attendance API: http://localhost:${PORT}/api/attendance/student`);
     console.log(` Static Frontend: http://localhost:${PORT}/index.html`);
     console.log("==================================================");
   });

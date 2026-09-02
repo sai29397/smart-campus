@@ -106,8 +106,9 @@ function initUnifiedSession() {
     switchDashboardView("admin");
   }
 
-  // Initialize Chat & Live Sync
+  // Initialize Chat, WebSocket & Live Sync
   loadChatConversations();
+  initSocketConnection();
   startChatLiveSync();
 
   // Logout handler
@@ -2255,6 +2256,38 @@ let cachedConversations = [];
 let cachedContacts = [];
 let lastChatMessagesJson = "";
 let lastChatConversationsJson = "";
+let socketClient = null;
+
+function initSocketConnection() {
+  if (typeof io !== "undefined" && currentUser) {
+    try {
+      const socketUrl = getApiBaseUrl() || (typeof window !== "undefined" ? window.location.origin : "");
+      if (!socketClient && socketUrl) {
+        socketClient = io(socketUrl, { transports: ["websocket", "polling"] });
+
+        socketClient.on("connect", () => {
+          const userId = String(currentUser.id || currentUser._id);
+          socketClient.emit("join_user_room", userId);
+          socketClient.emit("join_room", userId);
+        });
+
+        socketClient.on("receive_direct_message", (msg) => {
+          // If currently in conversation with sender or receiver, refresh thread
+          if (
+            activeChatPartner &&
+            (String(msg.senderId) === String(activeChatPartner.id) ||
+              String(msg.receiverId) === String(activeChatPartner.id))
+          ) {
+            refreshActiveChat();
+          }
+          silentRefreshConversations();
+        });
+      }
+    } catch (e) {
+      console.warn("Socket client notice:", e.message);
+    }
+  }
+}
 
 function startChatLiveSync() {
   if (chatPollInterval) clearInterval(chatPollInterval);
