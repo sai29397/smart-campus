@@ -108,7 +108,7 @@
     "receiverName": "Alex Johnson",
     "receiverEmail": "student@campus.edu",
     "message": "hi",
-    "readStatus": false,
+    "readStatus": true,
     "timestamp": "2026-09-02T01:51:06.759Z"
   },
   {
@@ -124,7 +124,7 @@
     "receiverName": "Alex Johnson",
     "receiverEmail": "student@campus.edu",
     "message": "hlo",
-    "readStatus": false,
+    "readStatus": true,
     "timestamp": "2026-09-02T01:51:49.548Z"
   },
   {
@@ -156,7 +156,7 @@
     "receiverName": "Alex Johnson",
     "receiverEmail": "student@campus.edu",
     "message": "hii",
-    "readStatus": false,
+    "readStatus": true,
     "timestamp": "2026-09-02T01:59:07.009Z"
   },
   {
@@ -172,7 +172,39 @@
     "receiverName": "Alex Johnson",
     "receiverEmail": "student@campus.edu",
     "message": "hii",
-    "readStatus": false,
+    "readStatus": true,
     "timestamp": "2026-09-02T01:59:56.330Z"
+  },
+  {
+    "_id": "msg_1788316689948_8949",
+    "id": "msg_1788316689948_1801",
+    "conversationId": "usr_faculty_1_usr_student_1",
+    "senderId": "usr_faculty_1",
+    "senderRole": "faculty",
+    "senderName": "Dr. Sarah Jenkins",
+    "senderEmail": "faculty@campus.edu",
+    "receiverId": "usr_student_1",
+    "receiverRole": "student",
+    "receiverName": "Alex Johnson",
+    "receiverEmail": "student@campus.edu",
+    "message": "Hello Student",
+    "readStatus": true,
+    "timestamp": "2026-09-02T02:38:09.948Z"
+  },
+  {
+    "_id": "msg_1788316689969_9649",
+    "id": "msg_1788316689969_5230",
+    "conversationId": "usr_faculty_1_usr_student_1",
+    "senderId": "usr_student_1",
+    "senderRole": "student",
+    "senderName": "Alex Johnson",
+    "senderEmail": "student@campus.edu",
+    "receiverId": "usr_faculty_1",
+    "receiverRole": "faculty",
+    "receiverName": "Dr. Sarah Jenkins",
+    "receiverEmail": "faculty@campus.edu",
+    "message": "Hello Sir",
+    "readStatus": true,
+    "timestamp": "2026-09-02T02:38:09.969Z"
   }
 ]

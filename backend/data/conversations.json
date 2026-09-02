@@ -84,31 +84,31 @@
     ],
     "participantDetails": [
       {
-        "userId": "usr_faculty_1",
-        "name": "Dr. Sarah Jenkins",
-        "role": "faculty",
-        "email": "faculty@campus.edu",
-        "department": "Computer Science",
-        "year": "Faculty/Staff",
-        "specialization": "General CSE"
-      },
-      {
         "userId": "usr_student_1",
         "name": "Alex Johnson",
         "role": "student",
         "email": "student@campus.edu",
         "department": "Computer Science",
-        "year": "1st Year"
+        "year": "1st Year",
+        "specialization": "General CSE"
+      },
+      {
+        "userId": "usr_faculty_1",
+        "name": "Dr. Sarah Jenkins",
+        "role": "faculty",
+        "email": "faculty@campus.edu",
+        "department": "Computer Science",
+        "year": "Faculty/Staff"
       }
     ],
-    "lastMessage": "hii",
-    "lastMessageTime": "2026-09-02T01:59:56.330Z",
-    "lastSenderId": "usr_faculty_1",
+    "lastMessage": "Hello Sir",
+    "lastMessageTime": "2026-09-02T02:38:09.969Z",
+    "lastSenderId": "usr_student_1",
     "unreadCount": {
-      "usr_faculty_1": 0,
-      "usr_student_1": 4
+      "usr_faculty_1": 1,
+      "usr_student_1": 0
     },
     "createdAt": "2026-09-01T10:00:00.000Z",
-    "updatedAt": "2026-09-02T01:59:56.330Z"
+    "updatedAt": "2026-09-02T02:38:09.969Z"
   }
 ]
