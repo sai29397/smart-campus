@@ -45,35 +45,26 @@ function initUnifiedSession() {
   const token = localStorage.getItem("smart_campus_token");
   const userJson = localStorage.getItem("smart_campus_user");
 
+  // Require explicit login with email and password
   if (!token || !userJson) {
-    // Default guest campus user so anyone can view all 3 portals immediately
-    currentUser = {
-      id: "usr_student_1",
-      _id: "usr_student_1",
-      name: "Campus User",
-      email: "student@campus.edu",
-      role: "student",
-      department: "Computer Science",
-      year: "1st Year",
-      specialization: "General CSE",
-    };
-    localStorage.setItem("smart_campus_token", "default_guest_token");
-    localStorage.setItem("smart_campus_user", JSON.stringify(currentUser));
-  } else {
-    try {
-      currentUser = JSON.parse(userJson);
-    } catch (e) {
-      currentUser = {
-        id: "usr_student_1",
-        _id: "usr_student_1",
-        name: "Campus User",
-        email: "student@campus.edu",
-        role: "student",
-        department: "Computer Science",
-        year: "1st Year",
-        specialization: "General CSE",
-      };
-    }
+    window.location.href = "login.html";
+    return;
+  }
+
+  try {
+    currentUser = JSON.parse(userJson);
+  } catch (e) {
+    localStorage.removeItem("smart_campus_token");
+    localStorage.removeItem("smart_campus_user");
+    window.location.href = "login.html";
+    return;
+  }
+
+  if (!currentUser || !currentUser.email) {
+    localStorage.removeItem("smart_campus_token");
+    localStorage.removeItem("smart_campus_user");
+    window.location.href = "login.html";
+    return;
   }
 
   const role = (currentUser.role || "student").toLowerCase();
