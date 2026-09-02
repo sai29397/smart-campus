@@ -110,5 +110,47 @@
     "message": "hiii",
     "readStatus": false,
     "timestamp": "2026-09-01T20:10:30.968Z"
+  },
+  {
+    "_id": "msg_1788307972089_372",
+    "id": "msg_1788307972089_507",
+    "conversationId": "usr_1788287068278_usr_1788291527038",
+    "senderId": "usr_1788287068278",
+    "senderRole": "student",
+    "senderName": "vimal",
+    "receiverId": "usr_1788291527038",
+    "receiverRole": "faculty",
+    "receiverName": "bhavya",
+    "message": "Hello Professor Bhavya, I have a doubt regarding today's C Programming lecture.",
+    "readStatus": true,
+    "timestamp": "2026-09-02T00:12:52.089Z"
+  },
+  {
+    "_id": "msg_1788308071759_163",
+    "id": "msg_1788308071759_503",
+    "conversationId": "usr_1788287068278_usr_1788291527038",
+    "senderId": "usr_1788287068278",
+    "senderRole": "student",
+    "senderName": "vimal",
+    "receiverId": "usr_1788291527038",
+    "receiverRole": "faculty",
+    "receiverName": "bhavya",
+    "message": "Good morning Professor, what chapters are included in the upcoming mid-term exam?",
+    "readStatus": true,
+    "timestamp": "2026-09-02T00:14:31.759Z"
+  },
+  {
+    "_id": "msg_1788308071792_380",
+    "id": "msg_1788308071792_788",
+    "conversationId": "usr_1788287068278_usr_1788291527038",
+    "senderId": "usr_1788291527038",
+    "senderRole": "faculty",
+    "senderName": "bhavya",
+    "receiverId": "usr_1788287068278",
+    "receiverRole": "student",
+    "receiverName": "vimal",
+    "message": "Hello Vimal, Chapters 1 through 4 will be covered. Make sure to review the PYQs in the exam portal!",
+    "readStatus": true,
+    "timestamp": "2026-09-02T00:14:31.792Z"
   }
 ]

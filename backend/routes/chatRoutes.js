@@ -44,36 +44,43 @@ let inMemoryMessages = loadServerMessages();
 // ==========================================================================
 router.get("/contacts", protect, (req, res) => {
   try {
-    const role = req.user.role;
+    const currentUserId = String(req.user._id || req.user.id);
+    const role = (req.user.role || "").toLowerCase();
     const allUsers = loadServerUsers();
 
     let contacts = [];
 
     if (role === "student") {
-      // Students can message faculty members
+      // Students can message faculty members & admins
       contacts = allUsers
-        .filter((u) => u.role === "faculty" || u.role === "admin")
+        .filter(
+          (u) =>
+            String(u._id || u.id) !== currentUserId &&
+            (u.role === "faculty" || u.role === "admin" || u.role === "administration")
+        )
         .map((f) => ({
           id: f._id || f.id,
           _id: f._id || f.id,
           name: f.name,
           email: f.email,
           role: f.role,
-          department: f.department,
+          department: f.department || "Faculty",
+          year: f.year || "Faculty",
+          specialization: f.specialization || "Faculty",
         }));
     } else {
-      // Faculty: return students
+      // Faculty & Admin: can message all campus members
       contacts = allUsers
-        .filter((u) => u.role === "student")
+        .filter((u) => String(u._id || u.id) !== currentUserId)
         .map((st) => ({
           id: st._id || st.id,
           _id: st._id || st.id,
           name: st.name,
           email: st.email,
           role: st.role,
-          year: st.year,
-          department: st.department,
-          specialization: st.specialization || "General CSE",
+          year: st.year || (st.role === "faculty" ? "Faculty" : "Student"),
+          department: st.department || "General",
+          specialization: st.specialization || (st.role === "faculty" ? "Faculty" : "General CSE"),
         }));
     }
 
@@ -141,16 +148,24 @@ router.get("/:conversationId", protect, (req, res) => {
     const currentUserId = String(req.user._id || req.user.id);
     inMemoryMessages = loadServerMessages();
 
-    // Query messages strictly between this authenticated user and the specific recipient
+    // Query messages strictly between this authenticated user and the specific partner
     const messages = inMemoryMessages.filter((m) => {
-      // User must be one of the two participants
-      const isParticipant = String(m.senderId) === currentUserId || String(m.receiverId) === currentUserId;
+      const isParticipant =
+        String(m.senderId) === currentUserId || String(m.receiverId) === currentUserId;
       if (!isParticipant) return false;
 
-      // Exact conversation ID match
+      // 1. Exact conversation ID match
       if (m.conversationId === conversationId) return true;
 
-      // Or exact sender/receiver pair match
+      // 2. Direct partner ID match
+      if (
+        (String(m.senderId) === currentUserId && String(m.receiverId) === conversationId) ||
+        (String(m.receiverId) === currentUserId && String(m.senderId) === conversationId)
+      ) {
+        return true;
+      }
+
+      // 3. Normalized pair match
       const partnerId = String(m.senderId) === currentUserId ? String(m.receiverId) : String(m.senderId);
       const expectedConvId = [currentUserId, partnerId].sort().join("_");
       return expectedConvId === conversationId;

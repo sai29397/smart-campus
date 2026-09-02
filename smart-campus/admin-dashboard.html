@@ -2,103 +2,17 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Dashboard - Smart Campus</title>
-    <!-- Connect CSS -->
-    <link rel="stylesheet" href="css/style.css">
+    <meta http-equiv="refresh" content="0; url=dashboard.html">
+    <title>Redirecting to Unified Dashboard...</title>
 </head>
-<body>
-
-    <!-- ================= TOP NAVIGATION ================= -->
-    <nav class="navbar">
-        <a href="index.html" class="nav-brand">
-            <div class="brand-icon">🎓</div>
-            <span>SmartCampus</span>
-        </a>
-
-        <div class="nav-links">
-            <a href="index.html">Home</a>
-            <a href="student-dashboard.html">Student Portal</a>
-            <a href="faculty-dashboard.html">Faculty Dashboard</a>
-            <a href="admin-dashboard.html" class="active">Admin Portal</a>
-            
-            <div class="user-profile-badge">
-                <div class="user-avatar" style="background: var(--dark);">🏛️</div>
-                <div>
-                    <span class="user-info">Campus Admin</span>
-                    <span class="user-role-tag">Super Administrator</span>
-                </div>
-            </div>
-
-            <a href="login.html" class="btn btn-outline btn-sm">Logout</a>
-        </div>
-    </nav>
-
-    <!-- ================= MAIN DASHBOARD CONTAINER ================= -->
-    <main class="dashboard-wrapper">
-
-        <!-- Page Header -->
-        <div class="page-header">
-            <div class="page-title">
-                <h1>Campus Administration Control Center</h1>
-                <p>Monitor platform statistics, active announcements, and curriculum subjects across departments.</p>
-            </div>
-            <div>
-                <button onclick="refreshAdminData()" class="btn btn-primary btn-sm">🔄 Refresh Metrics</button>
-            </div>
-        </div>
-
-        <!-- Quick Summary Stats -->
-        <div class="stats-grid">
-            <div class="stat-card">
-                <div class="stat-info">
-                    <h3>Backend Server</h3>
-                    <div class="stat-number" id="serverStatus" style="font-size: 1.25rem; color: var(--success);">Checking...</div>
-                </div>
-                <div class="stat-icon-wrapper stat-icon-emerald">⚡</div>
-            </div>
-
-            <div class="stat-card">
-                <div class="stat-info">
-                    <h3>Total Academic Subjects</h3>
-                    <div class="stat-number" id="totalSubjects">0</div>
-                </div>
-                <div class="stat-icon-wrapper stat-icon-blue">📚</div>
-            </div>
-
-            <div class="stat-card">
-                <div class="stat-info">
-                    <h3>Active Departments</h3>
-                    <div class="stat-number">5</div>
-                </div>
-                <div class="stat-icon-wrapper stat-icon-purple">🏛️</div>
-            </div>
-
-            <div class="stat-card">
-                <div class="stat-info">
-                    <h3>Registered Users</h3>
-                    <div class="stat-number">1,240+</div>
-                </div>
-                <div class="stat-icon-wrapper stat-icon-amber">👥</div>
-            </div>
-        </div>
-
-        <!-- Academic Subjects Master Overview -->
-        <section class="section-card">
-            <div class="section-header">
-                <h2>📚 Campus Academic Directory (Live from API)</h2>
-                <span class="badge-count" id="adminAcademicBadge">Loading...</span>
-            </div>
-            <div class="section-body">
-                <div id="adminAcademicList" class="cards-grid">
-                    <!-- Loaded dynamically via GET http://localhost:3000/api/academic -->
-                </div>
-            </div>
-        </section>
-
-    </main>
-
-    <!-- Connect JS -->
-    <script src="js/admin.js"></script>
+<body style="font-family: sans-serif; display: flex; align-items: center; justify-content: center; height: 100vh; background: #f8fafc;">
+    <div style="text-align: center;">
+        <h2>🎓 Smart Campus Dashboard</h2>
+        <p>Redirecting you to the unified dashboard...</p>
+        <a href="dashboard.html" style="color: #2563eb; font-weight: bold;">Click here if not redirected automatically</a>
+    </div>
+    <script>
+        window.location.replace("dashboard.html");
+    </script>
 </body>
 </html>
