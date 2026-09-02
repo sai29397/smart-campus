@@ -5,20 +5,18 @@
 // Helper to determine the backend API base URL
 function getApiBaseUrl() {
   if (typeof window === "undefined") return "http://localhost:3000";
-  // If served directly from Express on port 3000
-  if (window.location.port === "3000") return "";
-  // If served from VS Code Live Server (5500), Python http.server (5500), file://, or other local ports
-  const host = window.location.hostname;
+  // If running on deployed domain or production (Vercel, Render) or same port 3000
   if (
-    host === "localhost" ||
-    host === "127.0.0.1" ||
-    host === "" ||
-    window.location.protocol === "file:" ||
-    window.location.port !== ""
+    window.location.hostname.includes("vercel.app") ||
+    window.location.hostname.includes("onrender.com") ||
+    window.location.port === "3000"
   ) {
+    return "";
+  }
+  if (window.location.protocol === "file:") {
     return "http://localhost:3000";
   }
-  return "";
+  return `${window.location.protocol}//${window.location.hostname}:3000`;
 }
 
 const API_URL = getApiBaseUrl();
