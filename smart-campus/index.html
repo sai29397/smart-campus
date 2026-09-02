@@ -188,30 +188,11 @@
             <div class="section-card" style="margin-bottom: 0; box-shadow: var(--shadow-xl);">
                 <div class="section-header">
                     <h2>🔔 Live Campus Feed</h2>
-                    <span class="badge-count">Live</span>
+                    <span class="badge-count" id="liveFeedCountBadge">Live</span>
                 </div>
-                <div class="section-body">
-                    <div class="item-card" style="margin-bottom: 1rem;">
-                        <div class="item-header">
-                            <h4 class="item-title">📢 Mid-Term Exam Schedule</h4>
-                            <span class="meta-chip chip-high">Urgent</span>
-                        </div>
-                        <p class="item-desc">CS501 & CS502 examination timetable published.</p>
-                        <div class="item-footer">
-                            <span>🏛️ Computer Science</span>
-                            <span>🕒 Today</span>
-                        </div>
-                    </div>
-                    <div class="item-card">
-                        <div class="item-header">
-                            <h4 class="item-title">📚 Hackathon 2026 Registration</h4>
-                            <span class="meta-chip chip-medium">Important</span>
-                        </div>
-                        <p class="item-desc">Annual intra-college hackathon registrations are open.</p>
-                        <div class="item-footer">
-                            <span>🏛️ Campus Wide</span>
-                            <span>🕒 Yesterday</span>
-                        </div>
+                <div class="section-body" id="liveCampusFeedContainer">
+                    <div style="text-align: center; padding: 2rem; color: var(--text-muted);">
+                        <span>⏳ Loading latest campus announcements...</span>
                     </div>
                 </div>
             </div>
@@ -265,7 +246,7 @@
                     <h3>Faculty Portal</h3>
                     <p>Manage students, assign subjects, mark attendance, post notices, and message students directly.</p>
                 </div>
-                <a href="login.html?role=faculty" class="btn btn-primary">Sign In as Faculty →</a>
+                <a href="login.html?role=faculty" class="btn btn-primary" id="facultyPortalBtn">Sign In as Faculty →</a>
             </div>
 
             <!-- Student Portal -->
@@ -276,7 +257,7 @@
                     <h3>Student Portal</h3>
                     <p>View your enrolled subjects, check attendance progress, receive notices, and chat with faculty.</p>
                 </div>
-                <a href="login.html?role=student" class="btn btn-outline">Sign In as Student →</a>
+                <a href="login.html?role=student" class="btn btn-outline" id="studentPortalBtn">Sign In as Student →</a>
             </div>
 
             <!-- Admin Portal -->
@@ -286,7 +267,7 @@
                     <h3>Admin Portal</h3>
                     <p>Campus-wide announcements, complete user management, department analytics, and security alert controls.</p>
                 </div>
-                <a href="admin-dashboard.html" class="btn btn-outline">Open Admin Portal →</a>
+                <a href="login.html?role=admin" class="btn btn-outline" id="adminPortalBtn">Sign In as Admin →</a>
             </div>
         </div>
     </section>

@@ -1,5 +1,42 @@
 [
   {
+    "_id": "conv_1788310644428_163",
+    "id": "conv_1788310644428_759",
+    "conversationId": "usr_1788287068278_usr_1788310305859",
+    "participants": [
+      "usr_1788310305859",
+      "usr_1788287068278"
+    ],
+    "participantDetails": [
+      {
+        "userId": "usr_1788310305859",
+        "name": "sai ganesh",
+        "role": "student",
+        "email": "vtu29853@veltech.edu.in",
+        "department": "Electronics & Communication",
+        "year": "3rd Year",
+        "specialization": "General CSE"
+      },
+      {
+        "userId": "usr_1788287068278",
+        "name": "vimal",
+        "role": "student",
+        "email": "saibudeti1@gmail.com",
+        "department": "Computer Science",
+        "year": "1st Year"
+      }
+    ],
+    "lastMessage": "hii",
+    "lastMessageTime": "2026-09-02T00:57:24.427Z",
+    "lastSenderId": "usr_1788310305859",
+    "unreadCount": {
+      "usr_1788287068278": 1,
+      "usr_1788310305859": 0
+    },
+    "createdAt": "2026-09-02T00:57:24.427Z",
+    "updatedAt": "2026-09-02T00:57:24.427Z"
+  },
+  {
     "_id": "conv_1788310594370_25",
     "id": "conv_1788310594370_753",
     "conversationId": "usr_1788310594164_usr_1788310594275",
