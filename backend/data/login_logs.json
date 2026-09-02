@@ -1,5 +1,27 @@
 [
   {
+    "userId": "usr_student_1",
+    "email": "student@campus.edu",
+    "name": "Alex Johnson",
+    "role": "student",
+    "department": "Computer Science",
+    "year": "1st Year",
+    "ip": "::1",
+    "userAgent": "Mozilla/5.0 (Windows NT; Windows NT 10.0; en-US) WindowsPowerShell/5.1.26100.9278",
+    "timestamp": "2026-09-02T01:57:58.121Z"
+  },
+  {
+    "userId": "usr_1788309805674",
+    "email": "vtu20704@veltech.edu.in",
+    "name": "SAI",
+    "role": "student",
+    "department": "Computer Science",
+    "year": "1st Year",
+    "ip": "::1",
+    "userAgent": "Mozilla/5.0 (Windows NT; Windows NT 10.0; en-US) WindowsPowerShell/5.1.26100.9278",
+    "timestamp": "2026-09-02T01:57:58.039Z"
+  },
+  {
     "userId": "usr_faculty_1",
     "email": "faculty@campus.edu",
     "name": "Dr. Sarah Jenkins",
